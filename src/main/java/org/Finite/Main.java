@@ -9,7 +9,7 @@ public class Main {
         System.out.flush();
         common.print("java MASM interperter: 2025 (C) Finite\n");
         common.print("Type 'help' for a list of commands\n");
-
+        
         ArgumentParser.Args arguments = new ArgumentParser.Args();
         JCommander.newBuilder()
                 .addObject(arguments)

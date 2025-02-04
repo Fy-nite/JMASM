@@ -14,16 +14,16 @@ public class debug {
             String[] args = Arrays.copyOfRange(tokens, 1, tokens.length);
             switch (command) {
                 case "dumpmemory":
-                    dumpMemory();
+                    dumpMemory(common.memory);
                     break;
                 case "dumpregisters":
                     dumpRegisters();
                     break;
                 case "readmemory":
-                    print("%d", ReadMemory(Integer.parseInt(args[0])));
+                    print("%d", ReadMemory(common.memory, Integer.parseInt(args[0])));
                     break;
                 case "writememory":
-                    WriteMemory(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
+                    WriteMemory(common.memory, Integer.parseInt(args[0]), Integer.parseInt(args[1]));
                     break;
                 case "readregister":
                     print("%d", ReadRegister(String.valueOf(Integer.parseInt(args[0]))));

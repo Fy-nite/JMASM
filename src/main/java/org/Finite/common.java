@@ -44,7 +44,7 @@ public class common {
     /**
      * Dumps the contents of the memory array to the console.
      */
-    public static void dumpMemory() {
+    public static void dumpMemory(int memory[]) {
         // Check if the memory array has been initialized
         if (memory == null || memory.length != MAX_MEMORY) {
             System.err.println("Error: Memory array not initialized or incorrect size.");
@@ -120,7 +120,7 @@ public static void box(String... messages) {
      * @param value   The value to write to memory.
      */
 
-public static void WriteMemory(int address, int value) {
+public static void WriteMemory(int memory[], int address, int value) {
         memory[address] = value;
     }
 
@@ -135,7 +135,7 @@ public static void WriteMemory(int address, int value) {
      * @param address The memory address of the value to read.
      * @return The value stored at the specified memory address.
      */
-    public static int ReadMemory(int address) {
+    public static int ReadMemory(int memory[], int address) {
         // Directly access the element at the given index from the 'memory' array
         return memory[address];
     }
