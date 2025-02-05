@@ -88,21 +88,42 @@ public class common {
         return memory[registersMap.get(register)];
     }
 
-    public static void box(String... messages) {
-        for (String message : messages) {
-            print("\033[34m┏");
-            for (int i = 0; i < message.length(); i++) {
-                print("━");
-            }
-            print("┓\n");
-            print("┃\033[31m%s\033[34m┃\n", message);
-            print("\033[34m┗");
-            for (int i = 0; i < message.length(); i++) {
-                print("━");
-            }
-            print("┛\033[0m\n");
-            print("\n"); // Add a new line between boxes
+    public static void box(String title, String message, String type) {
+        String color;
+        switch (type.toLowerCase()) {
+            case "error":
+                color = "\u001B[31m"; // Red
+                break;
+            case "info":
+            default:
+                color = "\u001B[34m"; // Blue
+                break;
         }
+
+        String reset = "\u001B[0m";
+        String[] lines = message.split("\n");
+        int maxLength = title.length();
+        for (String line : lines) {
+            if (line.length() > maxLength) {
+                maxLength = line.length();
+            }
+        }
+
+        String border = "+" + "-".repeat(maxLength + 2) + "+";
+        System.out.println(color + border);
+        System.out.println("| " + title + " ".repeat(maxLength - title.length()) + " |");
+        System.out.println(border);
+
+        for (String line : lines) {
+            System.out.println("| " + line + " ".repeat(maxLength - line.length()) + " |");
+        }
+
+        System.out.println(border + reset);
+    }
+
+    // Overloaded method for backward compatibility
+    public static void box(String title, String message) {
+        box(title, message, "info");
     }
 
     public static void printerr(String message) {

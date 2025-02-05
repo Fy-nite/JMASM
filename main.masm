@@ -1,0 +1,5 @@
+LBL main
+    MOV RAX 5
+    MOV RBX 5
+    ADD RAX RBX
+    OUT RAX

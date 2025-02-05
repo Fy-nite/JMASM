@@ -45,7 +45,7 @@ public class includemanager {
         // check if the file exists
         File file = new File(path);
         if (!file.exists()) {
-            common.printerr("Error: file " + path + " does not exist");
+            common.box("Error", "file " + path + " does not exist", "error");
             return CurrentFileContents;
         }
 
@@ -59,7 +59,7 @@ public class includemanager {
             }
             reader.close();
         } catch (IOException e) {
-            common.printerr("Error reading file: " + path);
+            common.box("Error", "Error reading file: " + path, "error");
         }
         return CurrentFileContents;
     }

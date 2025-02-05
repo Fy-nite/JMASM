@@ -45,7 +45,7 @@ public class Functions {
         // read the register hashmap
         int value = common.ReadRegister(reg1);
         // print the value
-        common.print("Output: %d\n", value);
+        common.box("Output", String.format("%d", value));
     }
     public void mov(int[] memory, String reg1, String reg2) {
         // check if the thing is a number or a register
