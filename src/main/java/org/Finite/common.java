@@ -1,10 +1,13 @@
 package org.Finite;
 
-import java.util.Scanner;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.nio.charset.*;
+import java.util.*;
+import java.io.*;
+
 import com.beust.jcommander.Parameter;
+
 public class common {
     // THIS IS FINAL~~!!?!??!?!??!?!?!??!?!?!?!??!?!?
     public static final int MAX_MEMORY = 4096; // are you angry?
@@ -18,8 +21,8 @@ public class common {
             "exit",
             "help"
     };
-    public static String[] registers = {"RAX","RBX","RCX","RDX","RBP","RSP","RIP","R8","R9","R10","R11","R12","R13","R14","R15","FLAGS"};
-    public static String[] instructions = {"MOV","ADD","SUB","MUL","DIV","AND","OR","XOR","NOT","SHL","SHR","CMP","JMP","JE","JNE","JG","JGE","JL","JLE","CALL","RET","PUSH","POP","HLT"};
+    public static String[] registers = {"RAX", "RBX", "RCX", "RDX", "RBP", "RSP", "RIP", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "FLAGS"};
+    public static String[] instructions = {"MOV", "ADD", "SUB", "MUL", "DIV", "AND", "OR", "XOR", "NOT", "SHL", "SHR", "CMP", "JMP", "JE", "JNE", "JG", "JGE", "JL", "JLE", "CALL", "RET", "PUSH", "POP", "HLT", "NOP","OUT"};
     public static int[] memory = new int[MAX_MEMORY];
 
     public static Map<String, Integer> registersMap = new HashMap<String, Integer>() {{
@@ -64,8 +67,14 @@ public class common {
         }
     }
 
-    public static void WriteRegister(int register, int value) {
-        memory[register] = value;
+    public static void WriteRegister(String Register, int value) {
+        // use the hashmap to get the register
+        if (!registersMap.containsKey(Register)) {
+            printerr("Error: Invalid register name: " + Register + "\n");
+            return;
+        }
+        print("Writing %d to %s\n", value, Register);
+        memory[registersMap.get(Register)] = value;
     }
 
     public static int ReadRegister(String register) {
@@ -74,35 +83,39 @@ public class common {
             printerr("Error: Invalid register name: " + register + "\n");
             return -1;
         }
+        print("Reading %s\n",register);
+        print("Reading %d from %s\n", memory[registersMap.get(register)], register);
         return memory[registersMap.get(register)];
     }
-public static void box(String... messages) {
-    for (String message : messages) {
-        print("\033[34m┏");
-        for (int i = 0; i < message.length(); i++) {
-            print("━");
+
+    public static void box(String... messages) {
+        for (String message : messages) {
+            print("\033[34m┏");
+            for (int i = 0; i < message.length(); i++) {
+                print("━");
+            }
+            print("┓\n");
+            print("┃\033[31m%s\033[34m┃\n", message);
+            print("\033[34m┗");
+            for (int i = 0; i < message.length(); i++) {
+                print("━");
+            }
+            print("┛\033[0m\n");
+            print("\n"); // Add a new line between boxes
         }
-        print("┓\n");
-        print("┃\033[31m%s\033[34m┃\n", message);
-        print("\033[34m┗");
-        for (int i = 0; i < message.length(); i++) {
-            print("━");
-        }
-        print("┛\033[0m\n");
-        print("\n"); // Add a new line between boxes
     }
-}
+
     public static void printerr(String message) {
         // we gonna box the message in red
         print("\033[34m┏");
         for (int i = 0; i < message.length(); i++) {
-          print("━");
+            print("━");
         }
         print("┓\n");
         print("┃\033[31m%s\033[34m┃\n", message);
         print("\033[34m┗");
         for (int i = 0; i < message.length(); i++) {
-          print("━");
+            print("━");
         }
         print("┛\033[0m\n");
     }
@@ -120,7 +133,7 @@ public static void box(String... messages) {
      * @param value   The value to write to memory.
      */
 
-public static void WriteMemory(int memory[], int address, int value) {
+    public static void WriteMemory(int memory[], int address, int value) {
         memory[address] = value;
     }
 
@@ -137,6 +150,14 @@ public static void WriteMemory(int memory[], int address, int value) {
      */
     public static int ReadMemory(int memory[], int address) {
         // Directly access the element at the given index from the 'memory' array
+        if (address < 0 || address >= MAX_MEMORY) {
+            System.err.println("Error: Invalid memory address.");
+            return -1;
+        }
+        else if (memory == null || memory.length != MAX_MEMORY) {
+            System.err.println("Error: Memory array not initialized or incorrect size.");
+            return -1;
+        }
         return memory[address];
     }
 

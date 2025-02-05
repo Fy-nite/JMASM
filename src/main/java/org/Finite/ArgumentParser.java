@@ -10,7 +10,7 @@ public class ArgumentParser {
         public boolean debug = false;
         // get the current dir the program is running in
         public String currentDir = System.getProperty("user.dir");
-        @Parameter(names = {"--file", "-f"}, help = true)
-        public String file = currentDir + "main.masm";
+        @Parameter(names = {"--file", "-f"}, description = "Path to the MASM file to run")
+        public String file = "";
     }
 }
