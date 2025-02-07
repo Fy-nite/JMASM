@@ -8,6 +8,7 @@ import org.Finite.interp;
 public class Main {
     public static void main(String[] args) {
         System.out.print("\033[H\033[2J");
+        // get the main system resource
         System.out.flush();
         common.box("java MASM interpreter", "2025 (C) Finite\nType 'help' for a list of commands\n", "info");
         
@@ -28,7 +29,8 @@ public class Main {
         }
         else 
         {
-            common.box("Error", "No file specified, please use -d for debug to go into a prompt or pass a file with -f", "error");
+            String help = ReadResourceFile.read("help.txt");
+            common.box("Error",help, "error");
         }
     }
 }

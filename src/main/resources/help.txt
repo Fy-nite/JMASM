@@ -1,0 +1,3 @@
+Usage:
+    -d : debug mode, used for debugging MASM code or just playing around in the interpreter
+    -f <file> : specify a file to read MASM code from and execute

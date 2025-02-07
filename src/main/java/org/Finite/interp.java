@@ -19,7 +19,7 @@ public class interp {
     }
 
     static Functions functions = new Functions();
-
+    static ArgumentParser.Args arguments = new ArgumentParser.Args();
     // instructions class
     public static class instructions {
         // holds all the instructions
@@ -36,10 +36,7 @@ public class interp {
     }
 
     public static void ExecuteAllInstructions(instructions instrs) {
-        for (int i = 0; i < instrs.length; i++) {
-            common.box("Executing instruction", instrs.instructions[i].name, "info");
-            ExecuteSingleInstruction(instrs.instructions[i], instrs.Memory);
-        }
+
     }
     public static void runFile(String filename) {
         instructions instrs = new instructions();
@@ -75,7 +72,10 @@ public class interp {
     }
 
     public static int ExecuteSingleInstruction(instruction instr, int[] memory) {
-        common.box("Executing instruction", instr.name, "info");
+        if (arguments.debug) {
+            common.box("Debug", "Executing instruction: " + instr.name, "info");
+        }
+
         switch (instr.name.toLowerCase()) {
             case "mov":
                 functions.mov(memory, instr.sop1, instr.sop2);
@@ -91,6 +91,9 @@ public class interp {
                 break;
             case "div":
                 functions.div(memory, instr.sop1, instr.sop2);
+                break;
+            case "cmp":
+                functions.cmp(memory, instr.sop1, instr.sop2);
                 break;
             case "out":
                 functions.out(memory, instr.sop1);

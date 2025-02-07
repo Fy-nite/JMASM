@@ -16,18 +16,24 @@ public class debug {
                 String command = tokens[0];
                 String[] args = Arrays.copyOfRange(tokens, 1, tokens.length);
                 try {
-                    if (args.length != 2) {
-                        // do nothing, we don't need to do anything.
-                    } else {
+                    // Clear the instruction state first
+                    di.instructions = new interp.instruction[1];
+                    di.instructions[0] = new interp.instruction();
+                    di.length = 0;
 
-                        di.length = command.length();
-                        di.instructions = new interp.instruction[1];
-                        di.instructions[0] = new interp.instruction();
-                        // assign the instruction to the array
+                    // Only set up instruction if it's not a built-in command
+                    if (!Arrays.asList("dumpmemory", "dumpregisters", "readmemory", 
+                            "writememory", "readregister", "writeregister", "exit", "help")
+                            .contains(command.toLowerCase())) {
                         di.instructions[0].name = command;
                         di.instructions[0].opcode = 0;
-                        di.instructions[0].sop1 = args[0];
-                        di.instructions[0].sop2 = args[1];
+                        if (args.length >= 1) {
+                            di.instructions[0].sop1 = args[0];
+                        }
+                        if (args.length >= 2) {
+                            di.instructions[0].sop2 = args[1];
+                        }
+                        di.length = command.length();
                     }
                 } catch (Exception e) {
                     printerr("Error: " + e.getMessage());

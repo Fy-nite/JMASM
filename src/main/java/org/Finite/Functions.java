@@ -3,7 +3,7 @@ package org.Finite;
 import org.Finite.common.*;
 
 public class Functions {
-    public  void add(int[] memory, String reg1, String reg2) {
+    public void add(int[] memory, String reg1, String reg2) {
         // read the register hashmap
         int value1 = common.ReadRegister(reg1);
         int value2 = common.ReadRegister(reg2);
@@ -23,6 +23,7 @@ public class Functions {
         common.WriteRegister(reg1, result);
 
     }
+
     public void mul(int[] memory, String reg1, String reg2) {
         // read the register hashmap
         int value1 = common.ReadRegister(reg1);
@@ -32,6 +33,7 @@ public class Functions {
         // write the result to the first register
         common.WriteRegister(reg1, result);
     }
+
     public void div(int[] memory, String reg1, String reg2) {
         // read the register hashmap
         int value1 = common.ReadRegister(reg1);
@@ -41,12 +43,14 @@ public class Functions {
         // write the result to the first register
         common.WriteRegister(reg1, result);
     }
+
     public void out(int[] memory, String reg1) {
         // read the register hashmap
         int value = common.ReadRegister(reg1);
         // print the value
         common.box("Output", String.format("%d", value));
     }
+
     public void mov(int[] memory, String reg1, String reg2) {
         // check if the thing is a number or a register
         int value = 0;
@@ -56,7 +60,30 @@ public class Functions {
             value = common.ReadRegister(reg2);
         }
         // write the value to the first register
-        common.print("Writing %d to %s\n", value, reg1);
+        //common.print("Writing %d to %s\n", value, reg1);
         common.WriteRegister(reg1, value);
     }
+
+    public void cmp(int[] memory, String reg1, String reg2) {
+        // read the register hashmap or int value
+        int value1 = common.ReadRegister(reg1);
+        int value2 = 0;
+        try {
+            value2 = Integer.parseInt(reg2);
+        } catch (Exception e) {
+            value2 = common.ReadRegister(reg2);
+        }
+        // compare the values
+        if (value1 == value2) {
+            // set rflags to 0
+            common.WriteRegister("RFLAGS", 1);
+        }
+    }
+    public void jmp(int[] memory, String reg1) {
+        // read the register hashmap
+        int value = common.ReadRegister(reg1);
+        // jump to the value
+        common.WriteRegister("RIP", value);
+    }
 }
+

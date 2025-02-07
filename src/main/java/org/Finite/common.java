@@ -8,6 +8,8 @@ import java.io.*;
 
 import com.beust.jcommander.Parameter;
 
+import static org.Finite.interp.arguments;
+
 public class common {
     // THIS IS FINAL~~!!?!??!?!??!?!?!??!?!?!?!??!?!?
     public static final int MAX_MEMORY = 4096; // are you angry?
@@ -21,10 +23,9 @@ public class common {
             "exit",
             "help"
     };
-    public static String[] registers = {"RAX", "RBX", "RCX", "RDX", "RBP", "RSP", "RIP", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "FLAGS"};
+    public static String[] registers = {"RAX", "RBX", "RCX", "RDX", "RBP", "RSP", "RIP", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "RFLAGS"};
     public static String[] instructions = {"MOV", "ADD", "SUB", "MUL", "DIV", "AND", "OR", "XOR", "NOT", "SHL", "SHR", "CMP", "JMP", "JE", "JNE", "JG", "JGE", "JL", "JLE", "CALL", "RET", "PUSH", "POP", "HLT", "NOP","OUT"};
     public static int[] memory = new int[MAX_MEMORY];
-
     public static Map<String, Integer> registersMap = new HashMap<String, Integer>() {{
         put("RAX", 0);
         put("RBX", 1);
@@ -41,7 +42,7 @@ public class common {
         put("R13", 12);
         put("R14", 13);
         put("R15", 14);
-        put("FLAGS", 15);
+        put("RFLAGS", 15);
     }};
 
     /**
@@ -73,7 +74,7 @@ public class common {
             printerr("Error: Invalid register name: " + Register + "\n");
             return;
         }
-        print("Writing %d to %s\n", value, Register);
+       print("Writing %d to %s\n", value, Register);
         memory[registersMap.get(Register)] = value;
     }
 
@@ -83,8 +84,11 @@ public class common {
             printerr("Error: Invalid register name: " + register + "\n");
             return -1;
         }
-        print("Reading %s\n",register);
-        print("Reading %d from %s\n", memory[registersMap.get(register)], register);
+        //print("Reading %s\n",register);
+       // print("Reading %d from %s\n", memory[registersMap.get(register)], register);
+        if (arguments.debug) {
+            print("Reading %d from %s\n", memory[registersMap.get(register)], register);
+        }
         return memory[registersMap.get(register)];
     }
 
