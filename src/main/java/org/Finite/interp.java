@@ -9,6 +9,10 @@ import static org.Finite.debug.*;
 import org.Finite.Functions.*;
 
 public class interp {
+    // instructions, the base of the program
+    // holds the name of the instruction
+    // holds the opcode of the instruction
+    // and anything else we need to know about the instruction or its operands
     public static class instruction {
         String name;
         int opcode;
@@ -17,7 +21,8 @@ public class interp {
         String sop1;
         String sop2;
     }
-
+    // for some reason, java sucks and now requires us to do this instead of what we did before
+    // // screw the static keyword
     static Functions functions = new Functions();
     static ArgumentParser.Args arguments = new ArgumentParser.Args();
     // instructions class
