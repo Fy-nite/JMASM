@@ -11,7 +11,7 @@ jobs:
       - name: Build JMASM
         run: |
           apt update -y
-          apt install -y build-essential openjdk-22-jdk maven
+          apt install -y build-essential openjdk22-jdk maven
           mvn clean install package
 
           mv $(find . -name "*-jar-with-dependencies.jar") jmasm.jar
