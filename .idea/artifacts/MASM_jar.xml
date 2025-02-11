@@ -1,0 +1,15 @@
+<component name="ArtifactManager">
+  <artifact name="MASM:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/MASM_jar</output-path>
+    <root id="root">
+      <element id="archive" name="MASM.jar">
+        <element id="module-output" name="MASM" />
+        <element id="module-test-output" name="MASM" />
+      </element>
+      <element id="library" level="project" name="Maven: org.jcommander:jcommander:2.0" />
+      <element id="library" level="project" name="Maven: com.beust:jcommander:1.81" />
+      <element id="module-output" name="MASM" />
+      <element id="module-test-output" name="MASM" />
+    </root>
+  </artifact>
+</component>
