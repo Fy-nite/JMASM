@@ -1,0 +1,25 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: self-hosted-docker
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build JMASM
+        run: |
+          apt update -y
+          apt install -y build-essential openjdk-22-jdk maven
+          mvn clean install package
+# find target with jar-with-dependencies in the name, and rename it to jmasm.jar
+          mv $(find . -name "*-jar-with-dependencies.jar") jmasm.jar
+# compress the build
+          tar -cJf jmasm-build.tar.zst jmasm.jar
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: jmasm-build
+          path: jmasm-build.tar.zst

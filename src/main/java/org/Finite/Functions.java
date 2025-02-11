@@ -115,24 +115,30 @@ public class Functions {
             int address = Integer.parseInt(reg2.substring(1));
             // get the value at the memory address
             value = memory[address];
+            print("fValue: %d\n", value);
         } else {
            try
            {
                 // try to parse the string as an int
                 value = Integer.parseInt(reg2);
+                print("t1Value: %d\n", value);
               } catch (Exception e) {
                 // if it fails, then it is a register
                 value = common.ReadRegister(reg2);
+                print("c1Value: %d\n", value);
            }
         }
         try {
             // try to parse the string as an int
             value = Integer.parseInt(reg2);
+            print("t2Value: %d\n", value);
         } catch (Exception e) {
             // if it fails, then it is a register
             value = common.ReadRegister(reg2);
+            print("c2Value: %d\n", value);
         }
-
+        // write the value to the register
+        common.WriteRegister(reg1, value);
     }
 
     public void cmp(int[] memory, String reg1, String reg2) {
@@ -146,8 +152,13 @@ public class Functions {
         }
         // compare the values
         if (value1 == value2) {
-            // set rflags to 0
+            // set rflags to 1
             common.WriteRegister("RFLAGS", 1);
+        }
+        else
+        {
+            // set rflags to 0
+            common.WriteRegister("RFLAGS", 0);
         }
     }
     public void jmp(int[] memory, String reg1) {
