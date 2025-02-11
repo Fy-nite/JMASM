@@ -1,0 +1,19 @@
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: self-hosted-docker
+    steps:
+      - uses: actions/checkout@v3
+      - uses: https://github.com/actions/setup-java@main
+        with:
+          distribution: 'oracle' # not too sure if this works
+          java-version: '22'
+      - name: Build JMASM and test it
+        run: |
+          apt update -y
+          apt install -y build-essential maven
+          mvn clean install package test
