@@ -16,4 +16,6 @@ jobs:
         run: |
           apt update -y
           apt install -y build-essential maven
-          mvn clean install package test
+      - name: test the bastards
+        run: |
+          mvn test
