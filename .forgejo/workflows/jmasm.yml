@@ -11,11 +11,11 @@ jobs:
       - uses: https://github.com/actions/setup-java@main
         with:
           distribution: 'oracle' # not too sure if this works
-          java-version: '21'
+          java-version: '22'
       - name: Build JMASM
         run: |
           apt update -y
-          apt install -y build-essential openjdk22-jdk maven
+          apt install -y build-essential maven
           mvn clean install package
 
           mv $(find . -name "*-jar-with-dependencies.jar") jmasm.jar
