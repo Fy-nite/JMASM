@@ -41,7 +41,23 @@ public class interp {
     }
 
     public static void ExecuteAllInstructions(instructions instrs) {
+        int rip = common.ReadRegister("RIP");
+        while (rip < instrs.length) {  // Changed condition to check actual instruction count
+            instruction instr = instrs.instructions[rip];
+            if (arguments.debug) {
+                common.box("Debug", "Executing instruction: " + instr.name, "info");
+            }
+            ExecuteSingleInstruction(instr, instrs.Memory);
+            rip = common.ReadRegister("RIP") + 1;
+            common.WriteRegister("RIP", rip);
+        }
+    }
 
+    public static void printinstructions(instructions instrs) {
+        for (int i = 0; i < instrs.length; i++) {
+            print("Instruction %d: %s %s %s\n", i, instrs.instructions[i].name, instrs.instructions[i].sop1,
+                    instrs.instructions[i].sop2);
+        }
     }
     public static void runFile(String filename) {
         instructions instrs = new instructions();
@@ -65,9 +81,17 @@ public class interp {
                     instr.name = parts[0];
                     if (parts.length > 1) instr.sop1 = parts[1];
                     if (parts.length > 2) instr.sop2 = parts[2];
-                    instrs.instructions[instrs.length++] = instr;
+                    instrs.instructions[instrs.length] = instr;
+                    instrs.Memory[instrs.length] = instrs.length;  // Add this line to populate memory
+                    instrs.length++;
                 }
             }
+
+            if (arguments.debug) {
+                print("Read %d instructions\n", instrs.length);
+                printinstructions(instrs);
+            }
+            
             ExecuteAllInstructions(instrs);
         } catch (java.io.FileNotFoundException e) {
             common.box("Error", "File not found: " + filename, "error");
@@ -102,6 +126,13 @@ public class interp {
                 break;
             case "out":
                 functions.out(memory, instr.sop1);
+                break;
+            case "jmp":
+                functions.jmp(memory, instr.sop1);
+                break;
+            case "db":
+                functions.db(memory, instr.sop1);
+
                 break;
 
             default:

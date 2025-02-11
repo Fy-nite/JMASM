@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Main-Class: org.Finite.Main
+Class-Path: jcommander-2.0.jar jcommander-1.81.jar
+
