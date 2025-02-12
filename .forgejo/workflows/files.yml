@@ -1,23 +1,23 @@
-on:
-  push:
-    branches:
-      - master
-      - charlie-dev
-jobs:
-  build:
-    runs-on: self-hosted-docker
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install and run PowerShell
-        run: |
-          # Download PowerShell
-          wget https://github.com/PowerShell/PowerShell/releases/download/v7.3.7/powershell_7.3.7-1.deb_amd64.deb
-          echo "got the file"
-          # Install PowerShell
-          dpkg -i powershell_7.3.7-1.deb_amd64.deb
-          apt-get install -f -y
-          echo "installed the file"
-      - name: run the script
-        run: |
-          # Run your PowerShell script
-          pwsh -File ./test.ps1
+# on:
+#   push:
+#     branches:
+#       - master
+#       - charlie-dev
+# jobs:
+#   build:
+#     runs-on: self-hosted-docker
+#     steps:
+#       - uses: actions/checkout@v3
+#       - name: Install and run PowerShell
+#         run: |
+#           # Download PowerShell
+#           wget https://github.com/PowerShell/PowerShell/releases/download/v7.3.7/powershell_7.3.7-1.deb_amd64.deb
+#           echo "got the file"
+#           # Install PowerShell
+#           dpkg -i powershell_7.3.7-1.deb_amd64.deb
+#           apt-get install -f -y
+#           echo "installed the file"
+#       - name: run the script
+#         run: |
+#           # Run your PowerShell script
+#           pwsh -File ./test.ps1
