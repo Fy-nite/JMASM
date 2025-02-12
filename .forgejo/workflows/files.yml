@@ -19,4 +19,4 @@ jobs:
           echo "installed the file"
 
           # Run your PowerShell script
-          pwsh -File ./start.ps1
+          pwsh -File ./test.ps1
