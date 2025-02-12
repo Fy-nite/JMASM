@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - master
+      - charlie-dev
 
 jobs:
   build:

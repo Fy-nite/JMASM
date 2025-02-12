@@ -247,15 +247,43 @@ public class Functions {
         }
     }
 
-    public void jmp(int[] memory, String target) {
+
+    public static void jmp (int[] memory, String target)
+    {
         int value;
         try {
             value = Integer.parseInt(target);
         } catch (NumberFormatException e) {
             // If not a number, try to read as register
-            value = common.ReadRegister(target);
+            try {
+                value = common.ReadRegister(target);
+            } catch (Exception ex) {
+            // we can't use labels here so just die
+            common.box("Error", "Unknown address or label: " + target, "error");
+            }
         }
-        common.WriteRegister("RIP", value);
+    }
+
+    public void jmp(int[] memory, String target, instructions instrs) {
+        int value;
+        try {
+            value = Integer.parseInt(target);
+        } catch (NumberFormatException e) {
+            // If not a number, try to read as register
+            try {
+                value = common.ReadRegister(target);
+            } catch (Exception ex) {
+                // so it's a label with the # prefix
+                String labelName = target.substring(1);
+                Integer labelAddress = instrs.labelMap.get(labelName);
+                if (labelAddress != null) {
+                    value = labelAddress;
+                } else {
+                    common.box("Error", "Unknown label: " + labelName, "error");
+                    return;
+                }
+            }
+        }
     }
 }
 

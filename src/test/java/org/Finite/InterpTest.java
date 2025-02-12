@@ -1,6 +1,8 @@
 package org.Finite;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,52 +31,72 @@ public class InterpTest {
         instrs.functions = new Functions();
     }
 
-    @Test
-    void testExecuteSingleInstruction() {
-        common.WriteRegister("RIP", 0);
-        common.WriteRegister("RAX", 0);
-        common.WriteRegister("RBX", 0);
-        interp.instruction instr = new interp.instruction();
-        instr.name = "MOV";
-        instr.sop1 = "RAX";
-        instr.sop2 = "5";
-        
-        int result = interp.ExecuteSingleInstruction(instr, instrs.Memory, instrs);
-        assertEquals(0, result);
-        assertEquals(5, common.ReadRegister("RAX"));
-    }
-
-    @Test
-    void testRunFile(@TempDir Path tempDir) throws IOException {
-        common.WriteRegister("RIP", 0);
-        common.WriteRegister("RAX", 0);
-        common.WriteRegister("RBX", 0);
-        File testFile = tempDir.resolve("test.masm").toFile();
-        try (FileWriter writer = new FileWriter(testFile)) {
-            writer.write("MOV RAX 10\n");
-            writer.write("MOV RBX 5\n");
-            writer.write("ADD RAX RBX\n");
+    @Nested
+    @DisplayName("Instruction Execution")
+    class InstructionExecution {
+        @Test
+        @DisplayName("Test Single Instruction Execution")
+        void testExecuteSingleInstruction() {
+            common.WriteRegister("RIP", 0);
+            common.WriteRegister("RAX", 0);
+            common.WriteRegister("RBX", 0);
+            interp.instruction instr = new interp.instruction();
+            instr.name = "MOV";
+            instr.sop1 = "RAX";
+            instr.sop2 = "5";
+            
+            int result = interp.ExecuteSingleInstruction(instr, instrs.Memory, instrs);
+            assertEquals(0, result);
+            assertEquals(5, common.ReadRegister("RAX"));
         }
 
-        interp.runFile(testFile.getAbsolutePath());
-        assertEquals(15, common.ReadRegister("RAX"));
+        @Test
+        @DisplayName("Test Multiple Instructions")
+        void testMultipleInstructions() {
+            // Add new test for multiple instructions
+        }
     }
 
-    @Test
-    void testLabelExecution(@TempDir Path tempDir) throws IOException {
-        common.WriteRegister("RIP", 0);
-        common.WriteRegister("RAX", 0);
-        common.WriteRegister("RBX", 0);
-        File testFile = tempDir.resolve("test_label.masm").toFile();
-        try (FileWriter writer = new FileWriter(testFile)) {
-            writer.write("LBL main\n");
-            writer.write("    MOV RAX 5\n");
-            writer.write("    MOV RBX 3\n");
-            writer.write("    ADD RAX RBX\n");
+    @Nested
+    @DisplayName("File Operations")
+    class FileOperations {
+        @TempDir
+        Path tempDir;
+
+        @Test
+        @DisplayName("Test Running File")
+        void testRunFile() throws IOException {
+            common.WriteRegister("RIP", 0);
+            common.WriteRegister("RAX", 0);
+            common.WriteRegister("RBX", 0);
+            File testFile = tempDir.resolve("test.masm").toFile();
+            try (FileWriter writer = new FileWriter(testFile)) {
+                writer.write("MOV RAX 10\n");
+                writer.write("MOV RBX 5\n");
+                writer.write("ADD RAX RBX\n");
+            }
+
+            interp.runFile(testFile.getAbsolutePath());
+            assertEquals(15, common.ReadRegister("RAX"));
         }
 
-        interp.runFile(testFile.getAbsolutePath());
+        @Test
+        @DisplayName("Test Label Execution")
+        void testLabelExecution() throws IOException {
+            common.WriteRegister("RIP", 0);
+            common.WriteRegister("RAX", 0);
+            common.WriteRegister("RBX", 0);
+            File testFile = tempDir.resolve("test_label.masm").toFile();
+            try (FileWriter writer = new FileWriter(testFile)) {
+                writer.write("LBL main\n");
+                writer.write("    MOV RAX 5\n");
+                writer.write("    MOV RBX 3\n");
+                writer.write("    ADD RAX RBX\n");
+            }
 
-        assertEquals(8, common.ReadRegister("RAX"));
+            interp.runFile(testFile.getAbsolutePath());
+
+            assertEquals(8, common.ReadRegister("RAX"));
+        }
     }
 }

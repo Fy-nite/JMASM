@@ -1,0 +1,54 @@
+name: Maven Test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Maven
+        uses: https://github.com/s4u/setup-maven-action@main
+        with:
+          maven-version: '3.6.3'
+
+      - name: Run Maven tests
+        run: |
+          mvn test --fail-on-error
+          if [ $? -eq 0 ]; then
+            echo "All tests passed!"
+          else
+            echo "Test failed"
+            cat ./target/test-reports/TEST-REPORT.xml
+          fi
+
+      - name: Verify repository
+        run: |
+          git config --get user.email
+          git config --get user.name
+          if [ $? -ne 0 ]; then
+            echo "Repository configuration is invalid"
+          else
+            echo "Repository configuration is valid"
+          fi
+
+      - name: Create issue if test fails
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB.Repository: ${{ github.repository }}
+          GITHUB.Event-ID: ${{ github.event.id }}
+        run: |
+          if [ $? -ne 0 ]; then
+            echo "Test failed"
+            echo "::set-output name=issue::true"
+          else
+            echo "All tests passed!"
+            echo "::set-output name=issue::false"
+          fi

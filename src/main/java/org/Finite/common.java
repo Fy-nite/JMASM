@@ -173,8 +173,10 @@ public class common {
     }
     public static void box(String title, String message, String type) {
         String color;
+        boolean iserror = false;
         switch (type.toLowerCase()) {
             case "error":
+                iserror = true;
                 color = "\u001B[31m"; // Red
                 break;
             case "info":
@@ -185,25 +187,45 @@ public class common {
 
         String reset = "\u001B[0m";
         String[] lines = message.split("\n");
-        int maxLength = title.length();
-        for (String line : lines) {
-            if (line.length() > maxLength) {
-                maxLength = line.length();
+        if (iserror) {
+            title = "Error: " + title;
+            int maxLength = title.length();
+            for (String line : lines) {
+                if (line.length() > maxLength) {
+                    maxLength = line.length();
+                }
             }
+
+            String border = "+" + "-".repeat(maxLength + 2) + "+";
+            System.out.println(color + border);
+            System.out.println("| " + title + " ".repeat(maxLength - title.length()) + " |");
+            System.out.println(border);
+
+            for (String line : lines) {
+                System.out.println("| " + line + " ".repeat(maxLength - line.length()) + " |");
+            }
+
+            System.out.println(border + reset);
+        } else {
+            int maxLength = title.length();
+            for (String line : lines) {
+                if (line.length() > maxLength) {
+                    maxLength = line.length();
+                }
+            }
+
+            String border = "+" + "-".repeat(maxLength + 2) + "+";
+            System.out.println(color + border);
+            System.out.println("| " + title + " ".repeat(maxLength - title.length()) + " |");
+            System.out.println(border);
+
+            for (String line : lines) {
+                System.out.println("| " + line + " ".repeat(maxLength - line.length()) + " |");
+            }
+
+            System.out.println(border + reset);
         }
-
-        String border = "+" + "-".repeat(maxLength + 2) + "+";
-        System.out.println(color + border);
-        System.out.println("| " + title + " ".repeat(maxLength - title.length()) + " |");
-        System.out.println(border);
-
-        for (String line : lines) {
-            System.out.println("| " + line + " ".repeat(maxLength - line.length()) + " |");
-        }
-
-        System.out.println(border + reset);
     }
-
     // Overloaded method for backward compatibility
     public static void box(String title, String message) {
         box(title, message, "info");

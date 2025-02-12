@@ -35,14 +35,14 @@ public class interp {
         public int labels[];
         public Functions functions;
         public HashMap<String, Integer> labelMap; // Add this field
-        
+
         public instructions() {
             labelMap = new HashMap<>();
         }
     }
 
     public static void include(String filename, instructions instrs) {
-        
+
     }
 
     public static void ExecuteAllInstructions(instructions instrs) {
@@ -79,7 +79,7 @@ public class interp {
         try {
             Scanner scanner = new Scanner(new java.io.File(filename));
             int currentLine = 0;
-            
+
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine().trim();
                 if (!line.isEmpty() && !line.startsWith(";")) {
@@ -113,7 +113,7 @@ public class interp {
                 print("Read %d instructions and %d labels\n", instrs.length, instrs.labelMap.size());
                 printinstructions(instrs);
             }
-            
+
             ExecuteAllInstructions(instrs);
         } catch (java.io.FileNotFoundException e) {
             common.box("Error", "File not found: " + filename, "error");
