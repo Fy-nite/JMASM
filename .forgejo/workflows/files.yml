@@ -10,10 +10,7 @@ jobs:
   test:
     runs-on: self-hosted-docker
     steps:
-      - name: Checkout code
       - uses: actions/checkout@v3
-
-      - name: Setup Maven
       - uses: https://github.com/s4u/setup-maven-action@main
         with:
           maven-version: '3.6.3'
