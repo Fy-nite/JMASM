@@ -1,23 +1,16 @@
-name: Create issues from todos
-
 on:
   push:
     branches:
       - master
       - charlie-dev
-
 jobs:
-  todo_mitsukeru_kun:
+  build:
     runs-on: self-hosted-docker
-    name: test
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Use todo-mitsukeru-kun
-        uses: https://github.com/GOD-oda/todo-mitsukeru-kun@main
-        env:
-          INPUT_GITHUB_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
-          INPUT_TARGET_DIR: "src"
-          INPUT_ISSUE_LABELS: "TODO,BUG"
+      - uses: actions/checkout@v3
+      - name: does powershell work?
         run: |
-          echo ${{ secrets.FORGEJO_TOKEN }}
+          apt update -y
+          apt install -y powershell
+          pwsh -File ./test.ps1
+          
