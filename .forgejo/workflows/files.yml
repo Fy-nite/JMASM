@@ -8,9 +8,15 @@ jobs:
     runs-on: self-hosted-docker
     steps:
       - uses: actions/checkout@v3
-      - name: does powershell work?
+      - name: Install and run PowerShell
         run: |
-          apt update -y
-          apt install -y powershell
+          # Download PowerShell
+          wget https://github.com/PowerShell/PowerShell/releases/download/v7.3.7/powershell_7.3.7-1.deb_amd64.deb
+          echo "got the file"
+          # Install PowerShell
+          dpkg -i powershell_7.3.7-1.deb_amd64.deb
+          apt-get install -f -y
+          echo "installed the file"
+
+          # Run your PowerShell script
           pwsh -File ./test.ps1
-          
