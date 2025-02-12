@@ -17,6 +17,7 @@ jobs:
           dpkg -i powershell_7.3.7-1.deb_amd64.deb
           apt-get install -f -y
           echo "installed the file"
-
+      - name: run the script
+        run: |
           # Run your PowerShell script
           pwsh -File ./test.ps1
