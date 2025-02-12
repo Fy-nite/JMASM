@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    runs-on: sta
+    runs-on: self-hosted-docker
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
