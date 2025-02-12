@@ -1,51 +1,32 @@
-name: Maven Test
-
+name: "Run TODO to Issue"
 on:
-  push:
-    branches:
-      - master
-      - charlie-dev
-
+    push:
+        branches:
+        - main
+        - charlie-dev
 jobs:
-  test:
+  build:
     runs-on: self-hosted-docker
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v3
-      - uses: https://github.com/s4u/setup-maven-action@main
+      - uses: "actions/checkout@v4"
+      - name: "TODO to Issue"
+        uses: https://github.com/alstr/todo-to-issue-action@master
         with:
-          maven-version: '3.6.3'
-
-      - name: Run Maven tests
+          INSERT_ISSUE_URLS: "true"
+      - name: Set Git user
         run: |
-          mvn test --fail-on-error
-          if [ $? -eq 0 ]; then
-            echo "All tests passed!"
-          else
-            echo "Test failed"
-            cat ./target/test-reports/TEST-REPORT.xml
-          fi
-
-      - name: Verify repository
+          git config --global user.name "gayhub-actions[bot :3]"
+          git config --global user.email "charliesan@envs.net"
+      - name: Commit and Push Changes
         run: |
-          git config --get user.email
-          git config --get user.name
-          if [ $? -ne 0 ]; then
-            echo "Repository configuration is invalid"
+          git add -A
+          if [[ `git status --porcelain` ]]; then
+            git commit -m "Automatically added GitHub issue links to TODOs"
+            git push origin main
           else
-            echo "Repository configuration is valid"
-          fi
-
-      - name: Create issue if test fails
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-        env:
-          GITHUB.Repository: ${{ github.repository }}
-          GITHUB.Event-ID: ${{ github.event.id }}
-        run: |
-          if [ $? -ne 0 ]; then
-            echo "Test failed"
-            echo "::set-output name=issue::true"
-          else
-            echo "All tests passed!"
-            echo "::set-output name=issue::false"
+            echo "No changes to commit"
           fi
