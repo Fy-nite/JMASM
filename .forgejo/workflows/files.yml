@@ -16,6 +16,8 @@ jobs:
       - name: Use todo-mitsukeru-kun
         uses: https://github.com/GOD-oda/todo-mitsukeru-kun@main
         env:
-          INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_GITHUB_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
           INPUT_TARGET_DIR: "src"
           INPUT_ISSUE_LABELS: "TODO,BUG"
+        run: |
+          echo ${{ secrets.FORGEJO_TOKEN }}
