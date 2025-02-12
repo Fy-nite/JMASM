@@ -93,7 +93,7 @@ public class debug {
                         }
                         // execute the instruction
                         try {
-                            int out = interp.ExecuteSingleInstruction(di.instructions[0], di.Memory);
+                            int out = interp.ExecuteSingleInstruction(di.instructions[0], di.Memory, di);
                             print("Output: %d\n", out);
                         } catch (Exception e) {
                             printerr("Error: " + e.getMessage());

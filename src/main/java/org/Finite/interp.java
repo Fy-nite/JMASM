@@ -1,6 +1,7 @@
 package org.Finite;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Scanner;
 
 import static org.Finite.common.*;
@@ -9,10 +10,6 @@ import static org.Finite.debug.*;
 import org.Finite.Functions.*;
 
 public class interp {
-    // instructions, the base of the program
-    // holds the name of the instruction
-    // holds the opcode of the instruction
-    // and anything else we need to know about the instruction or its operands
     public static class instruction {
         String name;
         int opcode;
@@ -21,8 +18,7 @@ public class interp {
         String sop1;
         String sop2;
     }
-    // for some reason, java sucks and now requires us to do this instead of what we did before
-    // // screw the static keyword
+
     static Functions functions = new Functions();
     static ArgumentParser.Args arguments = new ArgumentParser.Args();
     // instructions class
@@ -38,6 +34,15 @@ public class interp {
         public int Memory[];
         public int labels[];
         public Functions functions;
+        public HashMap<String, Integer> labelMap; // Add this field
+        
+        public instructions() {
+            labelMap = new HashMap<>();
+        }
+    }
+
+    public static void include(String filename, instructions instrs) {
+        
     }
 
     public static void ExecuteAllInstructions(instructions instrs) {
@@ -47,7 +52,7 @@ public class interp {
             if (arguments.debug) {
                 common.box("Debug", "Executing instruction: " + instr.name, "info");
             }
-            ExecuteSingleInstruction(instr, instrs.Memory);
+            ExecuteSingleInstruction(instr, instrs.Memory, instrs);
             rip = common.ReadRegister("RIP") + 1;
             common.WriteRegister("RIP", rip);
         }
@@ -70,12 +75,29 @@ public class interp {
         instrs.labels = new int[100];
         instrs.functions = new Functions();
 
-        Scanner scanner = new Scanner(System.in);
+        // First pass: collect labels
         try {
-            scanner = new Scanner(new java.io.File(filename));
+            Scanner scanner = new Scanner(new java.io.File(filename));
+            int currentLine = 0;
+            
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine().trim();
                 if (!line.isEmpty() && !line.startsWith(";")) {
+                    if (line.startsWith("LBL ")) {
+                        String labelName = line.substring(4).trim();
+                        instrs.labelMap.put(labelName, currentLine);
+                        continue;
+                    }
+                    currentLine++;
+                }
+            }
+            scanner.close();
+
+            // Second pass: read instructions
+            scanner = new Scanner(new java.io.File(filename));
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine().trim();
+                if (!line.isEmpty() && !line.startsWith(";") && !line.startsWith("LBL")) {
                     instruction instr = new instruction();
                     String[] parts = line.split("\\s+");
                     instr.name = parts[0];
@@ -88,19 +110,17 @@ public class interp {
             }
 
             if (arguments.debug) {
-                print("Read %d instructions\n", instrs.length);
+                print("Read %d instructions and %d labels\n", instrs.length, instrs.labelMap.size());
                 printinstructions(instrs);
             }
             
             ExecuteAllInstructions(instrs);
         } catch (java.io.FileNotFoundException e) {
             common.box("Error", "File not found: " + filename, "error");
-        } finally {
-            scanner.close();
         }
     }
 
-    public static int ExecuteSingleInstruction(instruction instr, int[] memory) {
+    public static int ExecuteSingleInstruction(instruction instr, int[] memory, instructions instrs) {
         if (arguments.debug) {
             common.box("Debug", "Executing instruction: " + instr.name, "info");
         }
@@ -108,6 +128,9 @@ public class interp {
         switch (instr.name.toLowerCase()) {
             case "mov":
                 functions.mov(memory, instr.sop1, instr.sop2);
+                break;
+            case "#include":
+                functions.include(instr.sop1, instrs);
                 break;
             case "add":
                 functions.add(memory, instr.sop1, instr.sop2);
@@ -124,11 +147,30 @@ public class interp {
             case "cmp":
                 functions.cmp(memory, instr.sop1, instr.sop2);
                 break;
+            case "hlt":
+                System.exit(0);
+                break;
             case "out":
-                functions.out(memory, instr.sop1);
+                // out wants a fd or "place to output to"
+                // 1 is stdout where as 2 is stderr
+                String Splitted = instr.sop1.split(" ")[0];
+
+                functions.out(memory, Splitted, instr.sop2);
                 break;
             case "jmp":
-                functions.jmp(memory, instr.sop1);
+                if (instr.sop1.startsWith("#")) {
+                    // Handle label jump
+                    String labelName = instr.sop1.substring(1);
+                    Integer labelAddress = instrs.labelMap.get(labelName);
+                    if (labelAddress != null) {
+                        functions.jmp(memory, String.valueOf(labelAddress));
+                    } else {
+                        common.box("Error", "Unknown label: " + labelName, "error");
+                        return -1;
+                    }
+                } else {
+                    functions.jmp(memory, instr.sop1);
+                }
                 break;
             case "db":
                 functions.db(memory, instr.sop1);

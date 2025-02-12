@@ -39,7 +39,7 @@ public class InterpTest {
         instr.sop1 = "RAX";
         instr.sop2 = "5";
         
-        int result = interp.ExecuteSingleInstruction(instr, instrs.Memory);
+        int result = interp.ExecuteSingleInstruction(instr, instrs.Memory, instrs);
         assertEquals(0, result);
         assertEquals(5, common.ReadRegister("RAX"));
     }

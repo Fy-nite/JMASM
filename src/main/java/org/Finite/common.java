@@ -6,8 +6,6 @@ import java.nio.charset.*;
 import java.util.*;
 import java.io.*;
 
-import com.beust.jcommander.Parameter;
-
 import static org.Finite.interp.arguments;
 
 public class common {
@@ -23,6 +21,8 @@ public class common {
             "exit",
             "help"
     };
+    public String Error = "";
+    public boolean ErrorState = false;
     public static String[] registers = {"RAX", "RBX", "RCX", "RDX", "RBP", "RSP", "RIP", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "RFLAGS"};
     public static String[] instructions = {"MOV", "ADD", "SUB", "MUL", "DIV", "AND", "OR", "XOR", "NOT", "SHL", "SHR", "CMP", "JMP", "JE", "JNE", "JG", "JGE", "JL", "JLE", "CALL", "RET", "PUSH", "POP", "HLT", "NOP","OUT"};
     public static int[] memory = new int[MAX_MEMORY];
@@ -61,7 +61,77 @@ public class common {
         }
     }
 
+    public static void WrapStdinToFile(String... file_contents)
+    {
+        // create a temp file
+        try {
+            File temp = File.createTempFile("tempfile", ".tmp");
+            temp.deleteOnExit();
+            FileWriter writer = new FileWriter(temp);
+            for (String line : file_contents) {
+                writer.write(line + "\n");
+            }
+            writer.close();
+            System.setIn(new FileInputStream(temp));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+    }
+
+    public static String ReadFromFile(String filename)
+    {
+        try {
+            File file = new File(filename);
+            Scanner scanner = new Scanner(file);
+            StringBuilder sb = new StringBuilder();
+            while (scanner.hasNextLine()) {
+                sb.append(scanner.nextLine());
+            }
+            scanner.close();
+            return sb.toString();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    public static File WrapStdoutToFile()
+    {
+        // create a temp file
+        File temp = null;
+        try {
+            temp = File.createTempFile("tempfile", ".tmp");
+            temp.deleteOnExit();
+            System.setOut(new PrintStream(new FileOutputStream(temp)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return temp;
+    }
+    public static void WrapStderrToFile()
+    {
+        // create a temp file
+        try {
+            File temp = File.createTempFile("tempfile", ".tmp");
+            temp.deleteOnExit();
+            System.setErr(new PrintStream(new FileOutputStream(temp)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public static void UnwrapStdin()
+    {
+        System.setIn(System.in);
+    }
+    public static void UnwrapStdout()
+    {
+        System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
+    }
+    public static void UnwrapStderr()
+    {
+        System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.err)));
+    }
     public static void dumpRegisters() {
         for (int i = 0; i < 16; i++) {
             print("%s: %d", registers[i], memory[i]);
@@ -74,7 +144,11 @@ public class common {
             printerr("Error: Invalid register name: " + Register + "\n");
             return;
         }
-       print("Writing %d to %s\n", value, Register);
+        if (arguments.debug)
+        {
+
+            print("Writing %d to %s\n", value, Register);
+        }
         memory[registersMap.get(Register)] = value;
     }
 
@@ -91,7 +165,12 @@ public class common {
         }
         return memory[registersMap.get(register)];
     }
-
+    public static String inbox(String prompt) {
+        Scanner scanner = new Scanner(System.in);
+        String value = scanner.nextLine();
+        scanner.close();
+        return value;
+    }
     public static void box(String title, String message, String type) {
         String color;
         switch (type.toLowerCase()) {
@@ -143,6 +222,7 @@ public class common {
             print("━");
         }
         print("┛\033[0m\n");
+        
     }
 
 
@@ -188,6 +268,9 @@ public class common {
 
     public static void print(String message, Object... args) {
         System.out.printf(message, args);
+    }
+    public static void printerr(String message, Object... args) {
+        System.err.printf(message, args);
     }
 
 
