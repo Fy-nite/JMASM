@@ -165,12 +165,34 @@ public class common {
         }
         return memory[registersMap.get(register)];
     }
+
+    private static Scanner scanner = null;
+
     public static String inbox(String prompt) {
-        Scanner scanner = new Scanner(System.in);
-        String value = scanner.nextLine();
-        scanner.close();
-        return value;
+        try {
+            if (scanner == null) {
+                scanner = new Scanner(System.in);
+            }
+            
+            if (!scanner.hasNextLine()) {
+                // Reset scanner if no more input
+                scanner.close();
+                scanner = new Scanner(System.in);
+                throw new IllegalArgumentException("No input available");
+            }
+            
+            return scanner.nextLine();
+            
+        } catch (NoSuchElementException | IllegalStateException e) {
+            // Reset scanner and rethrow as IllegalArgumentException
+            if (scanner != null) {
+                scanner.close();
+            }
+            scanner = new Scanner(System.in);
+            throw new IllegalArgumentException("Invalid input operation");
+        }
     }
+
     public static void box(String title, String message, String type) {
         String color;
         boolean iserror = false;

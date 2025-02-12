@@ -18,6 +18,5 @@
 #           apt-get install -f -y
 #           echo "installed the file"
 #       - name: run the script
-#         run: |
-#           # Run your PowerShell script
+s#           # Run your PowerShell script
 #           pwsh -File ./test.ps1

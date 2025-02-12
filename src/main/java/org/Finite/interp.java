@@ -10,6 +10,58 @@ import static org.Finite.debug.*;
 import org.Finite.Functions.*;
 
 public class interp {
+    public static interp.instructions parseInstructions(String[] ops) {
+        interp.instructions instrs = new interp.instructions();
+        instrs.instructions = new interp.instruction[100];  // reasonable default size
+        instrs.Memory = new int[1000];              // reasonable default memory size
+        instrs.length = 0;
+        instrs.memory_size = 1000;
+        // calculate the total size
+        int totalSize = Arrays.stream(ops).mapToInt(String::length).sum();
+        instrs.max_labels = totalSize / 10;
+        instrs.max_instructions = totalSize / 10;
+        instrs.labels = new int[instrs.max_labels];
+        instrs.functions = new Functions();
+
+        // First pass: collect labels
+        int currentLine = 0;
+        for (String line : ops) {
+            line = line.trim();
+            if (!line.isEmpty() && !line.startsWith(";")) {
+                if (line.startsWith("LBL ")) {
+                    String labelName = line.substring(4).trim();
+                    instrs.labelMap.put(labelName, currentLine);
+                    continue;
+                }
+                currentLine++;
+            }
+        }
+
+        // Second pass: read instructions
+        currentLine = 0;
+        for (String line : ops) {
+            line = line.trim();
+            if (!line.isEmpty() && !line.startsWith(";") && !line.startsWith("LBL")) {
+                interp.instruction instr = new interp.instruction();
+                String[] parts = line.split("\\s+");
+                instr.name = parts[0];
+                if (parts.length > 1) instr.sop1 = parts[1];
+                if (parts.length > 2) instr.sop2 = parts[2];
+                instrs.instructions[instrs.length] = instr;
+                instrs.Memory[instrs.length] = instrs.length;  // Add this line to populate memory
+                instrs.length++;
+            }
+        }
+
+        if (arguments.debug) {
+            print("Read %d instructions and %d labels\n", instrs.length, instrs.labelMap.size());
+            printinstructions(instrs);
+        }
+
+        return instrs;
+
+    }
+
     public static class instruction {
         String name;
         int opcode;

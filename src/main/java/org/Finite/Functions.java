@@ -29,37 +29,37 @@ public class Functions {
             }
             reader.close();
         } catch (IOException e) {
-            common.printerr("Error reading file: " + filename);
+            printerr("Error reading file: " + filename);
         }
     }
     public void add(int[] memory, String reg1, String reg2) {
-        // read the register hashmap
+        if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
+            throw new IllegalArgumentException("Invalid register name");
+        }
         int value1 = common.ReadRegister(reg1);
         int value2 = common.ReadRegister(reg2);
-        // add the values
         int result = value1 + value2;
-        // write the result to the first register
         common.WriteRegister(reg1, result);
     }
 
     public void sub(int[] memory, String reg1, String reg2) {
-        // read the register hashmap
+        if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
+            throw new IllegalArgumentException("Invalid register name");
+        }
         int value1 = common.ReadRegister(reg1);
         int value2 = common.ReadRegister(reg2);
-        // sub the values
         int result = value1 - value2;
-        // write the result to the first register
         common.WriteRegister(reg1, result);
 
     }
 
     public void mul(int[] memory, String reg1, String reg2) {
-        // read the register hashmap
+        if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
+            throw new IllegalArgumentException("Invalid register name");
+        }
         int value1 = common.ReadRegister(reg1);
         int value2 = common.ReadRegister(reg2);
-        // mul the values
         int result = value1 * value2;
-        // write the result to the first register
         common.WriteRegister(reg1, result);
     }
 
@@ -115,43 +115,57 @@ public class Functions {
         if (fileDescriptor == 1) {
             print("%s", value);
         } else if (fileDescriptor == 2) {
-            common.printerr("%s", value);
+            printerr("%s", value);
         }
     }
 
     public void in(int[] memory, String fd, String dest) {
-        // Read from stdin
-        String value = common.inbox("stdin");
-        int fileDescriptor;
-        
-        try {
-            fileDescriptor = Integer.parseInt(fd);
-        } catch (Exception e) {
-            // If fd is a register, get its value
-            fileDescriptor = common.ReadRegister(fd);
+        // Validate inputs first
+        if (fd == null || dest == null) {
+            throw new IllegalArgumentException("File descriptor and destination cannot be null");
         }
 
-        if (fileDescriptor == 0) {
-            // Write to memory
-            if (dest.startsWith("$")) {
-                // Handle memory address starting with $
-                String addr = dest.substring(1);
-                try {
-                    // Check if it's a direct memory address
-                    int address = Integer.parseInt(addr);
-                    for (int i = 0; i < value.length(); i++) {
-                        memory[address + i] = value.charAt(i);
-                    }
-                } catch (Exception e) {
-                    // If not direct address, it's a register containing address
-                    int regAddr = common.ReadRegister(addr);
-                    for (int i = 0; i < value.length(); i++) {
-                        memory[regAddr + i] = value.charAt(i);
-                    }
-                }
-            } else {
-                common.printerr("Error: Invalid destination address: " + dest);
+        // Validate file descriptor
+        int fileDescriptor;
+        try {
+            fileDescriptor = Integer.parseInt(fd);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid file descriptor format: " + fd);
+        }
+
+        if (fileDescriptor != 0) {
+            throw new IllegalArgumentException("Only stdin (fd 0) is supported");
+        }
+
+        // Validate destination format first
+        if (!dest.startsWith("$")) {
+            throw new IllegalArgumentException("Invalid destination format. Must be memory address ($)");
+        }
+
+        // Validate memory address format before attempting input
+        try {
+            int address = Integer.parseInt(dest.substring(1));
+            if (address < 0 || address >= common.MAX_MEMORY) {
+                throw new IllegalArgumentException("Memory address out of bounds: " + address);
             }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid memory address format: " + dest);
+        }
+
+        // After all validation passes, try to read input
+        try {
+            String value = common.inbox("Enter input: ");
+            int address = Integer.parseInt(dest.substring(1));
+            
+            // Write input to memory
+            for (int i = 0; i < value.length(); i++) {
+                memory[address + i] = value.charAt(i);
+            }
+            memory[address + value.length()] = 0; // Null terminate
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Input operation failed: " + e.getMessage());
         }
     }
     
@@ -177,59 +191,61 @@ public class Functions {
     }
 
     public void mov(int[] memory, String reg1, String reg2) {
-        // check if the thing is a number or a register
-        int value = 0;
-        // if the start of the string is a $ then it is a memory address
-        if (reg2.startsWith("$")) {
-            // get the memory address
-            int address = Integer.parseInt(reg2.substring(1));
-            // get the value at the memory address
-            value = memory[address];
+        // Validate destination register first
+        if (!isValidRegister(reg1)) {
+            throw new IllegalArgumentException("Invalid destination register: " + reg1);
+        }
 
+        int value = 0;
+        if (reg2.startsWith("$")) {
+            try {
+                int address = Integer.parseInt(reg2.substring(1));
+                value = memory[address];
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid memory address: " + reg2);
+            }
         } else {
-           try
-           {
-                // try to parse the string as an int
+            try {
                 value = Integer.parseInt(reg2);
- 
-              } catch (Exception e) {
-                // if it fails, then it is a register
+            } catch (NumberFormatException e) {
+                if (!isValidRegister(reg2)) {
+                    throw new IllegalArgumentException("Invalid source register: " + reg2);
+                }
                 value = common.ReadRegister(reg2);
-  
-           }
+            }
         }
-        try {
-            // try to parse the string as an int
-            value = Integer.parseInt(reg2);
-    
-        } catch (Exception e) {
-            // if it fails, then it is a register
-            value = common.ReadRegister(reg2);
-     
-        }
-        // write the value to the register
         common.WriteRegister(reg1, value);
     }
 
+    // Helper method to validate registers
+    private boolean isValidRegister(String reg) {
+        return reg != null && (
+            reg.equals("RAX") || 
+            reg.equals("RBX") || 
+            reg.equals("RCX") || 
+            reg.equals("RIP") || 
+            reg.equals("RFLAGS")
+        );
+    }
+
     public void cmp(int[] memory, String reg1, String reg2) {
-        // read the register hashmap or int value
+        if (!isValidRegister(reg1)) {
+            throw new IllegalArgumentException("Invalid register name: " + reg1);
+        }
+        
         int value1 = common.ReadRegister(reg1);
-        int value2 = 0;
+        int value2;
+
         try {
             value2 = Integer.parseInt(reg2);
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
+            if (!isValidRegister(reg2)) {
+                throw new IllegalArgumentException("Invalid register name: " + reg2);
+            }
             value2 = common.ReadRegister(reg2);
         }
-        // compare the values
-        if (value1 == value2) {
-            // set rflags to 1
-            common.WriteRegister("RFLAGS", 1);
-        }
-        else
-        {
-            // set rflags to 0
-            common.WriteRegister("RFLAGS", 0);
-        }
+
+        common.WriteRegister("RFLAGS", (value1 == value2) ? 1 : 0);
     }
 
     public void cout(int[] memory, String fd, String reg) {
@@ -248,40 +264,101 @@ public class Functions {
     }
 
 
-    public static void jmp (int[] memory, String target)
-    {
-        int value;
+    public static void jmp(int[] memory, String target) {
+        print("DEBUG: Attempting to jump to target: %s\n", target);
         try {
-            value = Integer.parseInt(target);
-        } catch (NumberFormatException e) {
-            // If not a number, try to read as register
-            try {
-                value = common.ReadRegister(target);
-            } catch (Exception ex) {
-            // we can't use labels here so just die
-            common.box("Error", "Unknown address or label: " + target, "error");
+            // Try parsing as number first
+            Integer.parseInt(target); // This will throw NumberFormatException if not a number
+            int value = parseTarget(target);
+            if (value == -1) {
+                common.box("Error", "Unknown address or label: " + target, "error");
+                return;
             }
+            print("DEBUG: Jump successful - Setting RIP to %d\n", value);
+            common.WriteRegister("RIP", value);
+        } catch (NumberFormatException e) {
+            print("DEBUG: Jump failed - invalid number format: %s\n", target);
+            throw e; // Re-throw the NumberFormatException
+        } catch (Exception e) {
+            print("DEBUG: Jump failed with exception: %s\n", e.getMessage());
+            throw e;
         }
     }
 
     public void jmp(int[] memory, String target, instructions instrs) {
-        int value;
+        if (target == null || instrs == null) {
+            print("DEBUG: ERROR - Null target or instructions\n");
+            throw new NullPointerException("Target or instructions cannot be null");
+        }
+        print("DEBUG: Attempting to jump to target: %s with instructions context\n", target);
+        int value = parseTarget(target, instrs);
+        if (value == -1) {
+            print("DEBUG: Jump failed - invalid target: %s\n", target);
+            common.box("Error", "Unknown address or label: " + target, "error");
+            return;
+        }
+        print("DEBUG: Jump successful - Setting RIP to %d\n", value);
+        common.WriteRegister("RIP", value);
+    }
+
+    private static int parseTarget(String target) {
+        print("DEBUG: Parsing target: %s\n", target);
         try {
-            value = Integer.parseInt(target);
+            int value = Integer.parseInt(target);
+            print("DEBUG: Target parsed as direct integer: %d\n", value);
+            return value;
         } catch (NumberFormatException e) {
-            // If not a number, try to read as register
+            // Do not catch NumberFormatException here, let it propagate up
+            throw e;
+        }
+    }
+
+    private static int parseTarget(String target, instructions instrs) {
+        if (target == null || instrs == null) {
+            print("DEBUG: ERROR - Null target or instructions in parseTarget\n");
+            return -1;
+        }
+        print("DEBUG: Parsing target with instructions context: %s\n", target);
+        
+        // If it's a label reference
+        if (target.startsWith("#")) {
+            String labelName = target.substring(1);
+            print("DEBUG: Processing as label: %s\n", labelName);
+            print("DEBUG: Label map contents: %s\n", instrs.labelMap);
+            
+            if (instrs.labelMap == null) {
+                print("DEBUG: ERROR - Label map is null!\n");
+                return -1;
+            }
+            
+            Integer labelAddress = instrs.labelMap.get(labelName);
+            print("DEBUG: Label lookup result: %s\n", labelAddress);
+            
+            if (labelAddress != null) {
+                print("DEBUG: Found label address: %d\n", labelAddress);
+                return labelAddress;
+            } else {
+                print("DEBUG: Label '%s' not found in map\n", labelName);
+                return -1;
+            }
+        }
+        
+        // Try parsing as direct number
+        try {
+            int value = Integer.parseInt(target);
+            print("DEBUG: Parsed as direct number: %d\n", value);
+            return value;
+        } catch (NumberFormatException e) {
+            print("DEBUG: Not a number, trying as register name: %s\n", target);
+            
+            // Try as register
             try {
-                value = common.ReadRegister(target);
+                int regValue = common.ReadRegister(target);
+                print("DEBUG: Found in register with value: %d\n", regValue);
+                return regValue;
             } catch (Exception ex) {
-                // so it's a label with the # prefix
-                String labelName = target.substring(1);
-                Integer labelAddress = instrs.labelMap.get(labelName);
-                if (labelAddress != null) {
-                    value = labelAddress;
-                } else {
-                    common.box("Error", "Unknown label: " + labelName, "error");
-                    return;
-                }
+                print("DEBUG: Register lookup failed: %s\n", ex.getMessage());
+                return -1;
             }
         }
     }

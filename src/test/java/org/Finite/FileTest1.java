@@ -22,11 +22,43 @@ public class FileTest1 {
         @BeforeEach
         void createTestFile() throws IOException {
             try (FileWriter writer = new FileWriter(testFile)) {
+                writer.write("#include \"stdlib.test.meow\"\n");
                 writer.write("MOV RAX 10\n");
                 writer.write("ADD RAX 5\n");
             }
         }
 
+        @Test
+        @DisplayName("Test Includes")
+        void testIncludes() {
+            String CurrentFileContents = "";
+
+            try {
+                BufferedReader reader = new BufferedReader
+                        (new FileReader(testFile));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    CurrentFileContents += line + "\n";
+                }
+                reader.close();
+            } catch (IOException e) {
+                System.out.println("Error reading file: " + testFile);
+            }
+            String output = includemanager.include(testFile.toString(), CurrentFileContents);
+
+            try
+            {
+            String TestContents = ReadResourceFile.read("stdlib/test/meow.masm");
+            assertEquals(TestContents + "MOV RAX 10\nADD RAX 5\n", output);
+
+            }
+            catch (Exception e)
+            {
+                System.out.println("Error reading file: " + "stdlib/test/meow.masm");
+                System.out.println(e);
+            }
+
+        }
         @Test
         @DisplayName("Test File Exists")
         void testFileExists() {
