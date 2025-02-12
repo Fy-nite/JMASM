@@ -36,7 +36,6 @@ jobs:
           fi
 
       - name: Create issue if test fails
-      - uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
