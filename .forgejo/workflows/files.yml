@@ -14,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Use todo-mitsukeru-kun
-        uses: https://github.com/GOD-oda/todo-mitsukeru-kun
+        uses: https://github.com/GOD-oda/todo-mitsukeru-kun@main
         env:
           INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_TARGET_DIR: "src"
