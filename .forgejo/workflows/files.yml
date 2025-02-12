@@ -8,6 +8,7 @@ on:
 
 jobs:
   build:
+    env: INPUT_GITHUB_URL=https://git.gay/Finite/JMASM
     runs-on: self-hosted-docker
     permissions:
       contents: write
