@@ -210,19 +210,7 @@ public class interp {
                 functions.out(memory, Splitted, instr.sop2);
                 break;
             case "jmp":
-                if (instr.sop1.startsWith("#")) {
-                    // Handle label jump
-                    String labelName = instr.sop1.substring(1);
-                    Integer labelAddress = instrs.labelMap.get(labelName);
-                    if (labelAddress != null) {
-                        functions.jmp(memory, String.valueOf(labelAddress));
-                    } else {
-                        common.box("Error", "Unknown label: " + labelName, "error");
-                        return -1;
-                    }
-                } else {
-                    functions.jmp(memory, instr.sop1);
-                }
+                functions.jmp(memory,instr.sop1, instrs);
                 break;
             case "db":
                 functions.db(memory, instr.sop1);

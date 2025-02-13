@@ -6,6 +6,24 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 
 public class ReadResourceFile {
+    public static String[] readDir(String path) {
+        String[] files = new String[0];
+        try {
+            InputStream inputStream = ReadResourceFile.class.getClassLoader().getResourceAsStream(path);
+            if (inputStream == null) {
+                throw new IllegalArgumentException("Resource not found: " + path);
+            }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                files = line.split("\\s+");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return files;
+    }
+
     public static String read(String resourceName) {
         StringBuilder content = new StringBuilder();
         try (InputStream inputStream = ReadResourceFile.class.getClassLoader().getResourceAsStream(resourceName);

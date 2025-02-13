@@ -5,33 +5,80 @@ import org.Finite.common.*;
 import static org.Finite.common.print;
 import static org.Finite.common.printerr;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStream;
+
 import org.Finite.interp.instructions;
 
 public class Functions {
-    public static void include(String filename, instructions instrs) {
-        // check if the file exists
-        File file = new File(filename);
-        if (!file.exists()) {
-            common.box("Error", "file " + filename + " does not exist", "error");
-            return;
-        }
-
-        // read the file
+    public static String include(String filename, String CurrentFileContents) {
+        // Convert the dot notation to path
+        String resourcePath = filename.replace("\"", "").replace(".", "/") + ".masm";
+        
         try {
-            BufferedReader reader = new BufferedReader
-                    (new FileReader(file));
-            String line;
-            while ((line = reader.readLine()) != null) {
-
+            // Get resource as stream from classpath
+            ClassLoader classLoader = Functions.class.getClassLoader();
+            InputStream inputStream = classLoader.getResourceAsStream(resourcePath);
+            if (inputStream == null) {
+                throw new IOException("Resource not found: " + resourcePath);
             }
-            reader.close();
+            
+            // Read the file
+            StringBuilder content = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    content.append(line).append("\n");
+                }
+            }
+            
+            // Replace the include statement with the file contents
+            String includeStatement = "#include \"" + filename.replace("\"", "") + "\"";
+            return CurrentFileContents.replace(includeStatement, content.toString());
+            
         } catch (IOException e) {
-            printerr("Error reading file: " + filename);
+            printerr("Error including file %s: %s\n", resourcePath, e.getMessage());
+            return CurrentFileContents;
         }
     }
+
+    public static void include(String filename, instructions instrs) {
+        String resourcePath = filename.replace("\"", "").replace(".", "/") + ".masm";
+        
+        try {
+            ClassLoader classLoader = Functions.class.getClassLoader();
+            InputStream inputStream = classLoader.getResourceAsStream(resourcePath);
+            if (inputStream == null) {
+                throw new IOException("Resource not found: " + resourcePath);
+            }
+            
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (!line.isEmpty() && !line.startsWith(";")) {
+                        if (line.startsWith("LBL ")) {
+                            String labelName = line.substring(4).trim();
+                            instrs.labelMap.put(labelName, instrs.length);
+                            continue;
+                        }
+                        interp.instruction instr = new interp.instruction();
+                        String[] parts = line.split("\\s+");
+                        instr.name = parts[0];
+                        if (parts.length > 1) instr.sop1 = parts[1];
+                        if (parts.length > 2) instr.sop2 = parts[2];
+                        instrs.instructions[instrs.length] = instr;
+                        instrs.Memory[instrs.length] = instrs.length;
+                        instrs.length++;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            printerr("Error including file %s: %s\n", resourcePath, e.getMessage());
+        }
+    }
+    
     public void add(int[] memory, String reg1, String reg2) {
         if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
             throw new IllegalArgumentException("Invalid register name");

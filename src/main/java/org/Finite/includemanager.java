@@ -2,7 +2,8 @@ package org.Finite;
 
 import java.io.File;
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
 
 import org.Finite.common.*;
 import org.Finite.debug.*;
@@ -24,43 +25,35 @@ public class includemanager {
      * #include "stdlib.term.io.*"
      * then we just include the whole directory because the user wants literly everything inside that directory for some reason.
      */
-    public static String include(String path, String CurrentFileContents) {
-        // check the resources for a file with the name of path
-        // if it exists, include it
-//        InputStream inputStream = Main.class.getClassLoader().getResourceAsStream("test.csv");
-//        assert inputStream != null : "File not found";
-//        InputStreamReader streamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-//        BufferedReader reader = new BufferedReader(streamReader);
-//        String[] lines;
-//        String line;
-//        try {
-//            lines = reader.lines().toArray(String[]::new);
-//
-//        } catch (IOException e) {
-//
-//            common.printerr("Error reading file: " + path);
-//        }
-//
-
-        // check if the file exists
-        File file = new File(path);
-        if (!file.exists()) {
-            common.box("Error", "file " + path + " does not exist", "error");
-            return CurrentFileContents;
-        }
-
-        // read the file
+    public static String include(@org.jetbrains.annotations.NotNull String path, String currentFileContents) {
+        // Convert the dot notation to path
+        String resourcePath = path.replace(".", "/") + ".masm";
         try {
-            BufferedReader reader = new BufferedReader
-                    (new FileReader(file));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                CurrentFileContents += line + "\n";
+            // Get resource as stream from classpath
+            ClassLoader classLoader = includemanager.class.getClassLoader();
+            InputStream inputStream = classLoader.getResourceAsStream(resourcePath);
+            if (inputStream == null) {
+                throw new IOException("Resource not found: " + resourcePath);
             }
-            reader.close();
+            
+            // Read the file
+            StringBuilder content = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    content.append(line).append("\n");
+                }
+            }
+            
+            // Replace the include statement with the file contents
+            String includeStatement = "#include \"" + path + "\"";
+            currentFileContents = currentFileContents.replace(includeStatement, content.toString());
+            
         } catch (IOException e) {
-            common.box("Error", "Error reading file: " + path, "error");
+            common.box("Error", "Error including file " + resourcePath + ": " + e.getMessage(), "error");
         }
-        return CurrentFileContents;
+        
+        return currentFileContents;
     }
+
 }

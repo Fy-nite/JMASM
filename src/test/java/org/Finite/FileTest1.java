@@ -2,6 +2,9 @@ package org.Finite;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
+
+import static org.Finite.interp.functions;
+import static org.Finite.interp.include;
 import static org.junit.jupiter.api.Assertions.*;
 import java.nio.file.Path;
 import java.io.*;
@@ -44,13 +47,14 @@ public class FileTest1 {
             } catch (IOException e) {
                 System.out.println("Error reading file: " + testFile);
             }
-            String output = includemanager.include(testFile.toString(), CurrentFileContents);
+
+
+            String contents = includemanager.include("stdlib.test.meow", CurrentFileContents);
 
             try
             {
             String TestContents = ReadResourceFile.read("stdlib/test/meow.masm");
-            assertEquals(TestContents + "MOV RAX 10\nADD RAX 5\n", output);
-
+            assertEquals(contents, TestContents + "\nMOV RAX 10\nADD RAX 5\n");
             }
             catch (Exception e)
             {
