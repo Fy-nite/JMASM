@@ -1,3 +1,4 @@
 lbl printf
-    out 1 R1
+    DB $50 "Hello, world!"
+    out 1 $50
     hlt

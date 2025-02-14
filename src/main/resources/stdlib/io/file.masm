@@ -1,6 +1,6 @@
 lbl file
     db $100 "meow"
     db $150 "woof"
-    out $100
-    out $150
+    out RSI $100
+    out RSI $150
     hlt

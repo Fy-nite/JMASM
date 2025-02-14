@@ -1,6 +1,5 @@
-#include "stdlib.term.io"
-LBL main
-    MOV R1 5
-    MOV RSI 1
-    jmp #printf
+
+lbl main
+    DB $50 "Hello, world!\n"
+    out 1 $50
     hlt

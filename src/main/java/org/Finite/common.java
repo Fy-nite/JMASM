@@ -28,7 +28,8 @@ public class common {
     };
     public String Error = "";
     public boolean ErrorState = false;
-    public static String[] registers = {"RAX", "RBX", "RCX", "RDX", "RBP", "RSP", "RIP", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "RFLAGS"};
+    // TODO: find a better way to do this bullfuck
+    public static String[] registers = {"RAX", "RBX", "RCX", "RDX", "RBP", "RSP", "RIP", "RDI", "RSI", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "RFLAGS"};
     public static String[] instructions = {"MOV", "ADD", "SUB", "MUL", "DIV", "AND", "OR", "XOR", "NOT", "SHL", "SHR", "CMP", "JMP", "JE", "JNE", "JG", "JGE", "JL", "JLE", "CALL", "RET", "PUSH", "POP", "HLT", "NOP","OUT"};
     public static int[] memory = new int[MAX_MEMORY];
     public static Map<String, Integer> registersMap = new HashMap<String, Integer>() {{
@@ -39,23 +40,25 @@ public class common {
         put("RBP", 4);
         put("RSP", 5);
         put("RIP", 6);
-        put("R0", 7);
-        put("R1", 8);
-        put("R2", 9);
-        put("R3", 10);
-        put("R4", 11);
-        put("R5", 12);
-        put("R6", 13);
-        put("R7", 14);
-        put("R8", 15);
-        put("R9", 16);
-        put("R10", 17);
-        put("R11", 18);
-        put("R12", 19);
-        put("R13", 20);
-        put("R14", 21);
-        put("R15", 22);
-        put("RFLAGS", 23);
+        put("RDI", 7);
+        put("RSI", 8);
+        put("R0", 9);
+        put("R1", 10);
+        put("R2", 11);
+        put("R3", 12);
+        put("R4", 13);
+        put("R5", 14);
+        put("R6", 15);
+        put("R7", 16);
+        put("R8", 17);
+        put("R9", 18);
+        put("R10", 19);
+        put("R11", 20);
+        put("R12", 21);
+        put("R13", 22);
+        put("R14", 23);
+        put("R15", 24);
+        put("RFLAGS", 25);
 
         
     }};

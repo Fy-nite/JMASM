@@ -10,6 +10,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.File;
+import java.io.FileInputStream;
 
 import org.Finite.interp.instructions;
 
@@ -26,7 +28,17 @@ public class Functions {
             ClassLoader classLoader = Functions.class.getClassLoader();
             InputStream inputStream = classLoader.getResourceAsStream(resourcePath);
             if (inputStream == null) {
-                throw new IOException("Resource not found: " + resourcePath);
+                logger.debug("Resource not found in classpath, trying local directory");
+                File localFile = new File(resourcePath);
+                if (!localFile.exists()) {
+                    // Also try current working directory
+                    localFile = new File(System.getProperty("user.dir"), resourcePath);
+                }
+                if (localFile.exists()) {
+                    inputStream = new FileInputStream(localFile);
+                } else {
+                    throw new IOException("Resource not found: " + resourcePath);
+                }
             }
             
             // Read the file
@@ -48,6 +60,38 @@ public class Functions {
             return CurrentFileContents;
         }
     }
+    // Stack operations using last 1024 bytes of memory
+    public static void push(int[] memory, String reg1) {
+        // Get current stack pointer (starts from MAX_MEMORY and grows downward)
+        int sp = common.ReadRegister("RSP");
+        if (sp <= common.MAX_MEMORY - 1024) {
+            throw new IllegalStateException("Stack overflow");
+        }
+        
+        // Get value to push
+        int value = common.ReadRegister(reg1);
+        
+        // Decrement stack pointer
+        sp--;
+        common.WriteMemory(memory, sp, value);
+        common.WriteRegister("RSP", sp);
+    }
+
+    public static void pop(int[] memory, String reg1) {
+        // Get current stack pointer
+        int sp = common.ReadRegister("RSP");
+        if (sp >= common.MAX_MEMORY) {
+            throw new IllegalStateException("Stack underflow");
+        }
+        
+        // Get value from stack
+        int value = common.ReadMemory(memory, sp);
+        
+        // Increment stack pointer
+        sp++;
+        common.WriteRegister("RSP", sp);
+        common.WriteRegister(reg1, value);
+    }
 
     public static void include(String filename, instructions instrs) {
         String resourcePath = filename.replace("\"", "").replace(".", "/") + ".masm";
@@ -56,7 +100,17 @@ public class Functions {
             ClassLoader classLoader = Functions.class.getClassLoader();
             InputStream inputStream = classLoader.getResourceAsStream(resourcePath);
             if (inputStream == null) {
-                throw new IOException("Resource not found: " + resourcePath);
+                logger.debug("Resource not found in classpath, trying local directory");
+                File localFile = new File(resourcePath);
+                if (!localFile.exists()) {
+                    // Also try current working directory
+                    localFile = new File(System.getProperty("user.dir"), resourcePath);
+                }
+                if (localFile.exists()) {
+                    inputStream = new FileInputStream(localFile);
+                } else {
+                    throw new IOException("Resource not found: " + resourcePath);
+                }
             }
             
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
@@ -126,6 +180,35 @@ public class Functions {
         common.WriteRegister(reg1, result);
     }
 
+    private String processEscapeSequences(String input) {
+        StringBuilder result = new StringBuilder();
+        boolean inEscape = false;
+        
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            
+            if (inEscape) {
+                switch (c) {
+                    case 'n': result.append('\n'); break;  // newline
+                    case 't': result.append('\t'); break;  // tab
+                    case 'r': result.append('\r'); break;  // carriage return
+                    case 'b': result.append('\b'); break;  // backspace
+                    case 'f': result.append('\f'); break;  // form feed
+                    case 'a': result.append('\007'); break; // bell/alert
+                    case '\\': result.append('\\'); break; // backslash
+                    case '0': result.append('\0'); break;  // null character
+                    default: result.append(c);
+                }
+                inEscape = false;
+            } else if (c == '\\') {
+                inEscape = true;
+            } else {
+                result.append(c);
+            }
+        }
+        
+        return result.toString();
+    }
 
     public void out(int[] memory, String fd, String source) {
         String value = "";
@@ -146,32 +229,33 @@ public class Functions {
             try {
                 // Check if it's a direct memory address
                 int address = Integer.parseInt(addr);
-                // First try to read as a number from memory
-                int numValue = memory[address];
-                if (numValue != 0) {
-                    value = Integer.toString(numValue);
-                } else {
-                    // If zero, try reading as string
-                    int i = 0;
-                    while (memory[address + i] != 0) {
-                        value += (char) memory[address + i];
-                        i++;
-                    }
+                // Always try to read as null-terminated string first
+                StringBuilder sb = new StringBuilder();
+                int i = 0;
+                while (address + i < memory.length && memory[address + i] != 0) {
+                    sb.append((char)memory[address + i]);
+                    i++;
+                }
+                value = processEscapeSequences(sb.toString());
+                
+                // If empty, try as number
+                if (value.isEmpty()) {
+                    value = Integer.toString(memory[address]);
                 }
             } catch (Exception e) {
-                // If not direct address, it's a register containing address
+                // Handle register containing address
                 int regAddr = common.ReadRegister(addr);
-                // First try to read as a number
-                int numValue = memory[regAddr];
-                if (numValue != 0) {
-                    value = Integer.toString(numValue);
-                } else {
-                    // If zero, try reading as string
-                    int i = 0;
-                    while (memory[regAddr + i] != 0) {
-                        value += (char) memory[regAddr + i];
-                        i++;
-                    }
+                StringBuilder sb = new StringBuilder();
+                int i = 0;
+                while (regAddr + i < memory.length && memory[regAddr + i] != 0) {
+                    sb.append((char)memory[regAddr + i]);
+                    i++;
+                }
+                value = processEscapeSequences(sb.toString());
+                
+                // If empty, try as number
+                if (value.isEmpty()) {
+                    value = Integer.toString(memory[regAddr]);
                 }
             }
         } else {
@@ -185,8 +269,8 @@ public class Functions {
                     // Try reading from register
                     value = Integer.toString(common.ReadRegister(source));
                 } catch (Exception ex) {
-                    // If all else fails, treat as string literal
-                    value = source;
+                    // If all else fails, treat as string literal with escape sequences
+                    value = processEscapeSequences(source);
                 }
             }
         }
@@ -252,24 +336,52 @@ public class Functions {
     }
     
     public void db(int[] memory, String... argz) {
-        // split argz into two parts
-        String[] args = argz[0].split(" ");
-        // check if the first argument is a memory address
-        if (args[0].matches("\\$\\d+")) {
-            int address = Integer.parseInt(args[0].substring(1));
-            String str = args[1].replaceAll("^\"|\"$", "");
-            for (int i = 0; i < str.length(); i++) {
-                memory[address + i] = str.charAt(i);
-            }
-        } else {
-            print("Error: %s\n", args[0]);
-            int address = Integer.parseInt(args[0]);
-            String str = args[1].replaceAll("^\"|\"$", "");
-            for (int i = 0; i < str.length(); i++) {
-                memory[address + i] = str.charAt(i);
-            }
+        if (argz == null || argz.length == 0) {
+            throw new IllegalArgumentException("DB instruction requires arguments");
         }
 
+        String fullArg = argz[0].trim();
+        logger.debug("DB instruction received: '{}'", fullArg);
+
+        // Skip any extra whitespace after DB
+        fullArg = fullArg.replaceAll("\\s+", " ");
+
+        String[] parts = fullArg.split(" ", 2);
+        if (parts.length < 2) {
+            logger.error("Invalid DB format: '{}'", fullArg);
+            throw new IllegalArgumentException("DB instruction requires address and data");
+        }
+
+        String addressPart = parts[0];
+        String dataPart = parts[1];
+
+        logger.debug("DB parsed - Address: '{}', Data: '{}'", addressPart, dataPart);
+
+        // Parse memory address
+        int memoryAddress;
+        try {
+            if (addressPart.startsWith("$")) {
+                memoryAddress = Integer.parseInt(addressPart.substring(1));
+            } else {
+                memoryAddress = Integer.parseInt(addressPart);
+            }
+        } catch (NumberFormatException e) {
+            logger.error("Invalid memory address: {}", addressPart);
+            throw new IllegalArgumentException("Invalid memory address: " + addressPart);
+        }
+
+        // Clean up the data string
+        if (dataPart.startsWith("\"") && dataPart.endsWith("\"")) {
+            dataPart = dataPart.substring(1, dataPart.length() - 1);
+        }
+
+        logger.debug("Writing '{}' to memory address {}", dataPart, memoryAddress);
+        
+        // Write to memory
+        for (int i = 0; i < dataPart.length(); i++) {
+            memory[memoryAddress + i] = dataPart.charAt(i);
+        }
+        memory[memoryAddress + dataPart.length()] = 0; // Null terminate
     }
 
     public void mov(int[] memory, String reg1, String reg2) {

@@ -12,6 +12,9 @@ import static org.Finite.debug.*;
 import org.Finite.Functions.*;
 
 public class interp {
+    public static boolean testmode = true;
+    public static boolean testMode = false;  // Add this at the top
+
     private static String preprocess(String[] lines) {
         StringBuilder processed = new StringBuilder();
         for (String line : lines) {
@@ -74,10 +77,22 @@ public class interp {
             line = line.trim();
             if (!line.isEmpty() && !line.startsWith(";") && !line.startsWith("LBL")) {
                 interp.instruction instr = new interp.instruction();
-                String[] parts = line.split("\\s+");
-                instr.name = parts[0];
-                if (parts.length > 1) instr.sop1 = parts[1];
-                if (parts.length > 2) instr.sop2 = parts[2];
+                
+                // Special handling for DB instruction
+                if (line.toUpperCase().startsWith("DB ")) {
+                    instr.name = "DB";
+                    // Keep everything after "DB " as is
+                    String restOfLine = line.substring(2).trim();
+                    instr.sop1 = restOfLine;
+                    instr.sop2 = null; // DB doesn't need sop2
+                } else {
+                    // Normal instruction parsing
+                    String[] parts = line.split("\\s+", 3); // Limit split to 3 parts
+                    instr.name = parts[0];
+                    if (parts.length > 1) instr.sop1 = parts[1];
+                    if (parts.length > 2) instr.sop2 = parts[2];
+                }
+                
                 instrs.instructions[instrs.length] = instr;
                 instrs.Memory[instrs.length] = instrs.length;  // Add this line to populate memory
                 instrs.length++;
@@ -129,8 +144,19 @@ public class interp {
     }
 
     public static void ExecuteAllInstructions(instructions instrs) {
+        Integer mainAddress = instrs.labelMap.get("main");
+        
+        // Only enforce main label in non-test mode
+        if (!testMode && mainAddress == null) {
+            common.box("Error", "No 'main' label found in the program", "error");
+            System.exit(1);
+        }
+
+        // In test mode, start from instruction 0 if no main
+        common.WriteRegister("RIP", mainAddress != null ? mainAddress : 0);
+        
         int rip = common.ReadRegister("RIP");
-        while (rip < instrs.length) {  // Changed condition to check actual instruction count
+        while (rip < instrs.length) {
             instruction instr = instrs.instructions[rip];
             if (arguments.debug) {
                 common.box("Debug", "Executing instruction: " + instr.name, "info");
@@ -158,6 +184,10 @@ public class interp {
         instrs.labels = new int[instrs.max_labels];
         instrs.functions = new Functions();
 
+        // init the stack pointer
+        common.WriteRegister("RSP", common.MAX_MEMORY - 1);
+        
+
         try {
             // Read entire file into string array first
             List<String> lines = new ArrayList<>();
@@ -169,7 +199,7 @@ public class interp {
 
             // Preprocess and parse
             String preprocessed = preprocess(lines.toArray(new String[0]));
-            System.out.println(preprocessed);
+
             String[] processedLines = preprocessed.split("\n");
 
             // First pass: collect labels
@@ -196,20 +226,29 @@ public class interp {
                     }
                     
                     instruction instr = new instruction();
-                    String[] parts = line.split("\\s+");
-                    instr.name = parts[0];
-                    if (parts.length > 1) instr.sop1 = parts[1];
-                    if (parts.length > 2) instr.sop2 = parts[2];
+                    
+                    // Special handling for DB instruction
+                    if (line.toUpperCase().startsWith("DB ")) {
+                        instr.name = "DB";
+                        instr.sop1 = line.substring(2).trim(); // Keep everything after "DB"
+                    } else {
+                        // Normal instruction parsing
+                        String[] parts = line.split("\\s+", 3); // Limit split to 3 parts
+                        instr.name = parts[0];
+                        if (parts.length > 1) instr.sop1 = parts[1];
+                        if (parts.length > 2) instr.sop2 = parts[2];
+                    }
+                    
                     instrs.instructions[instrs.length] = instr;
                     instrs.Memory[instrs.length] = instrs.length;
                     instrs.length++;
                 }
             }
 
-            if (arguments.debug) {
-                print("Read %d instructions and %d labels\n", instrs.length, instrs.labelMap.size());
-                print("Label map contents: %s\n", instrs.labelMap.toString());
-                printinstructions(instrs);
+            // Only check for main label in non-test mode
+            if (!testMode && !instrs.labelMap.containsKey("main")) {
+                common.box("Error", "No 'main' label found in " + filename, "error");
+                System.exit(1);
             }
 
             ExecuteAllInstructions(instrs);
@@ -270,7 +309,12 @@ public class interp {
             case "db":
                 functions.db(memory, instr.sop1);
                 break;
-         
+            case "push":
+                functions.push(memory, instr.sop1);
+                break;
+            case "pop":
+                functions.pop(memory, instr.sop1);
+                break;
             default:
                 common.box("Error", "Unknown instruction: " + instr.name, "error");
                 return -1;

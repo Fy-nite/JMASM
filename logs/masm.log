@@ -37,3 +37,76 @@
 2025-02-15 00:13:57,726 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
 2025-02-15 00:14:18,452 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
 2025-02-15 00:14:18,541 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 00:16:50,330 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 00:16:50,410 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 00:18:56,768 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 00:18:56,861 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 00:20:36,957 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 00:20:37,062 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 00:23:24,781 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 00:23:24,875 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 00:23:58,056 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 00:23:58,146 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 02:55:21,203 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 02:55:21,280 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 02:55:39,601 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 02:55:39,658 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 02:59:34,501 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 02:59:34,561 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:00:24,467 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:00:24,534 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:01:29,663 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:01:29,719 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:02:14,745 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:02:14,816 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:02:30,188 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:02:30,251 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:03:18,229 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:03:18,286 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:03:36,365 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:03:36,427 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:04:11,718 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:04:11,781 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:04:33,587 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:04:33,650 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:05:56,776 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:05:56,852 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:07:36,697 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:07:36,754 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:13:30,798 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:13:30,856 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:13:30,895 ERROR [main] o.F.Functions [Functions.java:332] Invalid DB format: '$50'
+2025-02-15 03:14:31,691 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:14:31,765 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:14:31,806 ERROR [main] o.F.Functions [Functions.java:332] Invalid DB format: '50'
+2025-02-15 03:14:40,331 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:14:40,391 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:14:40,424 ERROR [main] o.F.Functions [Functions.java:332] Invalid DB format: '"Hello,'
+2025-02-15 03:14:44,857 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:14:44,920 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:14:44,953 ERROR [main] o.F.Functions [Functions.java:332] Invalid DB format: '$50'
+2025-02-15 03:17:44,542 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:17:44,602 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:17:44,634 ERROR [main] o.F.Functions [Functions.java:319] Invalid DB format: '$50'
+2025-02-15 03:19:30,968 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:19:31,051 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:24:17,915 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:24:17,990 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:24:40,600 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:24:40,666 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:25:13,115 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:25:13,174 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:25:34,496 ERROR [main] o.F.Functions [Functions.java:339] Invalid memory address: invalid
+2025-02-15 03:36:44,858 ERROR [main] o.F.Functions [Functions.java:339] Invalid memory address: invalid
+2025-02-15 03:37:21,657 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:37:21,724 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:39:43,033 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:39:43,119 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:40:57,902 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:40:57,977 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:44:21,831 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:44:21,893 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
+2025-02-15 03:44:45,854 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:44:45,906 WARN [main] o.F.Main [Main.java:39] No input file specified
+2025-02-15 03:44:49,844 INFO [main] o.F.Main [Main.java:14] Starting MASM interpreter
+2025-02-15 03:44:49,923 INFO [main] o.F.Main [Main.java:35] Running file: main.masm
