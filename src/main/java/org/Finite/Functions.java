@@ -1,6 +1,8 @@
 package org.Finite;
 
 import org.Finite.common.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.Finite.common.print;
 import static org.Finite.common.printerr;
@@ -12,7 +14,10 @@ import java.io.InputStream;
 import org.Finite.interp.instructions;
 
 public class Functions {
+    private static final Logger logger = LoggerFactory.getLogger(Functions.class);
+
     public static String include(String filename, String CurrentFileContents) {
+        logger.debug("Including file: {}", filename);
         // Convert the dot notation to path
         String resourcePath = filename.replace("\"", "").replace(".", "/") + ".masm";
         
@@ -38,6 +43,7 @@ public class Functions {
             return CurrentFileContents.replace(includeStatement, content.toString());
             
         } catch (IOException e) {
+            logger.error("Failed to include file: {}", resourcePath, e);
             printerr("Error including file %s: %s\n", resourcePath, e.getMessage());
             return CurrentFileContents;
         }
@@ -140,29 +146,58 @@ public class Functions {
             try {
                 // Check if it's a direct memory address
                 int address = Integer.parseInt(addr);
-                int i = 0;
-                while (memory[address + i] != 0) {
-                    value += (char) memory[address + i];
-                    i++;
+                // First try to read as a number from memory
+                int numValue = memory[address];
+                if (numValue != 0) {
+                    value = Integer.toString(numValue);
+                } else {
+                    // If zero, try reading as string
+                    int i = 0;
+                    while (memory[address + i] != 0) {
+                        value += (char) memory[address + i];
+                        i++;
+                    }
                 }
             } catch (Exception e) {
                 // If not direct address, it's a register containing address
                 int regAddr = common.ReadRegister(addr);
-                int i = 0;
-                while (memory[regAddr + i] != 0) {
-                    value += (char) memory[regAddr + i];
-                    i++;
+                // First try to read as a number
+                int numValue = memory[regAddr];
+                if (numValue != 0) {
+                    value = Integer.toString(numValue);
+                } else {
+                    // If zero, try reading as string
+                    int i = 0;
+                    while (memory[regAddr + i] != 0) {
+                        value += (char) memory[regAddr + i];
+                        i++;
+                    }
                 }
             }
         } else {
-            // Direct register value
-            value = Integer.toString(common.ReadRegister(source));
+            // Direct register or literal value
+            try {
+                // Try parsing as number first
+                int numValue = Integer.parseInt(source);
+                value = Integer.toString(numValue);
+            } catch (NumberFormatException e) {
+                try {
+                    // Try reading from register
+                    value = Integer.toString(common.ReadRegister(source));
+                } catch (Exception ex) {
+                    // If all else fails, treat as string literal
+                    value = source;
+                }
+            }
         }
 
         if (fileDescriptor == 1) {
             print("%s", value);
         } else if (fileDescriptor == 2) {
             printerr("%s", value);
+        }
+        else {
+            common.box("Error", "Invalid file descriptor: " + fileDescriptor, "error");
         }
     }
 
@@ -238,6 +273,7 @@ public class Functions {
     }
 
     public void mov(int[] memory, String reg1, String reg2) {
+        logger.trace("MOV {} {}", reg1, reg2);
         // Validate destination register first
         if (!isValidRegister(reg1)) {
             throw new IllegalArgumentException("Invalid destination register: " + reg1);
@@ -264,13 +300,43 @@ public class Functions {
         common.WriteRegister(reg1, value);
     }
 
+    public void ret(instructions instr)
+    {
+        // pop a value off the stack at last 1024 bytes of memory and set rip to it
+        // stack is 1024 bytes long and goes from the top of memory down
+        int value = common.ReadMemory(instr.Memory, common.MAX_MEMORY - 1024);
+        common.WriteRegister("RIP", value);
+        common.WriteMemory(instr.Memory, common.MAX_MEMORY - 1024, 0);
+    }
+
     // Helper method to validate registers
     private boolean isValidRegister(String reg) {
         return reg != null && (
             reg.equals("RAX") || 
             reg.equals("RBX") || 
             reg.equals("RCX") || 
-            reg.equals("RIP") || 
+            reg.equals("RDX") ||
+            reg.equals("RSI") ||
+            reg.equals("RDI") ||
+            reg.equals("RIP") ||
+            reg.equals("RSP") ||
+            reg.equals("RBP") ||
+            reg.equals("R0") ||
+            reg.equals("R1") ||
+            reg.equals("R2") ||
+            reg.equals("R3") ||
+            reg.equals("R4") ||
+            reg.equals("R5") ||
+            reg.equals("R6") ||
+            reg.equals("R7") ||
+            reg.equals("R8") ||
+            reg.equals("R9") ||
+            reg.equals("R10") ||
+            reg.equals("R11") ||
+            reg.equals("R12") ||
+            reg.equals("R13") ||
+            reg.equals("R14") ||
+            reg.equals("R15") ||
             reg.equals("RFLAGS")
         );
     }
@@ -333,6 +399,7 @@ public class Functions {
     }
 
     public void jmp(int[] memory, String target, instructions instrs) {
+        logger.debug("JMP to target: {}", target);
         if (target == null || instrs == null) {
             print("DEBUG: ERROR - Null target or instructions\n");
             throw new NullPointerException("Target or instructions cannot be null");

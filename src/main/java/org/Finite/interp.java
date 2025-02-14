@@ -3,6 +3,8 @@ package org.Finite;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.Finite.common.*;
 import static org.Finite.debug.*;
@@ -10,7 +12,36 @@ import static org.Finite.debug.*;
 import org.Finite.Functions.*;
 
 public class interp {
+    private static String preprocess(String[] lines) {
+        StringBuilder processed = new StringBuilder();
+        for (String line : lines) {
+            line = line.trim();
+            if (line.toLowerCase().startsWith("#include")) {
+                // Extract the file path from between quotes
+                int start = line.indexOf("\"");
+                int end = line.lastIndexOf("\"");
+                if (start != -1 && end != -1 && start != end) {
+                    String path = line.substring(start + 1, end);
+                    // Use includemanager to process the include
+                    processed.append(includemanager.include(path, line));
+                }
+            } else if (line.startsWith(";")) {
+                // Skip comments
+                continue;
+            }
+            
+            else {
+                processed.append(line).append("\n");
+            }
+        }
+        return processed.toString();
+    }
+
     public static interp.instructions parseInstructions(String[] ops) {
+        // Preprocess includes first
+        String preprocessed = preprocess(ops);
+        String[] processedOps = preprocessed.split("\n");
+        System.out.println(preprocessed);
         interp.instructions instrs = new interp.instructions();
         instrs.instructions = new interp.instruction[100];  // reasonable default size
         instrs.Memory = new int[1000];              // reasonable default memory size
@@ -25,7 +56,7 @@ public class interp {
 
         // First pass: collect labels
         int currentLine = 0;
-        for (String line : ops) {
+        for (String line : processedOps) {
             line = line.trim();
             if (!line.isEmpty() && !line.startsWith(";")) {
                 if (line.startsWith("LBL ")) {
@@ -39,7 +70,7 @@ public class interp {
 
         // Second pass: read instructions
         currentLine = 0;
-        for (String line : ops) {
+        for (String line : processedOps) {
             line = line.trim();
             if (!line.isEmpty() && !line.startsWith(";") && !line.startsWith("LBL")) {
                 interp.instruction instr = new interp.instruction();
@@ -119,23 +150,34 @@ public class interp {
     public static void runFile(String filename) {
         instructions instrs = new instructions();
         instrs.instructions = new instruction[100];  // reasonable default size
-        instrs.Memory = new int[1000];              // reasonable default memory size
+        instrs.Memory = new int[common.MAX_MEMORY];              // reasonable default memory size
         instrs.length = 0;
-        instrs.memory_size = 1000;
-        instrs.max_labels = 100;
-        instrs.max_instructions = 100;
-        instrs.labels = new int[100];
+        instrs.memory_size = common.MAX_MEMORY;
+        instrs.max_labels = common.MAX_MEMORY / 5;
+        instrs.max_instructions = common.MAX_MEMORY / 5;
+        instrs.labels = new int[instrs.max_labels];
         instrs.functions = new Functions();
 
-        // First pass: collect labels
         try {
+            // Read entire file into string array first
+            List<String> lines = new ArrayList<>();
             Scanner scanner = new Scanner(new java.io.File(filename));
-            int currentLine = 0;
-
             while (scanner.hasNextLine()) {
-                String line = scanner.nextLine().trim();
+                lines.add(scanner.nextLine());
+            }
+            scanner.close();
+
+            // Preprocess and parse
+            String preprocessed = preprocess(lines.toArray(new String[0]));
+            System.out.println(preprocessed);
+            String[] processedLines = preprocessed.split("\n");
+
+            // First pass: collect labels
+            int currentLine = 0;
+            for (String line : processedLines) {
+                line = line.trim();
                 if (!line.isEmpty() && !line.startsWith(";")) {
-                    if (line.startsWith("LBL ")) {
+                    if (line.toLowerCase().startsWith("lbl ")) {
                         String labelName = line.substring(4).trim();
                         instrs.labelMap.put(labelName, currentLine);
                         continue;
@@ -143,26 +185,30 @@ public class interp {
                     currentLine++;
                 }
             }
-            scanner.close();
 
             // Second pass: read instructions
-            scanner = new Scanner(new java.io.File(filename));
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine().trim();
-                if (!line.isEmpty() && !line.startsWith(";") && !line.startsWith("LBL")) {
+            for (String line : processedLines) {
+                line = line.trim();
+                if (!line.isEmpty() && !line.startsWith(";")) {
+                    // Skip label declarations but don't treat them as errors
+                    if (line.toLowerCase().startsWith("lbl ")) {
+                        continue;
+                    }
+                    
                     instruction instr = new instruction();
                     String[] parts = line.split("\\s+");
                     instr.name = parts[0];
                     if (parts.length > 1) instr.sop1 = parts[1];
                     if (parts.length > 2) instr.sop2 = parts[2];
                     instrs.instructions[instrs.length] = instr;
-                    instrs.Memory[instrs.length] = instrs.length;  // Add this line to populate memory
+                    instrs.Memory[instrs.length] = instrs.length;
                     instrs.length++;
                 }
             }
 
             if (arguments.debug) {
                 print("Read %d instructions and %d labels\n", instrs.length, instrs.labelMap.size());
+                print("Label map contents: %s\n", instrs.labelMap.toString());
                 printinstructions(instrs);
             }
 
@@ -171,7 +217,12 @@ public class interp {
             common.box("Error", "File not found: " + filename, "error");
         }
     }
-
+    private static void dumpinstr(instructions instrs) {
+        for (int i = 0; i < instrs.length; i++) {
+            print("Instruction %d: %s %s %s\n", i, instrs.instructions[i].name, instrs.instructions[i].sop1,
+                    instrs.instructions[i].sop2);
+        }
+    }
     public static int ExecuteSingleInstruction(instruction instr, int[] memory, instructions instrs) {
         if (arguments.debug) {
             common.box("Debug", "Executing instruction: " + instr.name, "info");
@@ -181,9 +232,10 @@ public class interp {
             case "mov":
                 functions.mov(memory, instr.sop1, instr.sop2);
                 break;
-            case "#include":
-                functions.include(instr.sop1, instrs);
+            case "dumpinstr":
+                dumpinstr(instrs);
                 break;
+         
             case "add":
                 functions.add(memory, instr.sop1, instr.sop2);
                 break;
@@ -198,6 +250,9 @@ public class interp {
                 break;
             case "cmp":
                 functions.cmp(memory, instr.sop1, instr.sop2);
+                break;
+            case "ret":
+                functions.ret(instrs);
                 break;
             case "hlt":
                 System.exit(0);
@@ -214,9 +269,8 @@ public class interp {
                 break;
             case "db":
                 functions.db(memory, instr.sop1);
-
                 break;
-
+         
             default:
                 common.box("Error", "Unknown instruction: " + instr.name, "error");
                 return -1;

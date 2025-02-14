@@ -1,0 +1,30 @@
+    <profile>
+        <id>linux</id>
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>3.1.0</version>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <configuration>
+                                <target>
+                                    <mkdir dir="${project.build.directory}/linux"/>
+                                    <copy file="${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar"
+                                          tofile="${project.build.directory}/linux/masm.jar"/>
+                                    <echo file="${project.build.directory}/linux/masm" message="#!/bin/sh${line.separator}java -jar &quot;$0.jar&quot; &quot;$@&quot;${line.separator}exit $?">
+                                    </echo>
+                                    <chmod file="${project.build.directory}/linux/masm" perm="755"/>
+                                </target>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </build>
+    </profile>

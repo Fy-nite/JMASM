@@ -1,12 +1,3 @@
-LBL printf
-    ; Prints a string to the console
-    ; Input: RDI - pointer to the string
-    ; Input: RSI - the port number, 0 for stdout, 1 for stderr
-    MNI OUT RSI RDI
-
-LBL print
-    ; Prints a string to the console
-    ; Input: RDI - pointer to the string
-    ; Input: RSI - the port number, 0 for stdout, 1 for stderr
-    MNI OUT RSI RDI
-    MNI OUTNL RSI
+lbl printf
+    out 1 R1
+    hlt

@@ -1,6 +1,6 @@
+#include "stdlib.term.io"
 LBL main
-    MOV RAX 5
-    MOV RBX 5
-    ADD RAX RBX
-    OUT 1 RAX
-    HLT
+    MOV R1 5
+    MOV RSI 1
+    jmp #printf
+    hlt

@@ -53,6 +53,13 @@ public class debug {
                             printerr("Error: " + e.getMessage());
                         }
                         break;
+                    case "#include":
+                        try {
+                            includemanager.include(args[0], input);
+                        } catch (Exception e) {
+                            printerr("Error: " + e.getMessage());
+                        }
+                        break;
                     case "writememory":
                         try {
                             WriteMemory(common.memory, Integer.parseInt(args[0]), Integer.parseInt(args[1]));
@@ -75,12 +82,13 @@ public class debug {
                         }
                         break;
                     case "exit":
+                        System.exit(0);
                         return;
-                    case "help":
-                        if (Arrays.asList(instructions).contains(command)) {
-                            print("Instruction: %s\n", command);
+                        case "help":
+                        if (di.instructions[0].sop1 != null) {
+                            help.help(di.instructions[0].sop1);
                         } else {
-                            print("Command: %s\n", command);
+                            help.help();
                         }
                         break;
 
