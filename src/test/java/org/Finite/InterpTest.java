@@ -51,9 +51,43 @@ public class InterpTest {
         }
 
         @Test
-        @DisplayName("Test Multiple Instructions")
-        void testMultipleInstructions() {
-            // Add new test for multiple instructions
+        @DisplayName("Test DB and OUT Instructions")
+        void testDBAndOutInstructions() {
+            common.WriteRegister("RIP", 0);
+            common.WriteRegister("RAX", 0);
+            common.WriteRegister("RBX", 0);
+
+            // First instruction: MOV RAX 1
+            interp.instruction instr1 = new interp.instruction();
+            instr1.name = "MOV";
+            instr1.sop1 = "RAX";
+            instr1.sop2 = "1";
+            int result1 = interp.ExecuteSingleInstruction(instr1, instrs.Memory, instrs);
+            assertEquals(0, result1);
+            assertEquals(1, common.ReadRegister("RAX"));
+
+            // Second instruction: MOV RBX 50
+            interp.instruction instr2 = new interp.instruction();
+            instr2.name = "MOV";
+            instr2.sop1 = "RBX";
+            instr2.sop2 = "50";
+            int result2 = interp.ExecuteSingleInstruction(instr2, instrs.Memory, instrs);
+            assertEquals(0, result2);
+            assertEquals(50, common.ReadRegister("RBX"));
+
+            // Third instruction: DB $RBX "Hello, world!\n"
+            String testString = "Hello, wooooorld!\n";
+            for (int i = 0; i < testString.length(); i++) {
+                instrs.Memory[50 + i] = testString.charAt(i);
+            }
+
+            // Fourth instruction: OUT RAX $RBX
+            interp.instruction instr4 = new interp.instruction();
+            instr4.name = "OUT";
+            instr4.sop1 = "RAX";
+            instr4.sop2 = "$RBX";
+            int result4 = interp.ExecuteSingleInstruction(instr4, instrs.Memory, instrs);
+            assertEquals(0, result4);
         }
     }
 

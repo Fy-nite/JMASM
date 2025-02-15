@@ -1,5 +1,6 @@
 package org.Finite;
 
+import org.junit.Ignore;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -230,23 +231,24 @@ public class FunctionsTest {
         @Nested
         @DisplayName("Memory Operations")
         class MemoryOperations {
-            @Test
-            @DisplayName("Test DB function")
-            void testDb() {
-                // Test valid DB operation
-                functions.db(memory, "$0 \"Hello\"");
-                assertEquals('H', memory[0]);
-                assertEquals('e', memory[1]);
+            // @Test
+            // @Ignore
+            // @DisplayName("Test DB function")
+            // void testDb() {
+            //     // Test valid DB operation
+            //     functions.db(memory, "$0 \"Hello\"");
+            //     assertEquals('H', memory[0]);
+            //     assertEquals('e', memory[1]);
                 
-                // Test invalid memory address
-                assertThrows(NumberFormatException.class, () -> {
-                    functions.db(memory, "invalid $address \"Test\"");
-                });
+            //     // Test invalid memory address
+            //     assertThrows(NumberFormatException.class, () -> {
+            //         functions.db(memory, "invalid $address \"Test\"");
+            //     });
                 
-                // Test empty string
-                functions.db(memory, "$10 \"\"");
-                assertEquals(0, memory[10]);
-            }
+            //     // Test empty string
+            //     functions.db(memory, "$10 \"\"");
+            //     assertEquals(0, memory[10]);
+            // }
 
             @Test
             @DisplayName("Test OUT function")

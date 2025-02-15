@@ -274,7 +274,7 @@ public class Functions {
                 }
             }
         }
-
+            //print("DEBUG: Writing to file descriptor %d: %s\n", fileDescriptor, value);
         if (fileDescriptor == 1) {
             print("%s", value);
         } else if (fileDescriptor == 2) {
@@ -341,6 +341,7 @@ public class Functions {
         }
 
         String fullArg = argz[0].trim();
+        //print("%s\n",fullArg);
         logger.debug("DB instruction received: '{}'", fullArg);
 
         // Skip any extra whitespace after DB
@@ -359,24 +360,30 @@ public class Functions {
 
         // Parse memory address
         int memoryAddress;
-        try {
+        try 
+        {
+            // parse $<reg> then $<num> then <num>
             if (addressPart.startsWith("$")) {
-                memoryAddress = Integer.parseInt(addressPart.substring(1));
+                try {
+                    int regAddress = common.ReadRegister(addressPart.substring(1));
+                    memoryAddress = regAddress;
+                } catch (NumberFormatException e) {
+                    memoryAddress = Integer.parseInt(addressPart.substring(1));
+                }
             } else {
                 memoryAddress = Integer.parseInt(addressPart);
             }
         } catch (NumberFormatException e) {
-            logger.error("Invalid memory address: {}", addressPart);
+            logger.error("Invalid memory address: '{}'", addressPart);
             throw new IllegalArgumentException("Invalid memory address: " + addressPart);
         }
-
         // Clean up the data string
         if (dataPart.startsWith("\"") && dataPart.endsWith("\"")) {
             dataPart = dataPart.substring(1, dataPart.length() - 1);
         }
 
         logger.debug("Writing '{}' to memory address {}", dataPart, memoryAddress);
-        
+       // print("Writing '%s' to memory address %d\n", dataPart, memoryAddress);
         // Write to memory
         for (int i = 0; i < dataPart.length(); i++) {
             memory[memoryAddress + i] = dataPart.charAt(i);
@@ -399,6 +406,14 @@ public class Functions {
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("Invalid memory address: " + reg2);
             }
+            // could be a registr with $
+        } else if (reg2.startsWith("$")) {
+            try {
+                int address = common.ReadRegister(reg2.substring(1));
+                value = memory[address];
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid memory address: " + reg2);
+            }
         } else {
             try {
                 value = Integer.parseInt(reg2);
@@ -414,11 +429,21 @@ public class Functions {
 
     public void ret(instructions instr)
     {
-        // pop a value off the stack at last 1024 bytes of memory and set rip to it
-        // stack is 1024 bytes long and goes from the top of memory down
-        int value = common.ReadMemory(instr.Memory, common.MAX_MEMORY - 1024);
-        common.WriteRegister("RIP", value);
-        common.WriteMemory(instr.Memory, common.MAX_MEMORY - 1024, 0);
+        // Get current stack pointer
+        int sp = common.ReadRegister("RSP");
+        if (sp >= common.MAX_MEMORY) {
+            throw new IllegalStateException("Stack underflow in ret");
+        }
+        
+        // Get return address from stack
+        int returnAddr = common.ReadMemory(instr.Memory, sp);
+        
+        // Increment stack pointer
+        sp++;
+        common.WriteRegister("RSP", sp);
+        
+        // Jump to return address
+        common.WriteRegister("RIP", returnAddr);
     }
 
     // Helper method to validate registers
@@ -490,7 +515,7 @@ public class Functions {
 
 
     public static void jmp(int[] memory, String target) {
-        print("DEBUG: Attempting to jump to target: %s\n", target);
+        //print("DEBUG: Attempting to jump to target: %s\n", target);
         try {
             // Try parsing as number first
             Integer.parseInt(target); // This will throw NumberFormatException if not a number
@@ -499,13 +524,13 @@ public class Functions {
                 common.box("Error", "Unknown address or label: " + target, "error");
                 return;
             }
-            print("DEBUG: Jump successful - Setting RIP to %d\n", value);
+           // print("DEBUG: Jump successful - Setting RIP to %d\n", value);
             common.WriteRegister("RIP", value);
         } catch (NumberFormatException e) {
-            print("DEBUG: Jump failed - invalid number format: %s\n", target);
+           // print("DEBUG: Jump failed - invalid number format: %s\n", target);
             throw e; // Re-throw the NumberFormatException
         } catch (Exception e) {
-            print("DEBUG: Jump failed with exception: %s\n", e.getMessage());
+          //  print("DEBUG: Jump failed with exception: %s\n", e.getMessage());
             throw e;
         }
     }
@@ -513,25 +538,26 @@ public class Functions {
     public void jmp(int[] memory, String target, instructions instrs) {
         logger.debug("JMP to target: {}", target);
         if (target == null || instrs == null) {
-            print("DEBUG: ERROR - Null target or instructions\n");
+          //  print("DEBUG: ERROR - Null target or instructions\n");
             throw new NullPointerException("Target or instructions cannot be null");
         }
-        print("DEBUG: Attempting to jump to target: %s with instructions context\n", target);
+        //print("DEBUG: Attempting to jump to target: %s with instructions context\n", target);
         int value = parseTarget(target, instrs);
         if (value == -1) {
-            print("DEBUG: Jump failed - invalid target: %s\n", target);
+            //print("DEBUG: Jump failed - invalid target: %s\n", target);
             common.box("Error", "Unknown address or label: " + target, "error");
             return;
         }
-        print("DEBUG: Jump successful - Setting RIP to %d\n", value);
-        common.WriteRegister("RIP", value);
+        //print("DEBUG: Jump successful - Setting RIP to %d\n", value);
+        //TODO: figure out why -1 saves stdlib functions from dying?
+        common.WriteRegister("RIP", value -1);
     }
 
     private static int parseTarget(String target) {
-        print("DEBUG: Parsing target: %s\n", target);
+       // print("DEBUG: Parsing target: %s\n", target);
         try {
             int value = Integer.parseInt(target);
-            print("DEBUG: Target parsed as direct integer: %d\n", value);
+          //  print("DEBUG: Target parsed as direct integer: %d\n", value);
             return value;
         } catch (NumberFormatException e) {
             // Do not catch NumberFormatException here, let it propagate up
@@ -541,30 +567,30 @@ public class Functions {
 
     private static int parseTarget(String target, instructions instrs) {
         if (target == null || instrs == null) {
-            print("DEBUG: ERROR - Null target or instructions in parseTarget\n");
+           // print("DEBUG: ERROR - Null target or instructions in parseTarget\n");
             return -1;
         }
-        print("DEBUG: Parsing target with instructions context: %s\n", target);
+      //  print("DEBUG: Parsing target with instructions context: %s\n", target);
         
         // If it's a label reference
         if (target.startsWith("#")) {
             String labelName = target.substring(1);
-            print("DEBUG: Processing as label: %s\n", labelName);
-            print("DEBUG: Label map contents: %s\n", instrs.labelMap);
+           // print("DEBUG: Processing as label: %s\n", labelName);
+           //print("DEBUG: Label map contents: %s\n", instrs.labelMap);
             
             if (instrs.labelMap == null) {
-                print("DEBUG: ERROR - Label map is null!\n");
+           //     print("DEBUG: ERROR - Label map is null!\n");
                 return -1;
             }
             
             Integer labelAddress = instrs.labelMap.get(labelName);
-            print("DEBUG: Label lookup result: %s\n", labelAddress);
+         //   print("DEBUG: Label lookup result: %s\n", labelAddress);
             
             if (labelAddress != null) {
-                print("DEBUG: Found label address: %d\n", labelAddress);
+          //      print("DEBUG: Found label address: %d\n", labelAddress);
                 return labelAddress;
             } else {
-                print("DEBUG: Label '%s' not found in map\n", labelName);
+           //     print("DEBUG: Label '%s' not found in map\n", labelName);
                 return -1;
             }
         }
@@ -572,18 +598,18 @@ public class Functions {
         // Try parsing as direct number
         try {
             int value = Integer.parseInt(target);
-            print("DEBUG: Parsed as direct number: %d\n", value);
+          //  print("DEBUG: Parsed as direct number: %d\n", value);
             return value;
         } catch (NumberFormatException e) {
-            print("DEBUG: Not a number, trying as register name: %s\n", target);
+           // print("DEBUG: Not a number, trying as register name: %s\n", target);
             
             // Try as register
             try {
                 int regValue = common.ReadRegister(target);
-                print("DEBUG: Found in register with value: %d\n", regValue);
+            //    print("DEBUG: Found in register with value: %d\n", regValue);
                 return regValue;
             } catch (Exception ex) {
-                print("DEBUG: Register lookup failed: %s\n", ex.getMessage());
+             //   print("DEBUG: Register lookup failed: %s\n", ex.getMessage());
                 return -1;
             }
         }

@@ -15,24 +15,25 @@ public class Main {
         System.out.print("\033[H\033[2J");
         // get the main system resource
         System.out.flush();
-        common.box("java MASM interpreter", "2025 (C) Finite\nType 'help' for a list of commands\n", "info");
         
         ArgumentParser.Args arguments = new ArgumentParser.Args();
         JCommander.newBuilder()
-                .addObject(arguments)
-                .build()
-                .parse(args);
-
+        .addObject(arguments)
+        .build()
+        .parse(args);
+        
         if (arguments.help) {
             logger.debug("Showing help message");
             common.box("Help", "This is the help message", "info");
         }
         if (arguments.debug) {
+            common.box("java MASM interpreter", "2025 (C) Finite\nType 'help' for a list of commands\n", "info");
             logger.debug("Starting debug REPL");
             debug.DebugRepl();
         }
         if (arguments.file != null && !arguments.file.isEmpty()) {
             logger.info("Running file: {}", arguments.file);
+            common.box("java MASM interpreter", "2025 (C) Finite\nrunning file: " + arguments.file + "\n", "info");
             interp.runFile(arguments.file);
         }
         else {

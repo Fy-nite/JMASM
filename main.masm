@@ -1,5 +1,7 @@
-
+#include "stdlib.term.io"
 lbl main
-    DB $50 "Hello, world!\n"
-    out 1 $50
+    mov RAX 1
+    mov RBX 50
+    DB $RBX "Hello, world!\n"
+    jmp #printf
     hlt

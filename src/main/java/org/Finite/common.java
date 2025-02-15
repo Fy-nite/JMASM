@@ -185,7 +185,7 @@ public class common {
     }
 
     private static Scanner scanner = null;
-
+    //TODO: remove this function at somepoint because wtf?
     public static String inbox(String prompt) {
         try {
             if (scanner == null) {
@@ -327,7 +327,7 @@ public class common {
         }
         return memory[address];
     }
-
+    //TODO: tell other people that this exists, it's handy
     public static void print(String message, Object... args) {
         System.out.printf(message, args);
     }

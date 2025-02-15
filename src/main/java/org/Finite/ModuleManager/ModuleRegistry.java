@@ -3,7 +3,7 @@ package org.Finite.ModuleManager;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-
+//TODO: make this actualy a thing that people can use.
 public class ModuleRegistry {
     private static final ModuleRegistry instance = new ModuleRegistry();
     private final Map<String, Map<String, Map<String, Method>>> moduleMap;

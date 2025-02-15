@@ -13,7 +13,7 @@ import org.Finite.Functions.*;
 
 public class interp {
     public static boolean testmode = true;
-    public static boolean testMode = false;  // Add this at the top
+    public static boolean testMode = Boolean.getBoolean("testMode"); // This line changes
 
     private static String preprocess(String[] lines) {
         StringBuilder processed = new StringBuilder();
@@ -139,9 +139,6 @@ public class interp {
         }
     }
 
-    public static void include(String filename, instructions instrs) {
-
-    }
 
     public static void ExecuteAllInstructions(instructions instrs) {
         Integer mainAddress = instrs.labelMap.get("main");
@@ -250,7 +247,7 @@ public class interp {
                 common.box("Error", "No 'main' label found in " + filename, "error");
                 System.exit(1);
             }
-
+            //System.out.println(preprocessed);
             ExecuteAllInstructions(instrs);
         } catch (java.io.FileNotFoundException e) {
             common.box("Error", "File not found: " + filename, "error");
