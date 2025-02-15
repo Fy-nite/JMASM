@@ -9,21 +9,40 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: https://github.com/actions/setup-java@main
+      - uses: actions/forgejo-release@v2
         with:
+
+          direction: upload
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-dir: dist/release
+          prerelease: true
           distribution: 'oracle' # not too sure if this works
           java-version: '22'
-      - name: Build JMASM
+      - name: Build JMASM for linux
+        run: |
+          mkdir build
+          apt update -y
+          apt install -y build-essential maven
+          mvn clean install package -P linux
+          # tar the contents
+          tar -czvf jmasm.tar.gz target/linux
+          
+
+
+      - name: Build JMASM for windows
         run: |
           apt update -y
           apt install -y build-essential maven
           mvn clean install package
+          mvn clean install package -P windows
+          # tar the contents
+          tar -czvf jmasm-windows.tar.gz target/MASM.exe
 
-          mv $(find . -name "*-jar-with-dependencies.jar") jmasm.jar
-
-          tar -cJf jmasm-build.tar.zst jmasm.jar
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
+      - name: push to release
+        uses: actions/upload-release-asset@v1
         with:
-          name: jmasm-build
-          path: jmasm-build.tar.zst
+          upload_url: ${{ secrets.UPLOAD_URL }}
+          asset_path: ./jmasm.tar.gz
+          asset_name: jmasm.tar.gz
+          asset_content_type: application/gzip
+          asset_label: JMASM for linux

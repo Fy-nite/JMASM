@@ -1,0 +1,12 @@
+# on: [tag]
+# jobs:
+#   upload-release:
+#     runs-on: self-hosted-docker
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: actions/forgejo-release@v2
+#         with:
+#           direction: upload
+#           token: ${{ secrets.GITHUB_TOKEN }}
+#           release-dir: dist/release
+#           prerelease: true
