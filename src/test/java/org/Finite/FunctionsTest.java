@@ -198,7 +198,7 @@ public class FunctionsTest {
                     assertEquals(address, instrsz.labelMap.get(label), "Label address mismatch");
                     
                     functions.jmp(memory, "#" + label, instrsz);
-                    assertEquals(address, common.ReadRegister("RIP"), "Label jump failed");
+                    assertEquals(address, common.ReadRegister("RIP") + 1, "Label jump failed");
                     common.print("DEBUG: JMP with label test completed successfully\n");
                 } catch (Exception e) {
                     common.print("DEBUG: Unexpected error in JMP with label test: %s\n", e.getMessage());

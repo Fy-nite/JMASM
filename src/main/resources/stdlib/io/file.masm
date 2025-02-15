@@ -1,6 +1,4 @@
 lbl file
-    db $100 "meow"
-    db $150 "woof"
-    out RSI $100
-    out RSI $150
+    ;; Read's a file from the users system
+    MNI readfile RAX RBX 
     hlt
