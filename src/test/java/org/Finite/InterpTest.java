@@ -14,6 +14,7 @@ import java.nio.file.Path;
 
 public class InterpTest {
     private interp.instructions instrs;
+    private interp terp = new interp();
 
     @BeforeEach
     void setUp() {
@@ -45,7 +46,7 @@ public class InterpTest {
             instr.sop1 = "RAX";
             instr.sop2 = "5";
             
-            int result = interp.ExecuteSingleInstruction(instr, instrs.Memory, instrs);
+            int result = terp.ExecuteSingleInstruction(instr, instrs.Memory, instrs);
             assertEquals(0, result);
             assertEquals(5, common.ReadRegister("RAX"));
         }
@@ -62,7 +63,7 @@ public class InterpTest {
             instr1.name = "MOV";
             instr1.sop1 = "RAX";
             instr1.sop2 = "1";
-            int result1 = interp.ExecuteSingleInstruction(instr1, instrs.Memory, instrs);
+            int result1 = terp.ExecuteSingleInstruction(instr1, instrs.Memory, instrs);
             assertEquals(0, result1);
             assertEquals(1, common.ReadRegister("RAX"));
 
@@ -71,7 +72,7 @@ public class InterpTest {
             instr2.name = "MOV";
             instr2.sop1 = "RBX";
             instr2.sop2 = "50";
-            int result2 = interp.ExecuteSingleInstruction(instr2, instrs.Memory, instrs);
+            int result2 = terp.ExecuteSingleInstruction(instr2, instrs.Memory, instrs);
             assertEquals(0, result2);
             assertEquals(50, common.ReadRegister("RBX"));
 
@@ -86,7 +87,7 @@ public class InterpTest {
             instr4.name = "OUT";
             instr4.sop1 = "RAX";
             instr4.sop2 = "$RBX";
-            int result4 = interp.ExecuteSingleInstruction(instr4, instrs.Memory, instrs);
+            int result4 = terp.ExecuteSingleInstruction(instr4, instrs.Memory, instrs);
             assertEquals(0, result4);
         }
     }

@@ -1,4 +1,4 @@
 lbl file
     ;; Read's a file from the users system
-    MNI readfile RAX RBX 
+    MNI readfile RAX $RBX
     hlt

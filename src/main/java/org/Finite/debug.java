@@ -6,6 +6,7 @@ import java.util.Scanner;
 import static org.Finite.common.*;
 
 public class debug {
+
     public static void DebugRepl() {
         try (Scanner scanner = new Scanner(System.in)) {
             interp.instructions di = new interp.instructions();
@@ -101,7 +102,8 @@ public class debug {
                         }
                         // execute the instruction
                         try {
-                            int out = interp.ExecuteSingleInstruction(di.instructions[0], di.Memory, di);
+                            interp terp = new   interp();
+                            int out = terp.ExecuteSingleInstruction(di.instructions[0], di.Memory, di);
                             print("Output: %d\n", out);
                         } catch (Exception e) {
                             printerr("Error: " + e.getMessage());

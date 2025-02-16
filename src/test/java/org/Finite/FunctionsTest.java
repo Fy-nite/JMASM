@@ -1,12 +1,13 @@
 package org.Finite;
 
-import org.junit.Ignore;
-import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
+import org.junit.Ignore;
+import org.junit.jupiter.api.*;
 
 public class FunctionsTest {
+
     private Functions functions;
     private int[] memory;
     private interp.instructions instrs;
@@ -28,7 +29,7 @@ public class FunctionsTest {
         common.WriteRegister("RCX", 0);
         common.WriteRegister("RIP", 0);
         common.WriteRegister("RFLAGS", 0);
-        
+
         // Clear memory
         for (int i = 0; i < memory.length; i++) {
             memory[i] = 0;
@@ -49,16 +50,21 @@ public class FunctionsTest {
     @Nested
     @DisplayName("Basic Operations")
     class BasicOperations {
+
         @Test
         @DisplayName("Test MOV function safely")
         void testMov() {
             // Test valid moves
             functions.mov(memory, "RAX", "10");
             assertEquals(10, common.ReadRegister("RAX"), "Basic MOV failed");
-            
+
             common.WriteRegister("RBX", 20);
             functions.mov(memory, "RAX", "RBX");
-            assertEquals(20, common.ReadRegister("RAX"), "Register to register MOV failed");
+            assertEquals(
+                20,
+                common.ReadRegister("RAX"),
+                "Register to register MOV failed"
+            );
 
             // Test invalid source register
             IllegalArgumentException thrown = assertThrows(
@@ -74,7 +80,9 @@ public class FunctionsTest {
                 () -> functions.mov(memory, "INVALID_REG", "10"),
                 "Should throw IllegalArgumentException for invalid destination register"
             );
-            assertTrue(thrown.getMessage().contains("Invalid destination register"));
+            assertTrue(
+                thrown.getMessage().contains("Invalid destination register")
+            );
 
             // Test invalid memory reference
             thrown = assertThrows(
@@ -88,6 +96,7 @@ public class FunctionsTest {
         @Nested
         @DisplayName("Arithmetic Operations")
         class ArithmeticOperations {
+
             @BeforeEach
             void validateMov() {
                 // Verify MOV works before running dependent tests
@@ -142,6 +151,81 @@ public class FunctionsTest {
             }
 
             @Test
+            @DisplayName("Test shl function")
+            void testShl() {
+                functions.mov(memory, "RAX", "1");
+                functions.shl(memory, "RAX", "3");
+                assertEquals(8, common.ReadRegister("RAX"));
+            }
+
+            @Test
+            @DisplayName("Test shr function")
+            void testShr() {
+                functions.mov(memory, "RAX", "8");
+                functions.shr(memory, "RAX", "3");
+                assertEquals(1, common.ReadRegister("RAX"));
+            }
+
+            @Test
+            @DisplayName("Test inc function")
+            void testInc() {
+                functions.mov(memory, "RAX", "5");
+                functions.inc(memory, "RAX");
+                assertEquals(6, common.ReadRegister("RAX"));
+            }
+
+            @Test
+            @DisplayName("Test dec function")
+            void testDec() {
+                functions.mov(memory, "RAX", "5");
+                functions.dec(memory, "RAX");
+                assertEquals(4, common.ReadRegister("RAX"));
+            }
+
+            @Test
+            @DisplayName("Test neg function")
+            void testNeg() {
+                functions.mov(memory, "RAX", "5");
+                functions.neg(memory, "RAX");
+                assertEquals(-5, common.ReadRegister("RAX"));
+            }
+
+            @Test
+            @DisplayName("Test not function")
+            void testNot() {
+                functions.mov(memory, "RAX", "5");
+                functions.not(memory, "RAX");
+                assertEquals(-6, common.ReadRegister("RAX"));
+            }
+
+            @Test
+            @DisplayName("Test xor function")
+            void testXor() {
+                functions.mov(memory, "RAX", "5");
+                functions.mov(memory, "RBX", "3");
+                functions.xor(memory, "RAX", "RBX");
+                assertEquals(6, common.ReadRegister("RAX"));
+            }
+
+            @Test
+            @DisplayName("Test or function")
+            void testOr() {
+                functions.mov(memory, "RAX", "5");
+                functions.mov(memory, "RBX", "3");
+                functions.or(memory, "RAX", "RBX");
+                assertEquals(7, common.ReadRegister("RAX"));
+            }
+
+            @Test
+            @DisplayName("Test and function")
+            void testAnd() {
+                functions.mov(memory, "RAX", "5");
+                functions.mov(memory, "RBX", "3");
+                functions.and(memory, "RAX", "RBX");
+                assertEquals(1, common.ReadRegister("RAX"));
+            }
+
+            @Test
             @DisplayName("Test arithmetic with invalid registers")
             void testInvalidRegisters() {
                 assertThrows(Exception.class, () -> {
@@ -153,12 +237,19 @@ public class FunctionsTest {
                 assertThrows(Exception.class, () -> {
                     functions.mul(memory, "INVALID_REG", "INVALID_REG");
                 });
+                assertThrows(Exception.class, () -> {
+                    functions.div(memory, "RAX", "INVALID_REG");
+                });
             }
 
             @Test
             @DisplayName("Test overflow conditions")
             void testOverflow() {
-                functions.mov(memory, "RAX", Integer.toString(Integer.MAX_VALUE));
+                functions.mov(
+                    memory,
+                    "RAX",
+                    Integer.toString(Integer.MAX_VALUE)
+                );
                 functions.mov(memory, "RBX", "1");
                 functions.add(memory, "RAX", "RBX");
                 assertEquals(Integer.MIN_VALUE, common.ReadRegister("RAX"));
@@ -168,16 +259,24 @@ public class FunctionsTest {
         @Nested
         @DisplayName("Safe Flow Operations")
         class FlowOperations {
+
             @Test
             @DisplayName("Test JMP function with safeguards")
             void testJmp() {
                 try {
                     common.print("DEBUG: Starting JMP test\n");
-                    functions.jmp(memory, "5");
-                    assertEquals(5, common.ReadRegister("RIP"), "Direct jump failed");
+                    functions.jmp(memory, "5", instrs);
+                    assertEquals(
+                        5,
+                        common.ReadRegister("RIP"),
+                        "Direct jump failed"
+                    );
                     common.print("DEBUG: JMP test completed successfully\n");
                 } catch (Exception e) {
-                    common.print("DEBUG: Unexpected error in JMP test: %s\n", e.getMessage());
+                    common.print(
+                        "DEBUG: Unexpected error in JMP test: %s\n",
+                        e.getMessage()
+                    );
                     throw e;
                 }
             }
@@ -192,16 +291,35 @@ public class FunctionsTest {
                     interp.instructions instrsz = new interp.instructions();
                     instrsz.labelMap = new java.util.HashMap<String, Integer>();
                     instrsz.labelMap.put(label, address);
-                    
-                    assertNotNull(instrsz.labelMap, "Label map initialization failed");
-                    assertTrue(instrsz.labelMap.containsKey(label), "Label not added to map");
-                    assertEquals(address, instrsz.labelMap.get(label), "Label address mismatch");
-                    
+
+                    assertNotNull(
+                        instrsz.labelMap,
+                        "Label map initialization failed"
+                    );
+                    assertTrue(
+                        instrsz.labelMap.containsKey(label),
+                        "Label not added to map"
+                    );
+                    assertEquals(
+                        address,
+                        instrsz.labelMap.get(label),
+                        "Label address mismatch"
+                    );
+
                     functions.jmp(memory, "#" + label, instrsz);
-                    assertEquals(address, common.ReadRegister("RIP") + 1, "Label jump failed");
-                    common.print("DEBUG: JMP with label test completed successfully\n");
+                    assertEquals(
+                        address,
+                        common.ReadRegister("RIP") + 1,
+                        "Label jump failed"
+                    );
+                    common.print(
+                        "DEBUG: JMP with label test completed successfully\n"
+                    );
                 } catch (Exception e) {
-                    common.print("DEBUG: Unexpected error in JMP with label test: %s\n", e.getMessage());
+                    common.print(
+                        "DEBUG: Unexpected error in JMP with label test: %s\n",
+                        e.getMessage()
+                    );
                     throw e;
                 }
             }
@@ -211,7 +329,7 @@ public class FunctionsTest {
             void testInvalidJump() {
                 // Test jump with invalid direct address
                 assertThrows(NumberFormatException.class, () -> {
-                    functions.jmp(memory, "not_a_number");
+                    functions.jmp(memory, "not_a_number", instrs);
                 });
 
                 // Test jump with null instructions
@@ -231,6 +349,7 @@ public class FunctionsTest {
         @Nested
         @DisplayName("Memory Operations")
         class MemoryOperations {
+
             // @Test
             // @Ignore
             // @DisplayName("Test DB function")
@@ -239,12 +358,12 @@ public class FunctionsTest {
             //     functions.db(memory, "$0 \"Hello\"");
             //     assertEquals('H', memory[0]);
             //     assertEquals('e', memory[1]);
-                
+
             //     // Test invalid memory address
             //     assertThrows(NumberFormatException.class, () -> {
             //         functions.db(memory, "invalid $address \"Test\"");
             //     });
-                
+
             //     // Test empty string
             //     functions.db(memory, "$10 \"\"");
             //     assertEquals(0, memory[10]);
@@ -256,10 +375,10 @@ public class FunctionsTest {
                 // Test invalid file descriptor
                 functions.mov(memory, "RAX", "65"); // ASCII 'A'
                 functions.out(memory, "3", "RAX"); // Should not output anything
-                
+
                 // Test null source
                 functions.out(memory, "1", null);
-                
+
                 // Test invalid register
                 functions.out(memory, "1", "INVALID_REG");
             }
@@ -271,35 +390,40 @@ public class FunctionsTest {
                     // Setup test input with proper cleanup
                     common.UnwrapStdin();
                     common.WrapStdinToFile("test input");
-                    
+
                     // Test valid input first
                     functions.in(memory, "0", "$0");
                     assertEquals('t', memory[0]);
                     assertEquals('e', memory[1]);
                     assertEquals('s', memory[2]);
                     assertEquals('t', memory[3]);
-                    
+
                     // Test invalid file descriptor (non-zero)
                     IllegalArgumentException thrown = assertThrows(
                         IllegalArgumentException.class,
                         () -> functions.in(memory, "999", "$0")
                     );
-                    assertEquals("Only stdin (fd 0) is supported", thrown.getMessage());
+                    assertEquals(
+                        "Only stdin (fd 0) is supported",
+                        thrown.getMessage()
+                    );
 
                     // Test invalid file descriptor format
-                    thrown = assertThrows(
-                        IllegalArgumentException.class,
-                        () -> functions.in(memory, "xyz", "$0")
+                    thrown = assertThrows(IllegalArgumentException.class, () ->
+                        functions.in(memory, "xyz", "$0")
                     );
-                    assertEquals("Invalid file descriptor format: xyz", thrown.getMessage());
-                    
+                    assertEquals(
+                        "Invalid file descriptor format: xyz",
+                        thrown.getMessage()
+                    );
+
                     // Test null inputs
                     assertThrows(
                         IllegalArgumentException.class,
                         () -> functions.in(memory, null, "$0"),
                         "File descriptor and destination cannot be null"
                     );
-                    
+
                     assertThrows(
                         IllegalArgumentException.class,
                         () -> functions.in(memory, "0", null),
@@ -307,21 +431,22 @@ public class FunctionsTest {
                     );
 
                     // Test invalid destination format
-                    thrown = assertThrows(
-                        IllegalArgumentException.class,
-                        () -> functions.in(memory, "0", "invalid_dest")
+                    thrown = assertThrows(IllegalArgumentException.class, () ->
+                        functions.in(memory, "0", "invalid_dest")
                     );
-                    assertEquals("Invalid destination format. Must be memory address ($)", 
-                               thrown.getMessage());
+                    assertEquals(
+                        "Invalid destination format. Must be memory address ($)",
+                        thrown.getMessage()
+                    );
 
                     // Test invalid memory address format
-                    thrown = assertThrows(
-                        IllegalArgumentException.class,
-                        () -> functions.in(memory, "0", "$invalid")
+                    thrown = assertThrows(IllegalArgumentException.class, () ->
+                        functions.in(memory, "0", "$invalid")
                     );
-                    assertEquals("Invalid memory address format: $invalid", 
-                               thrown.getMessage());
-                    
+                    assertEquals(
+                        "Invalid memory address format: $invalid",
+                        thrown.getMessage()
+                    );
                 } finally {
                     // Always clean up
                     common.UnwrapStdin();
@@ -337,16 +462,16 @@ public class FunctionsTest {
             functions.mov(memory, "RBX", "10");
             functions.cmp(memory, "RAX", "RBX");
             assertEquals(1, common.ReadRegister("RFLAGS"));
-            
+
             // Test unequal values
             functions.mov(memory, "RBX", "20");
             functions.cmp(memory, "RAX", "RBX");
             assertEquals(0, common.ReadRegister("RFLAGS"));
-            
+
             // Test with immediate value
             functions.cmp(memory, "RAX", "10");
             assertEquals(1, common.ReadRegister("RFLAGS"));
-            
+
             // Test with invalid register
             assertThrows(Exception.class, () -> {
                 functions.cmp(memory, "INVALID_REG", "10");
