@@ -699,13 +699,42 @@ public class Functions {
         common.WriteRegister(reg, value);
     }
 
-    public  void call(int[] memory, String target, instructions instrs) {
-        // read the register hashmap
-        int value = common.ReadRegister("RIP");
-        // push the return address to the stack
+    public void call(int[] memory, String target, instructions instrs) {
+        logger.debug("CALL to target: {}", target);
+        if (target == null || instrs == null) {
+            throw new NullPointerException("Target or instructions cannot be null");
+        }
+
+        // Save current instruction pointer
+        int currentRIP = common.ReadRegister("RIP");
+        
+        // Push return address (next instruction) onto stack
+        common.WriteRegister("RIP", currentRIP);
         Functions.push(memory, "RIP");
-        // jump to the target
-        jmp(memory, target, instrs);
+
+        try {
+            // Handle labels similar to jmp
+            if (target.startsWith("#")) {
+                String labelName = target.substring(1);
+                Integer labelAddress = instrs.labelMap.get(labelName);
+                if (labelAddress == null) {
+                    common.box("Error", "Unknown label: " + labelName, "error");
+                    return;
+                }
+                common.WriteRegister("RIP", labelAddress - 1);
+                return;
+            }
+
+            // Handle direct addresses
+            int targetAddress = parseTarget(target, instrs);
+            if (targetAddress == -1) {
+                common.box("Error", "Invalid call target: " + target, "error");
+                return;
+            }
+            common.WriteRegister("RIP", targetAddress - 1);
+        } catch (Exception e) {
+            common.box("Error", "Call failed: " + e.getMessage(), "error");
+        }
     }
 
     public void jeq(int[] memory, String target, instructions instrs) {
@@ -734,8 +763,17 @@ public class Functions {
     public void jne(int[] memory, String target, instructions instrs) {
         // read the register hashmap
         int value = common.ReadRegister("RFLAGS");
+        int targetz = 0;
         String fixed = target.substring(1);
-        int targetz = instrs.labelMap.get(fixed);
+        try
+        {
+        targetz = instrs.labelMap.get(fixed);
+
+        }
+        catch (Exception e) {
+            // try as label
+            targetz = instrs.labelMap.get(target.substring(1));
+        }
         // if the value is 1 jump to the target
 
         if (value == 0) {

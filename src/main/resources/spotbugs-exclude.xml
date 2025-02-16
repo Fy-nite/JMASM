@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude test classes -->
+    <Match>
+        <Class name="~.*\.*Test.*"/>
+    </Match>
+
+    <!-- Ignore warnings about public fields in instruction classes since they're used as data structures -->
+    <Match>
+        <Class name="org.Finite.interp$instruction"/>
+        <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"/>
+    </Match>
+
+    <!-- Ignore warnings about public fields in instructions class -->
+    <Match>
+        <Class name="org.Finite.interp$instructions"/>
+        <Bug pattern="MS_SHOULD_BE_FINAL"/>
+    </Match>
+
+    <!-- Ignore System.exit() calls in Main class -->
+    <Match>
+        <Class name="org.Finite.Main"/>
+        <Method name="main"/>
+        <Bug pattern="DM_EXIT"/>
+    </Match>
+
+    <!-- Ignore scanner resource warnings in interactive mode -->
+    <Match>
+        <Class name="org.Finite.debug"/>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    </Match>
+
+    <!-- Ignore unencrypted socket warnings since we don't use network -->
+    <Match>
+        <Bug pattern="UNENCRYPTED_SOCKET"/>
+    </Match>
+
+    <!-- Ignore non-serializable warnings for command line args -->
+    <Match>
+        <Class name="org.Finite.ArgumentParser$Args"/>
+        <Bug pattern="SE_BAD_FIELD"/>
+    </Match>
+
+    <!-- Ignore logging format string warnings -->
+    <Match>
+        <Bug pattern="FORMAT_STRING_MANIPULATION"/>
+    </Match>
+
+    <!-- Ignore null pointer warnings in test initialization -->
+    <Match>
+        <Class name="~.*\.*Test"/>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    </Match>
+
+    <!-- Ignore public static field warnings in common class since it's used as a global state -->
+    <Match>
+        <Class name="org.Finite.common"/>
+        <Bug pattern="MS_SHOULD_BE_FINAL,MS_MUTABLE_ARRAY"/>
+    </Match>
+</FindBugsFilter>
