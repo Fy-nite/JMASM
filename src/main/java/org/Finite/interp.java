@@ -1,16 +1,17 @@
 package org.Finite;
 
-import static org.Finite.common.*;
-import static org.Finite.debug.*;
+import static org.Finite.Common.common.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
-import org.Finite.Functions.*;
+
+import org.Finite.Common.common;
 import org.Finite.ModuleManager.MNIMethodObject;
 import org.Finite.ModuleManager.MNIHandler;
+import org.Finite.Exceptions.MASMException;  // Add this import
 
 public class interp {
 
@@ -31,10 +32,17 @@ public class interp {
                     processed.append(includemanager.include(path, line));
                 }
             } else if (line.startsWith(";")) {
-                // Skip comments
+                // Skip full-line comments
                 continue;
             } else {
-                processed.append(line).append("\n");
+                // Handle inline comments by removing everything after ;
+                int commentStart = line.indexOf(';');
+                if (commentStart != -1) {
+                    line = line.substring(0, commentStart).trim();
+                }
+                if (!line.isEmpty()) {
+                    processed.append(line).append("\n");
+                }
             }
         }
         return processed.toString();
@@ -81,6 +89,8 @@ public class interp {
                 !line.startsWith("LBL")
             ) {
                 interp.instruction instr = new interp.instruction();
+                instr.lineNumber = currentLine;
+                instr.originalLine = line;
 
                 // Special handling for DB instruction
                 if (line.toUpperCase().startsWith("DB ")) {
@@ -93,8 +103,23 @@ public class interp {
                     // Normal instruction parsing
                     String[] parts = line.split("\\s+", 3); // Limit split to 3 parts
                     instr.name = parts[0];
-                    if (parts.length > 1) instr.sop1 = parts[1];
-                    if (parts.length > 2) instr.sop2 = parts[2];
+                    // Remove any inline comments from the operands
+                    if (parts.length > 1) {
+                        String op1 = parts[1];
+                        int commentStart = op1.indexOf(';');
+                        if (commentStart != -1) {
+                            op1 = op1.substring(0, commentStart).trim();
+                        }
+                        instr.sop1 = op1;
+                    }
+                    if (parts.length > 2) {
+                        String op2 = parts[2];
+                        int commentStart = op2.indexOf(';');
+                        if (commentStart != -1) {
+                            op2 = op2.substring(0, commentStart).trim();
+                        }
+                        instr.sop2 = op2;
+                    }
                 }
 
                 instrs.instructions[instrs.length] = instr;
@@ -123,10 +148,12 @@ public class interp {
         int iop2;
         String sop1;
         String sop2;
+        int lineNumber;  // Add line number tracking
+        String originalLine;  // Add original line tracking
     }
 
-    static Functions functions = new Functions();
-    static ArgumentParser.Args arguments = new ArgumentParser.Args();
+    public static Functions functions = new Functions();
+    public static ArgumentParser.Args arguments = new ArgumentParser.Args();
 
     // instructions class
     public static class instructions {
@@ -247,6 +274,8 @@ public class interp {
                     }
 
                     instruction instr = new instruction();
+                    instr.lineNumber = currentLine;
+                    instr.originalLine = line;
 
                     // Special handling for DB instruction
                     if (line.toUpperCase().startsWith("DB ")) {
@@ -256,8 +285,23 @@ public class interp {
                         // Normal instruction parsing
                         String[] parts = line.split("\\s+", 3); // Limit split to 3 parts
                         instr.name = parts[0];
-                        if (parts.length > 1) instr.sop1 = parts[1];
-                        if (parts.length > 2) instr.sop2 = parts[2];
+                        // Remove any inline comments from the operands
+                        if (parts.length > 1) {
+                            String op1 = parts[1];
+                            int commentStart = op1.indexOf(';');
+                            if (commentStart != -1) {
+                                op1 = op1.substring(0, commentStart).trim();
+                            }
+                            instr.sop1 = op1;
+                        }
+                        if (parts.length > 2) {
+                            String op2 = parts[2];
+                            int commentStart = op2.indexOf(';');
+                            if (commentStart != -1) {
+                                op2 = op2.substring(0, commentStart).trim();
+                            }
+                            instr.sop2 = op2;
+                        }
                     }
 
                     instrs.instructions[instrs.length] = instr;
@@ -299,140 +343,155 @@ public class interp {
         int[] memory,
         instructions instrs
     ) {
-        if (arguments.debug) {
-            common.box("Debug", "Executing instruction: " + instr.name, "info");
+        try {
+            if (arguments.debug) {
+                common.box("Debug", "Executing instruction: " + instr.name, "info");
+            }
+
+            switch (instr.name.toLowerCase()) {
+                case "mov":
+                    functions.mov(memory, instr.sop1, instr.sop2);
+                    break;
+                case "dumpinstr":
+                    dumpinstr(instrs);
+                    break;
+                case "add":
+                    functions.add(memory, instr.sop1, instr.sop2);
+                    break;
+                case "sub":
+                    functions.sub(memory, instr.sop1, instr.sop2);
+                    break;
+                case "mul":
+                    functions.mul(memory, instr.sop1, instr.sop2);
+                    break;
+                case "div":
+                    functions.div(memory, instr.sop1, instr.sop2);
+                    break;
+                case "cmp":
+                    functions.cmp(memory, instr.sop1, instr.sop2);
+                    break;
+                case "ret":
+                    functions.ret(instrs);
+                    break;
+                case "hlt":
+                    System.exit(0);
+                    break;
+                case "out":
+                    // out wants a fd or "place to output to"
+                    // 1 is stdout where as 2 is stderr
+                    String Splitted = instr.sop1.split(" ")[0];
+                    functions.out(memory, Splitted, instr.sop2);
+                    break;
+                case "in":
+                    // in wants a fd or "place to input from"
+                    // 0 is stdin
+                    String Splitted1 = instr.sop1.split(" ")[0];
+                    functions.in(memory, Splitted1, instr.sop2);
+                    break;
+                case "cout":
+                    String Splitted2 = instr.sop1.split(" ")[0];
+                    functions.cout(memory, Splitted2, instr.sop2);
+                    break;
+                case "jmp":
+                    functions.jmp(memory, instr.sop1, instrs);
+                    break;
+                case "je":
+                    functions.jeq(memory, instr.sop1, instrs);
+                    break;
+                case "jne":
+                    functions.jne(memory, instr.sop1, instrs);
+                    break;
+                case "db":
+                    functions.db(memory, instr.sop1);
+                    break;
+                case "push":
+                    functions.push(memory, instr.sop1);
+                    break;
+                case "pop":
+                    functions.pop(memory, instr.sop1);
+                    break;
+                case "inc":
+                    functions.inc(memory, instr.sop1);
+                    break;
+                case "dec":
+                    functions.dec(memory, instr.sop1);
+                    break;
+                case "call":
+                    functions.call(memory, instr.sop1, instrs);
+                    break;
+                case "shl":
+                    functions.shl(memory, instr.sop1, instr.sop2);
+                    break;
+                case "shr":
+                    functions.shr(memory, instr.sop1, instr.sop2);
+                    break;
+                case "and":
+                    functions.and(memory, instr.sop1, instr.sop2);
+                    break;
+                case "or":
+                    functions.or(memory, instr.sop1, instr.sop2);
+                    break;
+                case "xor":
+                    functions.xor(memory, instr.sop1, instr.sop2);
+                    break;
+                case "not":
+                    functions.not(memory, instr.sop1);
+                    break;
+                case "neg":
+                    functions.neg(memory, instr.sop1);
+                    break;
+                case "mni":
+                    // MNI format: MNI module.function reg1 reg2
+                    if (instr.sop1 == null) {
+                        throw new RuntimeException("Invalid MNI call format. Expected: MNI module.function reg1 reg2");
+                    }
+
+                    String[] mniParts = instr.sop1.split("\\.");
+                    if (mniParts.length != 2) {
+                        throw new RuntimeException("Invalid MNI function format. Expected: module.function");
+                    }
+
+                    String moduleName = mniParts[0];
+                    String functionName = mniParts[1];
+
+                    // Parse the register arguments
+                    if (instr.sop2 == null) {
+                        throw new RuntimeException("Missing register arguments for MNI call");
+                    }
+
+                    String[] registerArgs = instr.sop2.trim().split("\\s+");
+                    if (registerArgs.length < 2) {
+                        throw new RuntimeException("MNI call requires two register arguments");
+                    }
+
+                    // Create MNI object with register names
+                    MNIMethodObject methodObj = new MNIMethodObject(memory, registerArgs[0], registerArgs[1]);
+                    MNIHandler.handleMNICall(moduleName, functionName, methodObj);
+                    break;
+                default:
+                    common.box(
+                        "Error",
+                        "Unknown instruction: " + instr.name,
+                        "error"
+                    );
+                    return -1;
+            }
+
+            return 0;
+        } catch (Exception e) {
+            if (e instanceof MASMException) {
+                throw e;
+            }
+            throw new MASMException(
+                e.getMessage(),
+                instr.lineNumber,
+                instr.originalLine,
+                String.format("Error in instruction: %s %s %s",
+                    instr.name,
+                    instr.sop1 != null ? instr.sop1 : "",
+                    instr.sop2 != null ? instr.sop2 : "")
+            );
         }
-
-        switch (instr.name.toLowerCase()) {
-            case "mov":
-                functions.mov(memory, instr.sop1, instr.sop2);
-                break;
-            case "dumpinstr":
-                dumpinstr(instrs);
-                break;
-            case "add":
-                functions.add(memory, instr.sop1, instr.sop2);
-                break;
-            case "sub":
-                functions.sub(memory, instr.sop1, instr.sop2);
-                break;
-            case "mul":
-                functions.mul(memory, instr.sop1, instr.sop2);
-                break;
-            case "div":
-                functions.div(memory, instr.sop1, instr.sop2);
-                break;
-            case "cmp":
-                functions.cmp(memory, instr.sop1, instr.sop2);
-                break;
-            case "ret":
-                functions.ret(instrs);
-                break;
-            case "hlt":
-                System.exit(0);
-                break;
-            case "out":
-                // out wants a fd or "place to output to"
-                // 1 is stdout where as 2 is stderr
-                String Splitted = instr.sop1.split(" ")[0];
-                functions.out(memory, Splitted, instr.sop2);
-                break;
-            case "in":
-                // in wants a fd or "place to input from"
-                // 0 is stdin
-                String Splitted1 = instr.sop1.split(" ")[0];
-                functions.in(memory, Splitted1, instr.sop2);
-                break;
-            case "cout":
-                String Splitted2 = instr.sop1.split(" ")[0];
-                functions.cout(memory, Splitted2, instr.sop2);
-                break;
-            case "jmp":
-                functions.jmp(memory, instr.sop1, instrs);
-                break;
-            case "je":
-                functions.jeq(memory, instr.sop1, instrs);
-                break;
-            case "jne":
-                functions.jne(memory, instr.sop1, instrs);
-                break;
-            case "db":
-                functions.db(memory, instr.sop1);
-                break;
-            case "push":
-                functions.push(memory, instr.sop1);
-                break;
-            case "pop":
-                functions.pop(memory, instr.sop1);
-                break;
-            case "inc":
-                functions.inc(memory, instr.sop1);
-                break;
-            case "dec":
-                functions.dec(memory, instr.sop1);
-                break;
-            case "call":
-                functions.call(memory, instr.sop1, instrs);
-                break;
-            case "shl":
-                functions.shl(memory, instr.sop1, instr.sop2);
-                break;
-            case "shr":
-                functions.shr(memory, instr.sop1, instr.sop2);
-                break;
-            case "and":
-                functions.and(memory, instr.sop1, instr.sop2);
-                break;
-            case "or":
-                functions.or(memory, instr.sop1, instr.sop2);
-                break;
-            case "xor":
-                functions.xor(memory, instr.sop1, instr.sop2);
-                break;
-            case "not":
-                functions.not(memory, instr.sop1);
-                break;
-            case "neg":
-                functions.neg(memory, instr.sop1);
-                break;
-            case "mni":
-                // MNI format: MNI module.function reg1 reg2
-                if (instr.sop1 == null) {
-                    throw new RuntimeException("Invalid MNI call format. Expected: MNI module.function reg1 reg2");
-                }
-
-                String[] mniParts = instr.sop1.split("\\.");
-                if (mniParts.length != 2) {
-                    throw new RuntimeException("Invalid MNI function format. Expected: module.function");
-                }
-
-                String moduleName = mniParts[0];
-                String functionName = mniParts[1];
-
-                // Parse the register arguments
-                if (instr.sop2 == null) {
-                    throw new RuntimeException("Missing register arguments for MNI call");
-                }
-
-                String[] registerArgs = instr.sop2.trim().split("\\s+");
-                if (registerArgs.length < 2) {
-                    throw new RuntimeException("MNI call requires two register arguments");
-                }
-
-                // Create MNI object with register names
-                MNIMethodObject methodObj = new MNIMethodObject(memory, registerArgs[0], registerArgs[1]);
-                MNIHandler.handleMNICall(moduleName, functionName, methodObj);
-                break;
-            default:
-                common.box(
-                    "Error",
-                    "Unknown instruction: " + instr.name,
-                    "error"
-                );
-                return -1;
-        }
-
-        return 0;
     }
 
     // Helper method to parse values (either direct numbers or register references)

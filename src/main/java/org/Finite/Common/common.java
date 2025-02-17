@@ -1,8 +1,9 @@
-package org.Finite;
+package org.Finite.Common;
+
+import org.Finite.ReadResourceFile;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.nio.charset.*;
 import java.util.*;
 import java.io.*;
 

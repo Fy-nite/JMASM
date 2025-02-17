@@ -54,7 +54,7 @@
 
     <!-- Ignore public static field warnings in common class since it's used as a global state -->
     <Match>
-        <Class name="org.Finite.common"/>
+        <Class name="org.Finite.Common.common"/>
         <Bug pattern="MS_SHOULD_BE_FINAL,MS_MUTABLE_ARRAY"/>
     </Match>
 </FindBugsFilter>

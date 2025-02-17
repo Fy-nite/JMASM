@@ -1,6 +1,6 @@
 lbl main
     mov RAX 5
     mov RBX 5
-    MNI math.add RAX RBX
+    MNI math.square RAX RBX
     out 1 RAX
     hlt

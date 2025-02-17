@@ -1,9 +1,11 @@
 package org.Finite;
 
+import org.Finite.Common.common;
+
 import java.util.Arrays;
 import java.util.Scanner;
 
-import static org.Finite.common.*;
+import static org.Finite.Common.common.*;
 
 public class debug {
 

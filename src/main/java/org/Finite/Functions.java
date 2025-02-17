@@ -1,8 +1,7 @@
 package org.Finite;
 
-import static org.Finite.common.print;
-import static org.Finite.common.printerr;
-import static org.Finite.common.registersMap;
+import static org.Finite.Common.common.print;
+import static org.Finite.Common.common.printerr;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,7 +9,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import org.Finite.common.*;
+
+import org.Finite.Common.common;
 import org.Finite.interp.instructions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -489,38 +489,61 @@ public class Functions {
         memory[memoryAddress + dataPart.length()] = 0; // Null terminate
     }
 
-    public void mov(int[] memory, String reg1, String reg2) {
-        logger.trace("MOV {} {}", reg1, reg2);
-        // Validate destination register first
-        if (!isValidRegister(reg1)) {
-            throw new IllegalArgumentException(
-                "Invalid destination register: " + reg1
-            );
-        }
-
-        int value = 0;
-        if (reg2.startsWith("$")) {
+    public void mov(int[] memory, String dest, String source) {
+        logger.trace("MOV {} {}", dest, source);
+        
+        int value;
+        // Handle source operand first
+        if (source.startsWith("$")) {
+            // Source is memory address
             try {
-                int address = common.ReadRegister(reg2.substring(1));
-                value = memory[address];
+                // Try as register containing address first
+                try {
+                    int address = common.ReadRegister(source.substring(1));
+                    value = memory[address];
+                } catch (Exception e) {
+                    // Try as direct memory address
+                    int address = Integer.parseInt(source.substring(1));
+                    value = memory[address];
+                }
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(
-                    "Invalid memory address: " + reg2
-                );
+                throw new IllegalArgumentException("Invalid memory address: " + source);
             }
         } else {
+            // Source is register or immediate value
             try {
-                value = Integer.parseInt(reg2);
+                value = Integer.parseInt(source);
             } catch (NumberFormatException e) {
-                if (!isValidRegister(reg2)) {
-                    throw new IllegalArgumentException(
-                        "Invalid source register: " + reg2
-                    );
+                if (!isValidRegister(source)) {
+                    throw new IllegalArgumentException("Invalid source: " + source);
                 }
-                value = common.ReadRegister(reg2);
+                value = common.ReadRegister(source);
             }
         }
-        common.WriteRegister(reg1, value);
+
+        // Handle destination operand
+        if (dest.startsWith("$")) {
+            // Destination is memory address
+            try {
+                // Try as register containing address first
+                try {
+                    int address = common.ReadRegister(dest.substring(1));
+                    memory[address] = value;
+                } catch (Exception e) {
+                    // Try as direct memory address
+                    int address = Integer.parseInt(dest.substring(1));
+                    memory[address] = value;
+                }
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid memory address: " + dest);
+            }
+        } else {
+            // Destination is register
+            if (!isValidRegister(dest)) {
+                throw new IllegalArgumentException("Invalid destination register: " + dest);
+            }
+            common.WriteRegister(dest, value);
+        }
     }
 
     public void ret(instructions instr) {

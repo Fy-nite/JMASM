@@ -2,8 +2,7 @@ package org.Finite;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.File;
-import org.junit.Ignore;
+import org.Finite.Common.common;
 import org.junit.jupiter.api.*;
 
 public class FunctionsTest {

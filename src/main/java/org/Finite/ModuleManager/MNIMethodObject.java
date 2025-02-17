@@ -1,6 +1,6 @@
 package org.Finite.ModuleManager;
 
-import org.Finite.common;
+import org.Finite.Common.common;
 
 public class MNIMethodObject {
     // Register constants

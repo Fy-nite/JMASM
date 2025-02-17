@@ -15,4 +15,12 @@ public class MathModule {
         // Store result back in first register
         obj.setRegister(obj.reg1, result);
     }
+    @MNIFunction(module = "math", name = "square")
+    public static void square(MNIMethodObject obj) {
+        // Get value using register name
+        int value = obj.getRegister(obj.reg1);
+        int result = value * value;
+        // Store result back in first register
+        obj.setRegister(obj.reg1, result);
+    }
 }
