@@ -1,1 +1,7 @@
-
+2025-02-18 03:35:05,183 INFO [main] o.F.Main [Main.java:18] Starting MASM interpreter
+2025-02-18 03:35:05,186 INFO [main] o.F.M.ModuleInit [ModuleInit.java:29] Initializing module system
+2025-02-18 03:35:05,186 WARN [main] o.F.M.ModuleInit [ModuleInit.java:46] Module directory does not exist, creating: modules
+2025-02-18 03:35:05,187 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-18 03:35:05,190 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-18 03:35:05,192 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-18 03:35:05,217 INFO [main] o.F.Main [Main.java:43] Running file: main.masm

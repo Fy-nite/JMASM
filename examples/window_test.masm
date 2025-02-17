@@ -1,0 +1,56 @@
+lbl main
+    ; Create main window
+    mov RAX 1000
+    mov RBX 200
+    DB $1000 "MASM Window Test"
+    MNI window.create RAX RBX
+
+    ; Create a greeting label
+    mov RAX RBX
+    mov RBX 300
+    DB $1100 "Welcome to MASM GUI System!"
+    mov R0 20        ; x position
+    mov $1102 R0     ; Store in memory
+    mov R0 20        ; y position
+    mov $1103 R0
+    mov R0 250       ; width
+    mov $1104 R0
+    mov R0 30        ; height
+    mov $1105 R0
+    MNI window.label RAX RBX
+
+    ; Create first button
+    mov RAX 200
+    mov RBX 400
+    DB $1200 "Test Button 1"
+    mov R0 20        ; x position
+    mov $1202 R0
+    mov R0 60        ; y position
+    mov $1203 R0
+    mov R0 120       ; width
+    mov $1204 R0
+    mov R0 40        ; height
+    mov $1205 R0
+    MNI window.button RAX RBX
+
+    ; Create second button
+    mov RAX 200
+    mov RBX 500
+    DB $1300 "Test Button 2"
+    mov R0 150       ; x position
+    mov $1302 R0
+    mov R0 60        ; y position
+    mov $1303 R0
+    mov R0 120       ; width
+    mov $1304 R0
+    mov R0 40        ; height
+    mov $1305 R0
+    MNI window.button RAX RBX
+
+    ; Show the window
+    mov RAX 200
+    MNI window.show RAX RAX
+
+keep_running:
+    mov RAX 1000
+    jmp keep_running

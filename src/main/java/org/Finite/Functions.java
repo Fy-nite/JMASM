@@ -214,10 +214,25 @@ public class Functions {
 
     public void div(int[] memory, String reg1, String reg2) {
         // read the register hashmap
-        int value1 = common.ReadRegister(reg1);
-        int value2 = common.ReadRegister(reg2);
+        int value1;
+        int value2;
+        try
+        {
+        value1 = common.ReadRegister(reg1);
+        value2 = common.ReadRegister(reg2);
+        } catch (Exception e) {
+            common.box("Error", "Invalid register name", "error");
+            throw e;
+        }
         // div the values
-        int result = value1 / value2;
+        int result;
+        try
+        {
+            result = value1 / value2;
+        } catch (ArithmeticException e) {
+            common.box("Error", "Division by zero", "error");
+            throw e;
+        }
         // write the result to the first register
         common.WriteRegister(reg1, result);
     }
@@ -454,16 +469,29 @@ public class Functions {
         try {
             // parse $<reg> then $<num> then <num>
             if (addressPart.startsWith("$")) {
+               // print("DEBUG: Address part starts with $\n");
+               // print(addressPart);
+
                 try {
                     int regAddress = common.ReadRegister(
                         addressPart.substring(1)
                     );
+                    if (regAddress < 0 || regAddress >= common.MAX_MEMORY) {
+                        throw new IllegalArgumentException(
+                            "Invalid memory address: " + regAddress
+                        );
+                    }
+                  //  print("DEBUG: Register address: %d\n", regAddress);
                     memoryAddress = regAddress;
                 } catch (NumberFormatException e) {
                     memoryAddress = Integer.parseInt(addressPart.substring(1));
+
                 }
             } else {
+                //print("DEBUG: Address part does not start with $\n");
+               // print(addressPart);
                 memoryAddress = Integer.parseInt(addressPart);
+
             }
         } catch (NumberFormatException e) {
             logger.error("Invalid memory address: '{}'", addressPart);
@@ -481,7 +509,7 @@ public class Functions {
             dataPart,
             memoryAddress
         );
-        // print("Writing '%s' to memory address %d\n", dataPart, memoryAddress);
+        print("Writing '%s' to memory address %d\n", dataPart, memoryAddress);
         // Write to memory
         for (int i = 0; i < dataPart.length(); i++) {
             memory[memoryAddress + i] = dataPart.charAt(i);
@@ -821,6 +849,7 @@ public class Functions {
 
     public void jmp(int[] memory, String target, instructions instrs) {
         logger.debug("JMP to target: {}", target);
+        int value;
         if (target == null || instrs == null) {
             //  print("DEBUG: ERROR - Null target or instructions\n");
             throw new NullPointerException(
@@ -831,15 +860,16 @@ public class Functions {
         try
         {
 
-        int value = parseTarget(target, instrs);
+        value = parseTarget(target, instrs);
         if (value == -1) {
             //print("DEBUG: Jump failed - invalid target: %s\n", target);
             common.box("Error", "Unknown address or label: " + target, "error");
             return;
         }
+        common.WriteRegister("RIP", value - 1);
         } catch (Exception e) {
             // try as label
-            int value = instrs.labelMap.get(target.substring(1));
+            value = instrs.labelMap.get(target.substring(1));
             if (value == -1) {
                 //print("DEBUG: Jump failed - invalid target: %s\n", target);
                 common.box("Error", "Unknown address or label: " + target, "error");
@@ -849,7 +879,7 @@ public class Functions {
         }
         //print("DEBUG: Jump successful - Setting RIP to %d\n", value);
         //TODO: figure out why -1 saves stdlib functions from dying?
-
+        common.WriteRegister("RIP", value - 1);
     }
 
     private static int parseTarget(String target) {
