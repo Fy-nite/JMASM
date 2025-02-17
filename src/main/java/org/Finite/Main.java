@@ -6,6 +6,8 @@ import com.beust.jcommander.JCommander;
 import org.Finite.interp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.Finite.ModuleManager.ModuleInit;
+import org.Finite.ModuleManager.examples.MathModule;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -15,6 +17,12 @@ public class Main {
         System.out.print("\033[H\033[2J");
         // get the main system resource
         System.out.flush();
+        
+        // Initialize module system
+        ModuleInit.init();
+        
+        // Register built-in modules
+        ModuleInit.registerBuiltInModule(MathModule.class);
         
         ArgumentParser.Args arguments = new ArgumentParser.Args();
         JCommander.newBuilder()

@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 import org.Finite.Functions.*;
+import org.Finite.ModuleManager.MNIMethodObject;
+import org.Finite.ModuleManager.MNIHandler;
 
 public class interp {
 
@@ -147,7 +149,8 @@ public class interp {
         }
     }
 
-        public static interp terp = new interp();
+    public static interp terp = new interp();
+
     public static void ExecuteAllInstructions(instructions instrs) {
         Integer mainAddress = instrs.labelMap.get("main");
 
@@ -155,7 +158,7 @@ public class interp {
         if (!testMode && mainAddress == null) {
             common.box(
                 "Error",
-                "No 'main' label found in the program",
+                "No 'main' label found in the program\n halting execution",
                 "error"
             );
             System.exit(1);
@@ -392,6 +395,34 @@ public class interp {
             case "neg":
                 functions.neg(memory, instr.sop1);
                 break;
+            case "mni":
+                // MNI format: MNI module.function reg1 reg2
+                if (instr.sop1 == null) {
+                    throw new RuntimeException("Invalid MNI call format. Expected: MNI module.function reg1 reg2");
+                }
+
+                String[] mniParts = instr.sop1.split("\\.");
+                if (mniParts.length != 2) {
+                    throw new RuntimeException("Invalid MNI function format. Expected: module.function");
+                }
+
+                String moduleName = mniParts[0];
+                String functionName = mniParts[1];
+
+                // Parse the register arguments
+                if (instr.sop2 == null) {
+                    throw new RuntimeException("Missing register arguments for MNI call");
+                }
+
+                String[] registerArgs = instr.sop2.trim().split("\\s+");
+                if (registerArgs.length < 2) {
+                    throw new RuntimeException("MNI call requires two register arguments");
+                }
+
+                // Create MNI object with register names
+                MNIMethodObject methodObj = new MNIMethodObject(memory, registerArgs[0], registerArgs[1]);
+                MNIHandler.handleMNICall(moduleName, functionName, methodObj);
+                break;
             default:
                 common.box(
                     "Error",
@@ -402,5 +433,24 @@ public class interp {
         }
 
         return 0;
+    }
+
+    // Helper method to parse values (either direct numbers or register references)
+    private int parseValue(String arg, int[] memory) {
+        if (arg.startsWith("$")) {
+            // Memory reference
+            int addr = Integer.parseInt(arg.substring(1));
+            return memory[addr];
+        } else if (arg.startsWith("R")) {
+            // Register reference
+            return common.ReadRegister(arg);
+        } else {
+            // Direct number
+            try {
+                return Integer.parseInt(arg);
+            } catch (NumberFormatException e) {
+                throw new RuntimeException("Invalid number format: " + arg);
+            }
+        }
     }
 }

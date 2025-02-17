@@ -1,10 +1,6 @@
-#include "stdio.io"
 lbl main
-    mov RAX 1
-    mov RBX 100
-    DB 100 "Hello, World!\n"
-    call #printf
-    call #printf
-    call #printf
-    call #printf
+    mov RAX 5
+    mov RBX 5
+    MNI math.add RAX RBX
+    out 1 RAX
     hlt

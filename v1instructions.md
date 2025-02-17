@@ -122,6 +122,9 @@ Calls a function at the specified label.
 Example: `CALL #function`
 or calls external code if not marked with a #
 Example: `CALL $function`
+
+Note: Unlike JMP, CALL saves the current instruction pointer (RIP) on the stack before jumping to the label. This allows the function to return to the point where it was called using the RET instruction.
+
 ## Stack Operations
 
 ### PUSH

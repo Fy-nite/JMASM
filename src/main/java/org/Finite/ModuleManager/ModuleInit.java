@@ -17,6 +17,8 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.Finite.ModuleManager.annotations.MNIClass;
+import org.Finite.ModuleManager.annotations.MNIFunction;
 
 /*
     * Module init is a class that is responsible for initializing the modules that are loaded into the interpreter.
@@ -97,14 +99,37 @@ public class ModuleInit {
     }
 
     private static void registerClassMethods(String jarName, Class<?> clazz) {
+        MNIClass mniClass = clazz.getAnnotation(MNIClass.class);
+        if (mniClass != null) {
+            String moduleName = mniClass.value();
+            for (Method method : clazz.getDeclaredMethods()) {
+                MNIFunction mniFunction = method.getAnnotation(MNIFunction.class);
+                if (mniFunction != null) {
+                    registry.registerMNIModule(moduleName, mniFunction.name(), method);
+                    logger.debug("Registered MNI function: {}.{}", moduleName, mniFunction.name());
+                }
+            }
+        }
+        
+        // Regular module registration
         for (Method method : clazz.getDeclaredMethods()) {
-            // You might want to add annotations or other filters here
-            registry.registerModule(jarName, clazz.getName(), method.getName(), method);
+            if (!method.isAnnotationPresent(MNIFunction.class)) {
+                registry.registerModule(jarName, clazz.getName(), method.getName(), method);
+            }
         }
     }
 
     // Method to access registered modules at runtime
     public static Method getModuleMethod(String jarName, String className, String methodName) {
         return registry.getMethod(jarName, className, methodName);
+    }
+
+    public static void registerBuiltInModule(Class<?> moduleClass) {
+        try {
+            logger.info("Registering built-in module: {}", moduleClass.getName());
+            registerClassMethods("built-in", moduleClass);
+        } catch (Exception e) {
+            logger.error("Failed to register built-in module: {}", moduleClass.getName(), e);
+        }
     }
 }

@@ -28,6 +28,14 @@ public class ModuleRegistry {
                 .get(methodName);
     }
 
+    public void registerMNIModule(String moduleName, String functionName, Method method) {
+        registerModule("mni", moduleName, functionName, method);
+    }
+
+    public Method getMNIMethod(String moduleName, String functionName) {
+        return getMethod("mni", moduleName, functionName);
+    }
+
     public Map<String, Map<String, Map<String, Method>>> getModuleMap() {
         return moduleMap;
     }

@@ -761,27 +761,40 @@ public class Functions {
     }
 
     public void jne(int[] memory, String target, instructions instrs) {
-        // read the register hashmap
+        logger.debug("JNE instruction with target: {}", target);
+        
+        if (target == null || instrs == null) {
+            throw new NullPointerException("Target or instructions cannot be null");
+        }
+
+        // read the RFLAGS register
         int value = common.ReadRegister("RFLAGS");
-        int targetz = 0;
-        String fixed = target.substring(1);
-        try
-        {
-        targetz = instrs.labelMap.get(fixed);
+        logger.debug("RFLAGS value: {}", value);
 
+        // Get label name by removing the '#' prefix
+        if (!target.startsWith("#")) {
+            common.box("Error", "JNE target must be a label (start with #)", "error");
+            return;
         }
-        catch (Exception e) {
-            // try as label
-            targetz = instrs.labelMap.get(target.substring(1));
-        }
-        // if the value is 1 jump to the target
 
+        String labelName = target.substring(1);
+        Integer targetAddress = instrs.labelMap.get(labelName);
+        
+        if (targetAddress == null) {
+            common.box("Error", "Unknown label: " + labelName, "error");
+            return;
+        }
+
+        logger.debug("Target address for label {}: {}", labelName, targetAddress);
+
+        // Jump if RFLAGS is 0 (values were not equal)
         if (value == 0) {
-            jmp(memory, target, instrs);
+            common.WriteRegister("RIP", targetAddress - 1);
+            logger.debug("Jump taken - setting RIP to {}", targetAddress - 1);
+        } else {
+            logger.debug("Jump not taken - RFLAGS was 1");
         }
     }
-
-
 
     public void jmp(int[] memory, String target, instructions instrs) {
         logger.debug("JMP to target: {}", target);
