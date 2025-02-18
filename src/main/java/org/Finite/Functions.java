@@ -868,7 +868,15 @@ public class Functions {
             // read the register hashmap
             int value = common.ReadRegister("RFLAGS");
             String fixed = target.substring(1);
-            int targetz = instrs.labelMap.get(fixed);
+            int targetz;
+            try
+            {
+                targetz = instrs.labelMap.get(fixed);
+            }
+            catch (Exception e)
+            {
+                throw new MASMException("Invalid label", instrs.currentLine, instrs.currentlineContents, "Error in instruction: jeq");
+            }
 
             // debug print the label map
 
