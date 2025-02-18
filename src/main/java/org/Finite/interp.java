@@ -249,12 +249,12 @@ public class interp {
 
     public static void runFile(String filename) {
         instructions instrs = new instructions();
-        instrs.instructions = new instruction[Integer.MAX_VALUE]; // reasonable default size
+        instrs.instructions = new instruction[21463]; // reasonable default size
         instrs.Memory = new int[common.MAX_MEMORY]; // reasonable default memory size
         instrs.length = 0;
         instrs.memory_size = common.MAX_MEMORY;
-        instrs.max_labels = Integer.MAX_VALUE;
-        instrs.max_instructions = Integer.MAX_VALUE;
+        instrs.max_labels = 21463;
+        instrs.max_instructions = 21463;
         instrs.labels = new int[instrs.max_labels];
         instrs.functions = new Functions();
 
