@@ -1,12 +1,23 @@
 #include "msrc/extras"
 
 lbl main
-    DB $100 "meow"
-    dB $500 "$: "
+    
+    dB $100 "$: "
+    db $200 "ls"
+    db $210 "dir"
     mov RAX 1
-    mov RBX 500
+    mov RBX 100
     call #printf
-    in 1 $200
+    in 1 $100
+    
+    
+    ; ls cmp 
     MNI StringOperations.cmp 100 200
-    je #yes
-    jmp #no
+    je #ls
+
+    ; dir cmp
+
+    MNI StringOperations.cmp 100 250
+    je #dir
+
+    jmp #invalid

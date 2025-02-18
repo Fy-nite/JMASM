@@ -249,12 +249,12 @@ public class interp {
 
     public static void runFile(String filename) {
         instructions instrs = new instructions();
-        instrs.instructions = new instruction[100]; // reasonable default size
+        instrs.instructions = new instruction[Integer.MAX_VALUE]; // reasonable default size
         instrs.Memory = new int[common.MAX_MEMORY]; // reasonable default memory size
         instrs.length = 0;
         instrs.memory_size = common.MAX_MEMORY;
-        instrs.max_labels = common.MAX_MEMORY / 5;
-        instrs.max_instructions = common.MAX_MEMORY / 5;
+        instrs.max_labels = Integer.MAX_VALUE;
+        instrs.max_instructions = Integer.MAX_VALUE;
         instrs.labels = new int[instrs.max_labels];
         instrs.functions = new Functions();
 
@@ -486,11 +486,12 @@ public class interp {
                     if (registerArgs.length < 2) {
                         throw new RuntimeException("MNI call requires two register arguments");
                     }
-
+                    
 
 
                     // Create MNI object with register names
                     MNIMethodObject methodObj = new MNIMethodObject(memory, registerArgs[0], registerArgs[1]);
+                    methodObj.argregs = registerArgs;
                     MNIHandler.handleMNICall(moduleName, functionName, methodObj);
                     break;
                 default:

@@ -5,7 +5,7 @@ import org.Finite.Common.common;
 public class MNIMethodObject {
     // Register constants
     public static final String[] REGISTERS = {
-        "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9",
+        "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9","R10", "R11", "R12", "R13", "R14", "R15",
         "RAX", "RBX", "RCX", "RDX",
         "RIP", "RSP", "RBP","RFLAGS"
     };
@@ -14,6 +14,8 @@ public class MNIMethodObject {
     public int arg2;
     public String reg1;  // Register name for first argument
     public String reg2;  // Register name for second argument
+    public int args[]; // Arguments
+    public String[] argregs;
     private final int[] memory;
 
     // System state
@@ -76,6 +78,13 @@ public class MNIMethodObject {
             sb.append(c);
         }
         return sb.toString();
+    }
+
+    public void writeString(int address, String value) {
+        for (int i = 0; i < value.length(); i++) {
+            common.WriteMemory(memory, address + i, value.charAt(i));
+        }
+        common.WriteMemory(memory, address + value.length(), 0); // Null terminator
     }
 
     public void writeMemory(int address, String value) {

@@ -16,7 +16,7 @@ public class common {
     String modulesPath = modulesDir + "/modules.toml";
     String[] modules = ReadResourceFile.readDir(modulesPath);
     // THIS IS FINAL~~!!?!??!?!??!?!?!??!?!?!?!??!?!?
-    public static final int MAX_MEMORY = 4096; // are you angry?
+    public static final int MAX_MEMORY = 9123; // are you angry?
     public static String[] commands = new String[]{
             "dumpMemory",
             "dumpRegisters",
