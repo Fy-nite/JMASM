@@ -22,8 +22,7 @@ import org.Finite.ModuleManager.annotations.MNIFunction;
 public class ModuleInit {
     private static final Logger logger = LoggerFactory.getLogger(ModuleInit.class);
     private static final ModuleRegistry registry = ModuleRegistry.getInstance();
-    private static final String BASE_DIR = "JMASM"; // Base directory for modules
-    private static final String DEFAULT_MODULE_DIR = BASE_DIR + "/modules"; // Default directory for modules
+    private static final String DEFAULT_MODULE_DIR = "modules"; // Default directory for modules
 
     public static void init() {
         try {
@@ -38,17 +37,8 @@ public class ModuleInit {
     }
 
     private static String getModuleDirectory() {
-        try {
-            // Get the path of the running JAR file
-            String jarPath = ModuleInit.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
-            File jarFile = new File(jarPath);
-            // Use the parent directory of the JAR file as the base directory
-            File baseDir = jarFile.getParentFile();
-            return new File(baseDir, DEFAULT_MODULE_DIR).getAbsolutePath();
-        } catch (Exception e) {
-            logger.error("Failed to determine module directory", e);
-            return DEFAULT_MODULE_DIR;
-        }
+        // TODO: Read from TOML config
+        return DEFAULT_MODULE_DIR;
     }
 
     private static void loadModulesFromDirectory(File directory) {

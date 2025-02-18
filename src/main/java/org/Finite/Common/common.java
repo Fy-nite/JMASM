@@ -10,10 +10,8 @@ import java.io.*;
 import static org.Finite.interp.arguments;
 
 public class common {
-    private static final String BASE_DIR = "JMASM"; // Base directory for modules and config
-    String modulesDir = BASE_DIR + "/modules";
-    String configDir = BASE_DIR + "/config";
-    String logsDir = BASE_DIR + "/logs";
+    String modulesDir = "JMASM/modules";
+    String configDir = "JMASM/config";
     String configPath = configDir + "/config.toml";
     String modulesPath = modulesDir + "/modules.toml";
     String[] modules = ReadResourceFile.readDir(modulesPath);
@@ -65,16 +63,6 @@ public class common {
 
         
     }};
-
-    public common() {
-        createDirectories();
-    }
-
-    private void createDirectories() {
-        new File(modulesDir).mkdirs();
-        new File(configDir).mkdirs();
-        new File(logsDir).mkdirs();
-    }
 
     /**
      * Dumps the contents of the memory array to the console.

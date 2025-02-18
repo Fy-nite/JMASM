@@ -1,129 +1,129 @@
 package org.Finite;
 
 import org.Finite.Common.common;
-import org.Finite.Exceptions.MASMException;
+import org.Finite.Config.MASMConfig;
+import org.Finite.Exceptions.IncludeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.Finite.Common.common.printerr;
-
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class includemanager {
     private static final Logger log = LoggerFactory.getLogger(includemanager.class);
     private static final Set<String> includedFiles = new HashSet<>();
+    private static final MASMConfig config = MASMConfig.getInstance();
 
-    /*
-     * include's a file into the current file from the resources directory
-     * take for example the following code:
-     * #include "stdlib.term.io"
-     * this will include the file stdlib/term/io.masm into the current file
-     * if the user does not specify the file extension, it will default to .masm
-     * if the file does not exist, it will throw an error
-     * if the file does exist, it will include the file
-     * another thing is that if the user does
-     * #include "stdlib.term.io.*"
-     * then we just include the whole directory because the user wants literly everything inside that directory for some reason.
-     */
-    public static String include(String filename, String CurrentFileContents) {
-        // Remove quotes from filename
+    static {
+        // Configure logger level based on debug flag
+        if (!config.getBoolean("debug.enabled", false)) {
+            ((ch.qos.logback.classic.Logger) log).setLevel(ch.qos.logback.classic.Level.INFO);
+        }
+    }
+
+    public static String include(String filename, String currentFileContents) {
         String cleanFilename = filename.replace("\"", "");
-        
         if (includedFiles.contains(cleanFilename)) {
-            throw new MASMException(
-                "Recursive include detected", 
-                0,  // We'll need to pass line numbers from the parser
-                "#include \"" + filename + "\"",
-                "File has already been included: " + cleanFilename
+            throw new IncludeException(
+                "Circular include detected",
+                0,
+                cleanFilename,
+                "File has already been included"
             );
         }
-        
-        // Convert the dot notation to path
-        String resourcePath = cleanFilename.replace(".", "/") + ".masm";
-        
+
         try {
-            // Track this file as being processed
             includedFiles.add(cleanFilename);
-            
-            String fileContent = readFileContent(resourcePath);
-            if (fileContent == null) {
-                throw new MASMException(
-                    "Include file not found",
-                    0,  // Line number should be passed from parser
-                    "#include \"" + filename + "\"",
-                    "Could not find file: " + resourcePath
-                );
-            }
-
-            // Process the include statement line by line
-            String[] lines = CurrentFileContents.split("\n");
-            StringBuilder processedContent = new StringBuilder();
-            String includeStatement = "#include \"" + filename.replace("\"", "") + "\"";
-            
-            boolean includeFound = false;
-            for (int lineNum = 0; lineNum < lines.length; lineNum++) {
-                String line = lines[lineNum];
-                if (line.trim().equals(includeStatement)) {
-                    if (!includeFound) {
-                        processedContent.append(fileContent).append("\n");
-                        includeFound = true;
-                    } else {
-                        throw new MASMException(
-                            "Duplicate include statement",
-                            lineNum + 1,
-                            line,
-                            "File already included: " + filename
-                        );
-                    }
-                } else {
-                    processedContent.append(line).append("\n");
-                }
-            }
-
-            // Remove this file from being processed
+            String fileContent = readFileContent(cleanFilename);
+            String processed = processIncludes(currentFileContents, fileContent, cleanFilename);
             includedFiles.remove(cleanFilename);
-            
-            return processedContent.toString();
-            
+            return processed;
         } catch (IOException e) {
-            throw new MASMException(
-                "Failed to process include",
-                0,  // Line number should be passed from parser
-                "#include \"" + filename + "\"",
+            throw new IncludeException(
+                "Failed to include file",
+                0,
+                cleanFilename,
                 e.getMessage()
             );
         }
     }
 
-    private static String readFileContent(String resourcePath) throws IOException {
-        // Try classpath first
-        ClassLoader classLoader = Functions.class.getClassLoader();
-        InputStream inputStream = classLoader.getResourceAsStream(resourcePath);
+    private static String readFileContent(String filename) throws IOException {
+        List<File> searchPaths = getSearchPaths(filename);
         
-        // If not found in classpath, try file system
-        if (inputStream == null) {
-            File localFile = new File(resourcePath);
-            if (!localFile.exists()) {
-                localFile = new File(System.getProperty("user.dir"), resourcePath);
-            }
-            if (localFile.exists()) {
-                inputStream = new FileInputStream(localFile);
+        // First try loading from classpath if it's a stdlib file
+        String resourcePath = filename.replace(".", "/") + ".masm";
+        if (filename.startsWith("std")) {
+            try (InputStream is = includemanager.class.getClassLoader().getResourceAsStream(resourcePath)) {
+                if (is != null) {
+                    return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                }
             }
         }
         
-        if (inputStream == null) {
-            return null;
+        // Fall back to file system search
+        for (File file : searchPaths) {
+            if (file.exists()) {
+                return readFile(file);
+            }
         }
+        
+        StringBuilder errorMsg = new StringBuilder("File not found in any search path or resources:\n");
+        errorMsg.append("- classpath:").append(resourcePath).append("\n");
+        for (File path : searchPaths) {
+            errorMsg.append("- ").append(path.getAbsolutePath()).append("\n");
+        }
+        throw new IOException(errorMsg.toString());
+    }
 
-        // Read the file content
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-            StringBuilder content = new StringBuilder();
+    private static List<File> getSearchPaths(String filename) {
+        String resourcePath = filename.replace(".", "/") + ".masm";
+        List<File> paths = new ArrayList<>();
+        
+        // Current directory
+        paths.add(new File(resourcePath));
+        
+        // Working directory
+        paths.add(new File(System.getProperty("user.dir"), resourcePath));
+        
+        // Module directory
+        paths.add(new File(config.getPath("modules.dir"), resourcePath));
+        
+        // Stdlib directory
+        paths.add(new File(config.getPath("stdlib.dir"), resourcePath));
+        
+        return paths;
+    }
+
+    private static String readFile(File file) throws IOException {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 content.append(line).append("\n");
             }
-            return content.toString();
         }
+        return content.toString();
+    }
+
+    private static String processIncludes(String currentContent, String includeContent, String includePath) {
+        String[] lines = currentContent.split("\n");
+        StringBuilder processed = new StringBuilder();
+        String includeStatement = "#include \"" + includePath + "\"";
+        
+        boolean includeFound = false;
+        for (String line : lines) {
+            if (line.trim().equals(includeStatement)) {
+                if (!includeFound) {
+                    processed.append(includeContent);
+                    includeFound = true;
+                }
+            } else {
+                processed.append(line).append("\n");
+            }
+        }
+        
+        return processed.toString();
     }
 }

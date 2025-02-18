@@ -57,4 +57,10 @@
         <Class name="org.Finite.Common.common"/>
         <Bug pattern="MS_SHOULD_BE_FINAL,MS_MUTABLE_ARRAY"/>
     </Match>
+
+    <!-- Ignore resource loading warnings -->
+    <Match>
+        <Class name="org.Finite.includemanager"/>
+        <Bug pattern="RR_NOT_CHECKED,OS_OPEN_STREAM"/>
+    </Match>
 </FindBugsFilter>
