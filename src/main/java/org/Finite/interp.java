@@ -18,34 +18,55 @@ public class interp {
     public static boolean testmode = true;
     public static boolean testMode = Boolean.getBoolean("testMode"); // This line changes
 
+    private static boolean hasIncludes(String content) {
+        return content.toLowerCase().contains("#include");
+    }
+
     private static String preprocess(String[] lines) {
         StringBuilder processed = new StringBuilder();
         for (String line : lines) {
-            line = line.trim();
-            if (line.toLowerCase().startsWith("#include")) {
-                // Extract the file path from between quotes
-                int start = line.indexOf("\"");
-                int end = line.lastIndexOf("\"");
-                if (start != -1 && end != -1 && start != end) {
-                    String path = line.substring(start + 1, end);
-                    // Use includemanager to process the include
-                    processed.append(includemanager.include(path, line));
-                }
-            } else if (line.startsWith(";")) {
-                // Skip full-line comments
-                continue;
-            } else {
-                // Handle inline comments by removing everything after ;
-                int commentStart = line.indexOf(';');
-                if (commentStart != -1) {
-                    line = line.substring(0, commentStart).trim();
-                }
-                if (!line.isEmpty()) {
-                    processed.append(line).append("\n");
+            processed.append(line).append("\n");
+        }
+        
+        String result = processed.toString();
+        int maxPasses = 10; // Prevent infinite recursion
+        int currentPass = 0;
+        
+        while (hasIncludes(result) && currentPass < maxPasses) {
+            StringBuilder newProcessed = new StringBuilder();
+            String[] currentLines = result.split("\n");
+            
+            for (String line : currentLines) {
+                line = line.trim();
+                if (line.toLowerCase().startsWith("#include")) {
+                    int start = line.indexOf("\"");
+                    int end = line.lastIndexOf("\"");
+                    if (start != -1 && end != -1 && start != end) {
+                        String path = line.substring(start + 1, end);
+                        newProcessed.append(includemanager.include(path, line));
+                    }
+                } else if (line.startsWith(";")) {
+                    continue;
+                } else {
+                    int commentStart = line.indexOf(';');
+                    if (commentStart != -1) {
+                        line = line.substring(0, commentStart).trim();
+                    }
+                    if (!line.isEmpty()) {
+                        newProcessed.append(line).append("\n");
+                    }
                 }
             }
+            
+            result = newProcessed.toString();
+            currentPass++;
         }
-        return processed.toString();
+        
+        if (currentPass >= maxPasses) {
+            throw new RuntimeException("Maximum include depth exceeded. Possible circular inclusion detected.");
+        }
+        
+        return result;
     }
 
     public static interp.instructions parseInstructions(String[] ops) {
@@ -169,7 +190,10 @@ public class interp {
         public int Memory[];
         public int labels[];
         public Functions functions;
-        public HashMap<String, Integer> labelMap; // Add this field
+        public HashMap<String, Integer> labelMap; 
+        public int currentLine;  // Add current line tracking
+        public String currentlineContents;  // Add current line contents tracking
+         
 
         public instructions() {
             labelMap = new HashMap<>();
@@ -183,17 +207,13 @@ public class interp {
 
         // Only enforce main label in non-test mode
         if (!testMode && mainAddress == null) {
-            common.box(
-                "Error",
-                "No 'main' label found in the program\n halting execution",
-                "error"
-            );
-            System.exit(1);
+           throw new MASMException("No 'main' label found in instructions", instrs.currentLine, instrs.currentlineContents, "Error in instruction: main");
+          
         }
 
         // In test mode, start from instruction 0 if no main
         common.WriteRegister("RIP", mainAddress != null ? mainAddress : 0);
-
+        String instrString = "";
         int rip = common.ReadRegister("RIP");
         while (rip < instrs.length) {
             instruction instr = instrs.instructions[rip];
@@ -204,6 +224,11 @@ public class interp {
                     "info"
                 );
             }
+            instrs.currentLine = instr.lineNumber;  // Track current line
+
+            // Track current line contents
+            instrString = instr.name + " " + (instr.sop1 != null ? instr.sop1 : "") + " " + (instr.sop2 != null ? instr.sop2 : "");
+            instrs.currentlineContents = instrString;
             terp.ExecuteSingleInstruction(instr, instrs.Memory, instrs);
             rip = common.ReadRegister("RIP") + 1;
             common.WriteRegister("RIP", rip);
@@ -312,12 +337,8 @@ public class interp {
 
             // Only check for main label in non-test mode
             if (!testMode && !instrs.labelMap.containsKey("main")) {
-                common.box(
-                    "Error",
-                    "No 'main' label found in " + filename,
-                    "error"
-                );
-                System.exit(1);
+            throw new MASMException("No 'main' label found in instructions", instrs.currentLine, instrs.currentlineContents, "Error in instruction: main");
+                
             }
             //System.out.println(preprocessed);
             ExecuteAllInstructions(instrs);
@@ -350,25 +371,25 @@ public class interp {
 
             switch (instr.name.toLowerCase()) {
                 case "mov":
-                    functions.mov(memory, instr.sop1, instr.sop2);
+                    functions.mov(memory, instr.sop1, instr.sop2,instrs);
                     break;
                 case "dumpinstr":
                     dumpinstr(instrs);
                     break;
                 case "add":
-                    functions.add(memory, instr.sop1, instr.sop2);
+                    functions.add(memory, instr.sop1, instr.sop2,instrs);
                     break;
                 case "sub":
-                    functions.sub(memory, instr.sop1, instr.sop2);
+                    functions.sub(memory, instr.sop1, instr.sop2,instrs);
                     break;
                 case "mul":
-                    functions.mul(memory, instr.sop1, instr.sop2);
+                    functions.mul(memory, instr.sop1, instr.sop2,instrs);
                     break;
                 case "div":
-                    functions.div(memory, instr.sop1, instr.sop2);
+                    functions.div(memory, instr.sop1, instr.sop2,instrs);
                     break;
                 case "cmp":
-                    functions.cmp(memory, instr.sop1, instr.sop2);
+                    functions.cmp(memory, instr.sop1, instr.sop2,instrs);
                     break;
                 case "ret":
                     functions.ret(instrs);
@@ -380,17 +401,17 @@ public class interp {
                     // out wants a fd or "place to output to"
                     // 1 is stdout where as 2 is stderr
                     String Splitted = instr.sop1.split(" ")[0];
-                    functions.out(memory, Splitted, instr.sop2);
+                    functions.out(memory, Splitted, instr.sop2,instrs);
                     break;
                 case "in":
                     // in wants a fd or "place to input from"
                     // 0 is stdin
                     String Splitted1 = instr.sop1.split(" ")[0];
-                    functions.in(memory, Splitted1, instr.sop2);
+                    functions.in(memory, Splitted1, instr.sop2,instrs);
                     break;
                 case "cout":
                     String Splitted2 = instr.sop1.split(" ")[0];
-                    functions.cout(memory, Splitted2, instr.sop2);
+                    functions.cout(memory, Splitted2, instr.sop2,instrs);
                     break;
                 case "jmp":
                     functions.jmp(memory, instr.sop1, instrs);
@@ -402,43 +423,44 @@ public class interp {
                     functions.jne(memory, instr.sop1, instrs);
                     break;
                 case "db":
-                    functions.db(memory, instr.sop1);
+                    String[] dbParts = instr.sop1.split("\\s+");
+                    functions.db(memory, instrs,dbParts);
                     break;
                 case "push":
-                    functions.push(memory, instr.sop1);
+                    functions.push(memory, instr.sop1,instrs);
                     break;
                 case "pop":
-                    functions.pop(memory, instr.sop1);
+                    functions.pop(memory, instr.sop1,instrs);
                     break;
                 case "inc":
-                    functions.inc(memory, instr.sop1);
+                    functions.inc(memory, instr.sop1,instrs);
                     break;
                 case "dec":
-                    functions.dec(memory, instr.sop1);
+                    functions.dec(memory, instr.sop1,instrs);
                     break;
                 case "call":
                     functions.call(memory, instr.sop1, instrs);
                     break;
                 case "shl":
-                    functions.shl(memory, instr.sop1, instr.sop2);
+                    functions.shl(memory, instr.sop1, instr.sop2,instrs);
                     break;
                 case "shr":
-                    functions.shr(memory, instr.sop1, instr.sop2);
+                    functions.shr(memory, instr.sop1, instr.sop2,instrs);
                     break;
                 case "and":
-                    functions.and(memory, instr.sop1, instr.sop2);
+                    functions.and(memory, instr.sop1, instr.sop2,instrs);
                     break;
                 case "or":
-                    functions.or(memory, instr.sop1, instr.sop2);
+                    functions.or(memory, instr.sop1, instr.sop2,instrs);
                     break;
                 case "xor":
-                    functions.xor(memory, instr.sop1, instr.sop2);
+                    functions.xor(memory, instr.sop1, instr.sop2,instrs);
                     break;
                 case "not":
-                    functions.not(memory, instr.sop1);
+                    functions.not(memory, instr.sop1,instrs);
                     break;
                 case "neg":
-                    functions.neg(memory, instr.sop1);
+                    functions.neg(memory, instr.sop1,instrs);
                     break;
                 case "mni":
                     // MNI format: MNI module.function reg1 reg2
@@ -447,6 +469,7 @@ public class interp {
                     }
 
                     String[] mniParts = instr.sop1.split("\\.");
+             
                     if (mniParts.length != 2) {
                         throw new RuntimeException("Invalid MNI function format. Expected: module.function");
                     }
@@ -464,17 +487,19 @@ public class interp {
                         throw new RuntimeException("MNI call requires two register arguments");
                     }
 
+
+
                     // Create MNI object with register names
                     MNIMethodObject methodObj = new MNIMethodObject(memory, registerArgs[0], registerArgs[1]);
                     MNIHandler.handleMNICall(moduleName, functionName, methodObj);
                     break;
                 default:
-                    common.box(
-                        "Error",
-                        "Unknown instruction: " + instr.name,
-                        "error"
-                    );
-                    return -1;
+                throw new MASMException(
+                    "Unknown instruction: " + instr.name,
+                    instr.lineNumber,
+                    instr.originalLine,
+                    "Error in instruction: " + instr.name
+                );
             }
 
             return 0;

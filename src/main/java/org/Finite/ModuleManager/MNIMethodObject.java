@@ -25,13 +25,57 @@ public class MNIMethodObject {
         this.memory = memory;
         this.reg1 = reg1;
         this.reg2 = reg2;
-        this.arg1 = common.ReadRegister(reg1);
-        this.arg2 = common.ReadRegister(reg2);
+
+        // Handle first argument
+        if (reg1.startsWith("$")) {
+            try {
+                int address = Integer.parseInt(reg1.substring(1));
+                this.arg1 = memory[address];
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid memory address: " + reg1);
+            }
+        } else if (reg1.startsWith("0x")) {
+            this.arg1 = Integer.parseInt(reg1.substring(2), 16);
+        } 
+        // register can be a number
+        else if (reg1.matches("-?\\d+")) {
+            this.arg1 = Integer.parseInt(reg1);
+        } 
+        else {
+            this.arg1 = common.ReadRegister(reg1);
+        }
+
+        // Handle second argument
+        if (reg2.startsWith("$")) {
+            try {
+                int address = Integer.parseInt(reg2.substring(1));
+                this.arg2 = memory[address];
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid memory address: " + reg2);
+            }
+        } else if (reg2.startsWith("0x")) {
+            this.arg2 = Integer.parseInt(reg2.substring(2), 16);
+        }
+        // register can be a number
+        else if (reg2.matches("-?\\d+")) {
+            this.arg2 = Integer.parseInt(reg2);
+        } 
+        else {
+            this.arg2 = common.ReadRegister(reg2);
+        }
     }
 
     // Memory operations
     public int readMemory(int address) {
         return common.ReadMemory(memory, address);
+    }
+    public String readString(int address) {
+        StringBuilder sb = new StringBuilder();
+        char c;
+        while ((c = (char)readMemory(address++)) != 0) {
+            sb.append(c);
+        }
+        return sb.toString();
     }
 
     public void writeMemory(int address, String value) {

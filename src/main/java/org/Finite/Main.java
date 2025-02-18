@@ -34,11 +34,11 @@ public class Main {
                 logger.debug("Showing help message");
                 common.box("Help", "This is the help message", "info");
             }
-            if (arguments.debug) {
-                common.box("java MASM interpreter", "2025 (C) Finite\nType 'help' for a list of commands\n", "info");
-                logger.debug("Starting debug REPL");
-                debug.DebugRepl();
-            }
+//            if (arguments.debug) {
+//                common.box("java MASM interpreter", "2025 (C) Finite\nType 'help' for a list of commands\n", "info");
+//                logger.debug("Starting debug REPL");
+//                debug.DebugRepl();
+//            }
             if (arguments.file != null && !arguments.file.isEmpty()) {
                 logger.info("Running file: {}", arguments.file);
                 common.box("java MASM interpreter", "2025 (C) Finite\nrunning file: " + arguments.file + "\n", "info");

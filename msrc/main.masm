@@ -1,0 +1,8 @@
+#include "extras"
+
+lbl main
+    db $100 "meow"
+    DB $200 "meow"
+    MNI StringOperations.cmp 100 200
+    je #yes
+    jmp #no

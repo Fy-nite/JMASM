@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import org.Finite.Common.common;
+import org.Finite.Exceptions.MASMException;
 import org.Finite.interp.instructions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,6 @@ public class Functions {
         // Convert the dot notation to path
         String resourcePath =
             filename.replace("\"", "").replace(".", "/") + ".masm";
-
         try {
             // Get resource as stream from classpath
             ClassLoader classLoader = Functions.class.getClassLoader();
@@ -86,36 +86,34 @@ public class Functions {
     }
 
     // Stack operations using last 1024 bytes of memory
-    public static void push(int[] memory, String reg1) {
-        // Get current stack pointer (starts from MAX_MEMORY and grows downward)
-        int sp = common.ReadRegister("RSP");
-        if (sp <= common.MAX_MEMORY - 1024) {
-            throw new IllegalStateException("Stack overflow");
+    public static void push(int[] memory, String reg1, instructions instrs) {
+        try {
+            int sp = common.ReadRegister("RSP");
+            if (sp <= common.MAX_MEMORY - 1024) {
+                throw new MASMException("Stack overflow", instrs.currentLine, instrs.currentlineContents, "Error in instruction: push");
+            }
+            int value = common.ReadRegister(reg1);
+            sp--;
+            common.WriteMemory(memory, sp, value);
+            common.WriteRegister("RSP", sp);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: push");
         }
-
-        // Get value to push
-        int value = common.ReadRegister(reg1);
-
-        // Decrement stack pointer
-        sp--;
-        common.WriteMemory(memory, sp, value);
-        common.WriteRegister("RSP", sp);
     }
 
-    public static void pop(int[] memory, String reg1) {
-        // Get current stack pointer
-        int sp = common.ReadRegister("RSP");
-        if (sp >= common.MAX_MEMORY) {
-            throw new IllegalStateException("Stack underflow");
+    public static void pop(int[] memory, String reg1, instructions instrs) {
+        try {
+            int sp = common.ReadRegister("RSP");
+            if (sp >= common.MAX_MEMORY) {
+                throw new MASMException("Stack underflow", instrs.currentLine, instrs.currentlineContents, "Error in instruction: pop");
+            }
+            int value = common.ReadMemory(memory, sp);
+            sp++;
+            common.WriteRegister("RSP", sp);
+            common.WriteRegister(reg1, value);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: pop");
         }
-
-        // Get value from stack
-        int value = common.ReadMemory(memory, sp);
-
-        // Increment stack pointer
-        sp++;
-        common.WriteRegister("RSP", sp);
-        common.WriteRegister(reg1, value);
     }
 
     public static void include(String filename, instructions instrs) {
@@ -182,59 +180,59 @@ public class Functions {
         }
     }
 
-    public void add(int[] memory, String reg1, String reg2) {
-        if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
-            throw new IllegalArgumentException("Invalid register name");
-        }
-        int value1 = common.ReadRegister(reg1);
-        int value2 = common.ReadRegister(reg2);
-        int result = value1 + value2;
-        common.WriteRegister(reg1, result);
-    }
-
-    public void sub(int[] memory, String reg1, String reg2) {
-        if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
-            throw new IllegalArgumentException("Invalid register name");
-        }
-        int value1 = common.ReadRegister(reg1);
-        int value2 = common.ReadRegister(reg2);
-        int result = value1 - value2;
-        common.WriteRegister(reg1, result);
-    }
-
-    public void mul(int[] memory, String reg1, String reg2) {
-        if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
-            throw new IllegalArgumentException("Invalid register name");
-        }
-        int value1 = common.ReadRegister(reg1);
-        int value2 = common.ReadRegister(reg2);
-        int result = value1 * value2;
-        common.WriteRegister(reg1, result);
-    }
-
-    public void div(int[] memory, String reg1, String reg2) {
-        // read the register hashmap
-        int value1;
-        int value2;
-        try
-        {
-        value1 = common.ReadRegister(reg1);
-        value2 = common.ReadRegister(reg2);
+    public void add(int[] memory, String reg1, String reg2, instructions instrs) {
+        try {
+            if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
+                throw new MASMException("Invalid register name", instrs.currentLine, instrs.currentlineContents, "Error in instruction: add");
+            }
+            int value1 = common.ReadRegister(reg1);
+            int value2 = common.ReadRegister(reg2);
+            int result = value1 + value2;
+            common.WriteRegister(reg1, result);
         } catch (Exception e) {
-            common.box("Error", "Invalid register name", "error");
-            throw e;
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: add");
         }
-        // div the values
-        int result;
-        try
-        {
-            result = value1 / value2;
+    }
+
+    public void sub(int[] memory, String reg1, String reg2, instructions instrs) {
+        try {
+            if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
+                throw new MASMException("Invalid register name", instrs.currentLine, instrs.currentlineContents, "Error in instruction: sub");
+            }
+            int value1 = common.ReadRegister(reg1);
+            int value2 = common.ReadRegister(reg2);
+            int result = value1 - value2;
+            common.WriteRegister(reg1, result);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: sub");
+        }
+    }
+
+    public void mul(int[] memory, String reg1, String reg2, instructions instrs) {
+        try {
+            if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
+                throw new MASMException("Invalid register name", instrs.currentLine, instrs.currentlineContents, "Error in instruction: mul");
+            }
+            int value1 = common.ReadRegister(reg1);
+            int value2 = common.ReadRegister(reg2);
+            int result = value1 * value2;
+            common.WriteRegister(reg1, result);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: mul");
+        }
+    }
+
+    public void div(int[] memory, String reg1, String reg2, instructions instrs) {
+        try {
+            int value1 = common.ReadRegister(reg1);
+            int value2 = common.ReadRegister(reg2);
+            int result = value1 / value2;
+            common.WriteRegister(reg1, result);
         } catch (ArithmeticException e) {
-            common.box("Error", "Division by zero", "error");
-            throw e;
+            throw new MASMException("Division by zero", instrs.currentLine, instrs.currentlineContents, "Error in instruction: div");
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: div");
         }
-        // write the result to the first register
-        common.WriteRegister(reg1, result);
     }
 
     private String processEscapeSequences(String input) {
@@ -284,312 +282,326 @@ public class Functions {
         return result.toString();
     }
 
-    public void out(int[] memory, String fd, String source) {
-        String value = "";
-        int fileDescriptor;
-        if (source == null) {
-            return;
-        }
+    public void out(int[] memory, String fd, String source, instructions instrs) {
         try {
-            fileDescriptor = Integer.parseInt(fd);
-        } catch (Exception e) {
-            // If fd is a register, get its value
-            fileDescriptor = common.ReadRegister(fd);
-        }
-
-        // Handle memory address starting with $
-        if (source.startsWith("$")) {
-            String addr = source.substring(1);
+            String value = "";
+            int fileDescriptor;
+            if (source == null) {
+                return;
+            }
             try {
-                // Check if it's a direct memory address
-                int address = Integer.parseInt(addr);
-                // Always try to read as null-terminated string first
-                StringBuilder sb = new StringBuilder();
-                int i = 0;
-                while (
-                    address + i < memory.length && memory[address + i] != 0
-                ) {
-                    sb.append((char) memory[address + i]);
-                    i++;
-                }
-                value = processEscapeSequences(sb.toString());
-
-                // If empty, try as number
-                if (value.isEmpty()) {
-                    value = Integer.toString(memory[address]);
-                }
+                fileDescriptor = Integer.parseInt(fd);
             } catch (Exception e) {
-                // Handle register containing address
-                int regAddr = common.ReadRegister(addr);
-                StringBuilder sb = new StringBuilder();
-                int i = 0;
-                while (
-                    regAddr + i < memory.length && memory[regAddr + i] != 0
-                ) {
-                    sb.append((char) memory[regAddr + i]);
-                    i++;
-                }
-                value = processEscapeSequences(sb.toString());
+                // If fd is a register, get its value
+                fileDescriptor = common.ReadRegister(fd);
+            }
 
-                // If empty, try as number
-                if (value.isEmpty()) {
-                    value = Integer.toString(memory[regAddr]);
-                }
-            }
-        } else {
-            // Direct register or literal value
-            try {
-                // Try parsing as number first
-                int numValue = Integer.parseInt(source);
-                value = Integer.toString(numValue);
-            } catch (NumberFormatException e) {
+            // Handle memory address starting with $
+            if (source.startsWith("$")) {
+                String addr = source.substring(1);
                 try {
-                    // Try reading from register
-                    value = Integer.toString(common.ReadRegister(source));
-                } catch (Exception ex) {
-                    // If all else fails, treat as string literal with escape sequences
-                    value = processEscapeSequences(source);
+                    // Check if it's a direct memory address
+                    int address = Integer.parseInt(addr);
+                    // Always try to read as null-terminated string first
+                    StringBuilder sb = new StringBuilder();
+                    int i = 0;
+                    while (
+                        address + i < memory.length && memory[address + i] != 0
+                    ) {
+                        sb.append((char) memory[address + i]);
+                        i++;
+                    }
+                    value = processEscapeSequences(sb.toString());
+
+                    // If empty, try as number
+                    if (value.isEmpty()) {
+                        value = Integer.toString(memory[address]);
+                    }
+                } catch (Exception e) {
+                    // Handle register containing address
+                    int regAddr = common.ReadRegister(addr);
+                    StringBuilder sb = new StringBuilder();
+                    int i = 0;
+                    while (
+                        regAddr + i < memory.length && memory[regAddr + i] != 0
+                    ) {
+                        sb.append((char) memory[regAddr + i]);
+                        i++;
+                    }
+                    value = processEscapeSequences(sb.toString());
+
+                    // If empty, try as number
+                    if (value.isEmpty()) {
+                        value = Integer.toString(memory[regAddr]);
+                    }
+                }
+            } else {
+                // Direct register or literal value
+                try {
+                    // Try parsing as number first
+                    int numValue = Integer.parseInt(source);
+                    value = Integer.toString(numValue);
+                } catch (NumberFormatException e) {
+                    try {
+                        // Try reading from register
+                        value = Integer.toString(common.ReadRegister(source));
+                    } catch (Exception ex) {
+                        // If all else fails, treat as string literal with escape sequences
+                        value = processEscapeSequences(source);
+                    }
                 }
             }
-        }
-        //print("DEBUG: Writing to file descriptor %d: %s\n", fileDescriptor, value);
-        if (fileDescriptor == 1) {
-            print("%s", value);
-        } else if (fileDescriptor == 2) {
-            printerr("%s", value);
-        } else {
-            common.box(
-                "Error",
-                "Invalid file descriptor: " + fileDescriptor,
-                "error"
-            );
+            //print("DEBUG: Writing to file descriptor %d: %s\n", fileDescriptor, value);
+            if (fileDescriptor == 1) {
+                print("%s", value);
+            } else if (fileDescriptor == 2) {
+                printerr("%s", value);
+            } else {
+                common.box(
+                    "Error",
+                    "Invalid file descriptor: " + fileDescriptor,
+                    "error"
+                );
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
         }
     }
 
     //HOw to use
     // in memory
     //
-    public void in(int[] memory, String fd, String dest) {
-        // Validate inputs first
-        if (fd == null || dest == null) {
-            throw new IllegalArgumentException(
-                "File descriptor and destination cannot be null"
-            );
-        }
-
-        // Validate file descriptor
-        int fileDescriptor;
+    public void in(int[] memory, String fd, String dest, instructions instrs) {
         try {
-            fileDescriptor = Integer.parseInt(fd);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(
-                "Invalid file descriptor format: " + fd
-            );
-        }
-
-        if (fileDescriptor != 1) {
-            throw new IllegalArgumentException(
-                "Only stdin (fd 1) is supported"
-            );
-        }
-
-        // Validate destination format first
-        if (!dest.startsWith("$")) {
-            throw new IllegalArgumentException(
-                "Invalid destination format. Must be memory address ($)"
-            );
-        }
-
-        // Validate memory address format before attempting input
-        try {
-            int address = Integer.parseInt(dest.substring(1));
-            if (address < 0 || address >= common.MAX_MEMORY) {
+            // Validate inputs first
+            if (fd == null || dest == null) {
                 throw new IllegalArgumentException(
-                    "Memory address out of bounds: " + address
+                    "File descriptor and destination cannot be null"
                 );
             }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(
-                "Invalid memory address format: " + dest
-            );
-        }
 
-        // After all validation passes, try to read input
-        try {
-            String value = common.inbox("Enter input: ");
-            int address = Integer.parseInt(dest.substring(1));
-
-            // Write input to memory
-            for (int i = 0; i < value.length(); i++) {
-                memory[address + i] = value.charAt(i);
-            }
-            memory[address + value.length()] = 0; // Null terminate
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new IllegalArgumentException(
-                "Input operation failed: " + e.getMessage()
-            );
-        }
-    }
-
-    public void db(int[] memory, String... argz) {
-        if (argz == null || argz.length == 0) {
-            throw new IllegalArgumentException(
-                "DB instruction requires arguments"
-            );
-        }
-
-        String fullArg = argz[0].trim();
-        //print("%s\n",fullArg);
-        logger.debug("DB instruction received: '{}'", fullArg);
-
-        // Skip any extra whitespace after DB
-        fullArg = fullArg.replaceAll("\\s+", " ");
-
-        String[] parts = fullArg.split(" ", 2);
-        if (parts.length < 2) {
-            logger.error("Invalid DB format: '{}'", fullArg);
-            throw new IllegalArgumentException(
-                "DB instruction requires address and data"
-            );
-        }
-
-        String addressPart = parts[0];
-        String dataPart = parts[1];
-
-        logger.debug(
-            "DB parsed - Address: '{}', Data: '{}'",
-            addressPart,
-            dataPart
-        );
-        //print("DB parsed - Address: '%s', Data: '%s'\n", addressPart, dataPart);
-        // Parse memory address
-        int memoryAddress;
-        try {
-            // parse $<reg> then $<num> then <num>
-            if (addressPart.startsWith("$")) {
-               // print("DEBUG: Address part starts with $\n");
-               // print(addressPart);
-
-                try {
-                    int regAddress = common.ReadRegister(
-                        addressPart.substring(1)
-                    );
-                    if (regAddress < 0 || regAddress >= common.MAX_MEMORY) {
-                        throw new IllegalArgumentException(
-                            "Invalid memory address: " + regAddress
-                        );
-                    }
-                  //  print("DEBUG: Register address: %d\n", regAddress);
-                    memoryAddress = regAddress;
-                } catch (NumberFormatException e) {
-                    memoryAddress = Integer.parseInt(addressPart.substring(1));
-
-                }
-            } else {
-                //print("DEBUG: Address part does not start with $\n");
-               // print(addressPart);
-                memoryAddress = Integer.parseInt(addressPart);
-
-            }
-        } catch (NumberFormatException e) {
-            logger.error("Invalid memory address: '{}'", addressPart);
-            throw new IllegalArgumentException(
-                "Invalid memory address: " + addressPart
-            );
-        }
-        // Clean up the data string
-        if (dataPart.startsWith("\"") && dataPart.endsWith("\"")) {
-            dataPart = dataPart.substring(1, dataPart.length() - 1);
-        }
-
-        logger.debug(
-            "Writing '{}' to memory address {}",
-            dataPart,
-            memoryAddress
-        );
-        print("Writing '%s' to memory address %d\n", dataPart, memoryAddress);
-        // Write to memory
-        for (int i = 0; i < dataPart.length(); i++) {
-            memory[memoryAddress + i] = dataPart.charAt(i);
-        }
-        memory[memoryAddress + dataPart.length()] = 0; // Null terminate
-    }
-
-    public void mov(int[] memory, String dest, String source) {
-        logger.trace("MOV {} {}", dest, source);
-        
-        int value;
-        // Handle source operand first
-        if (source.startsWith("$")) {
-            // Source is memory address
+            // Validate file descriptor
+            int fileDescriptor;
             try {
-                // Try as register containing address first
+                fileDescriptor = Integer.parseInt(fd);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                    "Invalid file descriptor format: " + fd
+                );
+            }
+
+            if (fileDescriptor != 1) {
+                throw new IllegalArgumentException(
+                    "Only stdin (fd 1) is supported"
+                );
+            }
+
+            // Validate destination format first
+            if (!dest.startsWith("$")) {
+                throw new IllegalArgumentException(
+                    "Invalid destination format. Must be memory address ($)"
+                );
+            }
+
+            // Validate memory address format before attempting input
+            try {
+                int address = Integer.parseInt(dest.substring(1));
+                if (address < 0 || address >= common.MAX_MEMORY) {
+                    throw new IllegalArgumentException(
+                        "Memory address out of bounds: " + address
+                    );
+                }
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                    "Invalid memory address format: " + dest
+                );
+            }
+
+            // After all validation passes, try to read input
+            try {
+                String value = common.inbox("Enter input: ");
+                int address = Integer.parseInt(dest.substring(1));
+
+                // Write input to memory
+                for (int i = 0; i < value.length(); i++) {
+                    memory[address + i] = value.charAt(i);
+                }
+                memory[address + value.length()] = 0; // Null terminate
+            } catch (IllegalArgumentException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IllegalArgumentException(
+                    "Input operation failed: " + e.getMessage()
+                );
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: in");
+        }
+    }
+
+    public void db(int[] memory, instructions instrs, String... argz) {
+        try {
+            if (argz == null || argz.length == 0) {
+                throw new MASMException(
+                    "DB instruction requires arguments",
+                    instrs.currentLine,
+                    instrs.currentlineContents,
+                    "Error in instruction: db"
+                );
+            }
+
+            String fullArg = String.join(" ", argz).trim();
+            logger.debug("DB instruction received: '{}'", fullArg);
+
+            // Skip any extra whitespace after DB
+            fullArg = fullArg.replaceAll("\\s+", " ");
+
+            String[] parts = fullArg.split(" ", 2);
+            if (parts.length < 2) {
+                logger.error("Invalid DB format: '{}'", fullArg);
+                throw new MASMException(
+                    "DB instruction requires address and data",
+                    instrs.currentLine,
+                    instrs.currentlineContents,
+                    "Error in instruction: db"
+                );
+            }
+
+            String addressPart = parts[0];
+            String dataPart = parts[1];
+
+            logger.debug(
+                "DB parsed - Address: '{}', Data: '{}'",
+                addressPart,
+                dataPart
+            );
+
+            // Parse memory address
+            int memoryAddress;
+            try {
+                if (addressPart.startsWith("$")) {
+                    String addressStr = addressPart.substring(1);
+                    try {
+                        memoryAddress = Integer.parseInt(addressStr);
+                    } catch (NumberFormatException e) {
+                        memoryAddress = common.ReadRegister(addressStr);
+                    }
+                } else {
+                    memoryAddress = Integer.parseInt(addressPart);
+                }
+
+                if (memoryAddress < 0 || memoryAddress >= common.MAX_MEMORY) {
+                    throw new MASMException(
+                        "Invalid memory address: " + memoryAddress,
+                        instrs.currentLine,
+                        instrs.currentlineContents,
+                        "Error in instruction: db"
+                    );
+                }
+            } catch (NumberFormatException e) {
+                logger.error("Invalid memory address: '{}'", addressPart);
+                throw new MASMException(
+                    "Invalid memory address: " + addressPart,
+                    instrs.currentLine,
+                    instrs.currentlineContents,
+                    "Error in instruction: db"
+                );
+            }
+
+            // Clean up the data string
+            if (dataPart.startsWith("\"") && dataPart.endsWith("\"")) {
+                dataPart = dataPart.substring(1, dataPart.length() - 1);
+            }
+
+            logger.debug(
+                "Writing '{}' to memory address {}",
+                dataPart,
+                memoryAddress
+            );
+            print("Writing '%s' to memory address %d\n", dataPart, memoryAddress);
+
+            // Write to memory
+            for (int i = 0; i < dataPart.length(); i++) {
+                memory[memoryAddress + i] = dataPart.charAt(i);
+            }
+            memory[memoryAddress + dataPart.length()] = 0; // Null terminate
+        } catch (Exception e) {
+            throw new MASMException(
+                e.getMessage(),
+                instrs.currentLine,
+                instrs.currentlineContents,
+                "Error in instruction: db"
+            );
+        }
+    }
+
+    public void mov(int[] memory, String dest, String source, instructions instrs) {
+        try {
+            logger.trace("MOV {} {}", dest, source);
+            
+            int value;
+            // Handle source operand first
+            if (source.startsWith("$")) {
+                // Source is memory address
                 try {
-                    int address = common.ReadRegister(source.substring(1));
-                    value = memory[address];
-                } catch (Exception e) {
-                    // Try as direct memory address
                     int address = Integer.parseInt(source.substring(1));
                     value = memory[address];
+                } catch (NumberFormatException e) {
+                    throw new MASMException("Invalid memory address: " + source, instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                 }
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid memory address: " + source);
-            }
-        } else {
-            // Source is register or immediate value
-            try {
-                value = Integer.parseInt(source);
-            } catch (NumberFormatException e) {
-                if (!isValidRegister(source)) {
-                    throw new IllegalArgumentException("Invalid source: " + source);
-                }
-                value = common.ReadRegister(source);
-            }
-        }
-
-        // Handle destination operand
-        if (dest.startsWith("$")) {
-            // Destination is memory address
-            try {
-                // Try as register containing address first
+            } else {
+                // Source is register or immediate value
                 try {
-                    int address = common.ReadRegister(dest.substring(1));
-                    memory[address] = value;
-                } catch (Exception e) {
-                    // Try as direct memory address
+                    value = Integer.parseInt(source);
+                } catch (NumberFormatException e) {
+                    if (!isValidRegister(source)) {
+                        throw new MASMException("Invalid source: " + source, instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                    }
+                    value = common.ReadRegister(source);
+                }
+            }
+
+            // Handle destination operand
+            if (dest.startsWith("$")) {
+                // Destination is memory address
+                try {
                     int address = Integer.parseInt(dest.substring(1));
                     memory[address] = value;
+                } catch (NumberFormatException e) {
+                    throw new MASMException("Invalid memory address: " + dest, instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                 }
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid memory address: " + dest);
+            } else {
+                // Destination is register
+                if (!isValidRegister(dest)) {
+                    throw new MASMException("Invalid destination register: " + dest, instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                }
+                common.WriteRegister(dest, value);
             }
-        } else {
-            // Destination is register
-            if (!isValidRegister(dest)) {
-                throw new IllegalArgumentException("Invalid destination register: " + dest);
-            }
-            common.WriteRegister(dest, value);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
         }
     }
 
-    public void ret(instructions instr) {
-        // Get current stack pointer
-        int sp = common.ReadRegister("RSP");
-        if (sp >= common.MAX_MEMORY) {
-            throw new IllegalStateException("Stack underflow in ret");
+    public void ret(instructions instrs) {
+        try {
+            // Get current stack pointer
+            int sp = common.ReadRegister("RSP");
+            if (sp >= common.MAX_MEMORY) {
+                throw new IllegalStateException("Stack underflow in ret");
+            }
+
+            // Get return address from stack
+            int returnAddr = common.ReadMemory(instrs.Memory, sp);
+
+            // Increment stack pointer
+            sp++;
+            common.WriteRegister("RSP", sp);
+
+            // Jump to return address
+            common.WriteRegister("RIP", returnAddr);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: ret");
         }
-
-        // Get return address from stack
-        int returnAddr = common.ReadMemory(instr.Memory, sp);
-
-        // Increment stack pointer
-        sp++;
-        common.WriteRegister("RSP", sp);
-
-        // Jump to return address
-        common.WriteRegister("RIP", returnAddr);
     }
 
     // Helper method to validate registers
@@ -625,261 +637,338 @@ public class Functions {
         );
     }
 
-    public void cmp(int[] memory, String reg1, String reg2) {
-        if (!isValidRegister(reg1)) {
-            throw new IllegalArgumentException(
-                "Invalid register name: " + reg1
-            );
-        }
-
-        int value1 = common.ReadRegister(reg1);
-        int value2;
-
+    public void cmp(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
-            value2 = Integer.parseInt(reg2);
-        } catch (NumberFormatException e) {
-            if (!isValidRegister(reg2)) {
-                throw new IllegalArgumentException(
-                    "Invalid register name: " + reg2
-                );
+            int value1;
+            int value2;
+            print("Comparing %s and %s\n", reg1, reg2);
+            // Handle first operand
+            if (reg1.startsWith("$")) {
+                try {
+                    int address = Integer.parseInt(reg1.substring(1));
+                    value1 = memory[address];
+                } catch (NumberFormatException e) {
+                    throw new MASMException("Invalid memory address: " + reg1, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
+                }
+            } else {
+                if (!isValidRegister(reg1)) {
+                    throw new MASMException("Invalid register name: " + reg1, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
+                }
+                value1 = common.ReadRegister(reg1);
             }
-            value2 = common.ReadRegister(reg2);
+
+            // Handle second operand
+            try {
+                value2 = Integer.parseInt(reg2);
+            } catch (NumberFormatException e) {
+                if (reg2.startsWith("$")) {
+                    try {
+                        int address = Integer.parseInt(reg2.substring(1));
+                        value2 = memory[address];
+                    } catch (NumberFormatException ex) {
+                        throw new MASMException("Invalid memory address: " + reg2, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
+                    }
+                } else {
+                    if (!isValidRegister(reg2)) {
+                        throw new MASMException("Invalid register name: " + reg2, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
+                    }
+                    value2 = common.ReadRegister(reg2);
+                }
+            }
+
+            common.WriteRegister("RFLAGS", (value1 == value2) ? 1 : 0);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
         }
-
-        common.WriteRegister("RFLAGS", (value1 == value2) ? 1 : 0);
     }
 
-    public void cout(int[] memory, String fd, String reg) {
-        // read the register hashmap
-        int value = common.ReadRegister(reg);
-        // print the value
-        if (fd.equals("1")) {
-            // convert to character
-            char c = (char) value;
-            print("%c", c);
-        } else if (fd.equals("2")) {
-            // convert to character
-            char c = (char) value;
-            printerr("%c", c);
+    public void cout(int[] memory, String fd, String reg, instructions instrs) {
+        try {
+            // read the register hashmap
+            int value = common.ReadRegister(reg);
+            // print the value
+            if (fd.equals("1")) {
+                // convert to character
+                char c = (char) value;
+                print("%c", c);
+            } else if (fd.equals("2")) {
+                // convert to character
+                char c = (char) value;
+                printerr("%c", c);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: cout");
         }
     }
 
-    public static void inc(int[] memory, String reg) {
-        // read the register hashmap
-        int value = common.ReadRegister(reg);
-        // increment the value
-        value++;
-        // write the value back to the register
-        common.WriteRegister(reg, value);
+    public static void inc(int[] memory, String reg, instructions instrs) {
+        try {
+            // read the register hashmap
+            int value = common.ReadRegister(reg);
+            // increment the value
+            value++;
+            // write the value back to the register
+            common.WriteRegister(reg, value);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: inc");
+        }
     }
 
-    public static void dec(int[] memory, String reg) {
-        // read the register hashmap
-        int value = common.ReadRegister(reg);
-        // decrement the value
-        value--;
-        // write the value back to the register
-        common.WriteRegister(reg, value);
+    public static void dec(int[] memory, String reg, instructions instrs) {
+        try {
+            // read the register hashmap
+            int value = common.ReadRegister(reg);
+            // decrement the value
+            value--;
+            // write the value back to the register
+            common.WriteRegister(reg, value);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: dec");
+        }
     }
 
-    public static void shl(int[] memory, String reg1, String reg2) {
-        // read the register hashmap
-        int value1 = common.ReadRegister(reg1);
-        int value2 = common.ReadRegister(reg2);
-        // shift the value
-        value1 = value1 << value2;
-        // write the value back to the register
-        common.WriteRegister(reg1, value1);
+    public static void shl(int[] memory, String reg1, String reg2, instructions instrs) {
+        try {
+            // read the register hashmap
+            int value1 = common.ReadRegister(reg1);
+            int value2 = common.ReadRegister(reg2);
+            // shift the value
+            value1 = value1 << value2;
+            // write the value back to the register
+            common.WriteRegister(reg1, value1);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: shl");
+        }
     }
 
-    public static void shr(int[] memory, String reg1, String reg2) {
-        // read the register hashmap
-        int value1 = common.ReadRegister(reg1);
-        int value2 = common.ReadRegister(reg2);
-        // shift the value
-        value1 = value1 >> value2;
-        // write the value back to the register
-        common.WriteRegister(reg1, value1);
+    public static void shr(int[] memory, String reg1, String reg2, instructions instrs) {
+        try {
+            // read the register hashmap
+            int value1 = common.ReadRegister(reg1);
+            int value2 = common.ReadRegister(reg2);
+            // shift the value
+            value1 = value1 >> value2;
+            // write the value back to the register
+            common.WriteRegister(reg1, value1);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: shr");
+        }
     }
 
-    public static void and(int[] memory, String reg1, String reg2) {
-        // read the register hashmap
-        int value1 = common.ReadRegister(reg1);
-        int value2 = common.ReadRegister(reg2);
-        // and the values
-        int result = value1 & value2;
-        // write the result back to the register
-        common.WriteRegister(reg1, result);
+    public static void and(int[] memory, String reg1, String reg2, instructions instrs) {
+        try {
+            // read the register hashmap
+            int value1 = common.ReadRegister(reg1);
+            int value2 = common.ReadRegister(reg2);
+            // and the values
+            int result = value1 & value2;
+            // write the result back to the register
+            common.WriteRegister(reg1, result);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: and");
+        }
     }
 
-    public static void or(int[] memory, String reg1, String reg2) {
-        // read the register hashmap
-        int value1 = common.ReadRegister(reg1);
-        int value2 = common.ReadRegister(reg2);
-        // or the values
-        int result = value1 | value2;
-        // write the result back to the register
-        common.WriteRegister(reg1, result);
+    public static void or(int[] memory, String reg1, String reg2, instructions instrs) {
+        try {
+            // read the register hashmap
+            int value1 = common.ReadRegister(reg1);
+            int value2 = common.ReadRegister(reg2);
+            // or the values
+            int result = value1 | value2;
+            // write the result back to the register
+            common.WriteRegister(reg1, result);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: or");
+        }
     }
 
-    public static void xor(int[] memory, String reg1, String reg2) {
-        // read the register hashmap
-        int value1 = common.ReadRegister(reg1);
-        int value2 = common.ReadRegister(reg2);
-        // xor the values
-        int result = value1 ^ value2;
-        // write the result back to the register
-        common.WriteRegister(reg1, result);
+    public static void xor(int[] memory, String reg1, String reg2, instructions instrs) {
+        try {
+            // read the register hashmap
+            int value1 = common.ReadRegister(reg1);
+            int value2 = common.ReadRegister(reg2);
+            // xor the values
+            int result = value1 ^ value2;
+            // write the result back to the register
+            common.WriteRegister(reg1, result);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: xor");
+        }
     }
 
-    public static void not(int[] memory, String reg) {
-        // read the register hashmap
-        int value = common.ReadRegister(reg);
-        // not the value
-        value = ~value;
-        // write the value back to the register
-        common.WriteRegister(reg, value);
+    public static void not(int[] memory, String reg, instructions instrs) {
+        try {
+            // read the register hashmap
+            int value = common.ReadRegister(reg);
+            // not the value
+            value = ~value;
+            // write the value back to the register
+            common.WriteRegister(reg, value);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: not");
+        }
     }
 
-    public static void neg(int[] memory, String reg) {
-        // read the register hashmap
-        int value = common.ReadRegister(reg);
-        // negate the value
-        value = -value;
-        // write the value back to the register
-        common.WriteRegister(reg, value);
+    public static void neg(int[] memory, String reg, instructions instrs) {
+        try {
+            // read the register hashmap
+            int value = common.ReadRegister(reg);
+            // negate the value
+            value = -value;
+            // write the value back to the register
+            common.WriteRegister(reg, value);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: neg");
+        }
     }
 
     public void call(int[] memory, String target, instructions instrs) {
-        logger.debug("CALL to target: {}", target);
-        if (target == null || instrs == null) {
-            throw new NullPointerException("Target or instructions cannot be null");
-        }
-
-        // Save current instruction pointer
-        int currentRIP = common.ReadRegister("RIP");
-        
-        // Push return address (next instruction) onto stack
-        common.WriteRegister("RIP", currentRIP);
-        Functions.push(memory, "RIP");
-
         try {
-            // Handle labels similar to jmp
-            if (target.startsWith("#")) {
-                String labelName = target.substring(1);
-                Integer labelAddress = instrs.labelMap.get(labelName);
-                if (labelAddress == null) {
-                    common.box("Error", "Unknown label: " + labelName, "error");
+            logger.debug("CALL to target: {}", target);
+            if (target == null || instrs == null) {
+                throw new NullPointerException("Target or instructions cannot be null");
+            }
+
+            // Save current instruction pointer
+            int currentRIP = common.ReadRegister("RIP");
+            
+            // Push return address (next instruction) onto stack
+            common.WriteRegister("RIP", currentRIP);
+            Functions.push(memory, "RIP", instrs);
+
+            try {
+                // Handle labels similar to jmp
+                if (target.startsWith("#")) {
+                    String labelName = target.substring(1);
+                    Integer labelAddress = instrs.labelMap.get(labelName);
+                    if (labelAddress == null) {
+                        common.box("Error", "Unknown label: " + labelName, "error");
+                        return;
+                    }
+                    common.WriteRegister("RIP", labelAddress - 1);
                     return;
                 }
-                common.WriteRegister("RIP", labelAddress - 1);
-                return;
-            }
 
-            // Handle direct addresses
-            int targetAddress = parseTarget(target, instrs);
-            if (targetAddress == -1) {
-                common.box("Error", "Invalid call target: " + target, "error");
-                return;
+                // Handle direct addresses
+                int targetAddress = parseTarget(target, instrs);
+                if (targetAddress == -1) {
+                    common.box("Error", "Invalid call target: " + target, "error");
+                    return;
+                }
+                common.WriteRegister("RIP", targetAddress - 1);
+            } catch (Exception e) {
+                common.box("Error", "Call failed: " + e.getMessage(), "error");
             }
-            common.WriteRegister("RIP", targetAddress - 1);
         } catch (Exception e) {
-            common.box("Error", "Call failed: " + e.getMessage(), "error");
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: call");
         }
     }
 
     public void jeq(int[] memory, String target, instructions instrs) {
-        // read the register hashmap
-        int value = common.ReadRegister("RFLAGS");
-        String fixed = target.substring(1);
-        int targetz = instrs.labelMap.get(fixed);
+        try {
+            // read the register hashmap
+            int value = common.ReadRegister("RFLAGS");
+            String fixed = target.substring(1);
+            int targetz = instrs.labelMap.get(fixed);
 
-        // debug print the label map
+            // debug print the label map
 
-        for (String key : instrs.labelMap.keySet()) {
-            logger.debug(
-                "Label: {} Address: {}",
-                key,
-                instrs.labelMap.get(key)
-            );
-        }
+            for (String key : instrs.labelMap.keySet()) {
+                logger.debug(
+                    "Label: {} Address: {}",
+                    key,
+                    instrs.labelMap.get(key)
+                );
+            }
 
-        // if the value is 1 jump to the target
+            // if the value is 1 jump to the target
 
-        if (value == 1) {
-            jmp(memory, target, instrs);
+            if (value == 1) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jeq");
         }
     }
 
     public void jne(int[] memory, String target, instructions instrs) {
-        logger.debug("JNE instruction with target: {}", target);
-        
-        if (target == null || instrs == null) {
-            throw new NullPointerException("Target or instructions cannot be null");
-        }
+        try {
+            logger.debug("JNE instruction with target: {}", target);
+            
+            if (target == null || instrs == null) {
+                throw new NullPointerException("Target or instructions cannot be null");
+            }
 
-        // read the RFLAGS register
-        int value = common.ReadRegister("RFLAGS");
-        logger.debug("RFLAGS value: {}", value);
+            // read the RFLAGS register
+            int value = common.ReadRegister("RFLAGS");
+            logger.debug("RFLAGS value: {}", value);
 
-        // Get label name by removing the '#' prefix
-        if (!target.startsWith("#")) {
-            common.box("Error", "JNE target must be a label (start with #)", "error");
-            return;
-        }
+            // Get label name by removing the '#' prefix
+            if (!target.startsWith("#")) {
+                common.box("Error", "JNE target must be a label (start with #)", "error");
+                return;
+            }
 
-        String labelName = target.substring(1);
-        Integer targetAddress = instrs.labelMap.get(labelName);
-        
-        if (targetAddress == null) {
-            common.box("Error", "Unknown label: " + labelName, "error");
-            return;
-        }
+            String labelName = target.substring(1);
+            Integer targetAddress = instrs.labelMap.get(labelName);
+            
+            if (targetAddress == null) {
+                common.box("Error", "Unknown label: " + labelName, "error");
+                return;
+            }
 
-        logger.debug("Target address for label {}: {}", labelName, targetAddress);
+            logger.debug("Target address for label {}: {}", labelName, targetAddress);
 
-        // Jump if RFLAGS is 0 (values were not equal)
-        if (value == 0) {
-            common.WriteRegister("RIP", targetAddress - 1);
-            logger.debug("Jump taken - setting RIP to {}", targetAddress - 1);
-        } else {
-            logger.debug("Jump not taken - RFLAGS was 1");
+            // Jump if RFLAGS is 0 (values were not equal)
+            if (value == 0) {
+                common.WriteRegister("RIP", targetAddress - 1);
+                logger.debug("Jump taken - setting RIP to {}", targetAddress - 1);
+            } else {
+                logger.debug("Jump not taken - RFLAGS was 1");
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jne");
         }
     }
 
     public void jmp(int[] memory, String target, instructions instrs) {
-        logger.debug("JMP to target: {}", target);
-        int value;
-        if (target == null || instrs == null) {
-            //  print("DEBUG: ERROR - Null target or instructions\n");
-            throw new NullPointerException(
-                "Target or instructions cannot be null"
-            );
-        }
-        //print("DEBUG: Attempting to jump to target: %s with instructions context\n", target);
-        try
-        {
+        try {
+            logger.debug("JMP to target: {}", target);
+            int value;
+            if (target == null || instrs == null) {
+                //  print("DEBUG: ERROR - Null target or instructions\n");
+                throw new NullPointerException(
+                    "Target or instructions cannot be null"
+                );
+            }
+            //print("DEBUG: Attempting to jump to target: %s with instructions context\n", target);
+            try
+            {
 
-        value = parseTarget(target, instrs);
-        if (value == -1) {
-            //print("DEBUG: Jump failed - invalid target: %s\n", target);
-            common.box("Error", "Unknown address or label: " + target, "error");
-            return;
-        }
-        common.WriteRegister("RIP", value - 1);
-        } catch (Exception e) {
-            // try as label
-            value = instrs.labelMap.get(target.substring(1));
+            value = parseTarget(target, instrs);
             if (value == -1) {
                 //print("DEBUG: Jump failed - invalid target: %s\n", target);
                 common.box("Error", "Unknown address or label: " + target, "error");
                 return;
             }
             common.WriteRegister("RIP", value - 1);
+            } catch (Exception e) {
+                // try as label
+                value = instrs.labelMap.get(target.substring(1));
+                if (value == -1) {
+                    //print("DEBUG: Jump failed - invalid target: %s\n", target);
+                    common.box("Error", "Unknown address or label: " + target, "error");
+                    return;
+                }
+                common.WriteRegister("RIP", value - 1);
+            }
+            //print("DEBUG: Jump successful - Setting RIP to %d\n", value);
+            //TODO: figure out why -1 saves stdlib functions from dying?
+            common.WriteRegister("RIP", value - 1);
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jmp");
         }
-        //print("DEBUG: Jump successful - Setting RIP to %d\n", value);
-        //TODO: figure out why -1 saves stdlib functions from dying?
-        common.WriteRegister("RIP", value - 1);
     }
 
     private static int parseTarget(String target) {

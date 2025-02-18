@@ -1,0 +1,22 @@
+#include "stdio.io"
+
+lbl yes
+    mov RAX 1
+    mov RBX 100
+    call #printf
+    mov RBX 500
+    db $500 "yes"
+    ;; push rip to stack automaticly
+    call #printf
+    hlt
+
+
+lbl no
+    mov RAX 1
+    mov RBX 100
+    call #printf
+    mov RBX 500
+    db $500 "no"
+    ;; push rip to stack automaticly
+    call #printf
+    hlt

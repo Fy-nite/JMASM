@@ -54,11 +54,11 @@ public class FunctionsTest {
         @DisplayName("Test MOV function safely")
         void testMov() {
             // Test valid moves
-            functions.mov(memory, "RAX", "10");
+            functions.mov(memory, "RAX", "10", instrs);
             assertEquals(10, common.ReadRegister("RAX"), "Basic MOV failed");
 
             common.WriteRegister("RBX", 20);
-            functions.mov(memory, "RAX", "RBX");
+            functions.mov(memory, "RAX", "RBX", instrs);
             assertEquals(
                 20,
                 common.ReadRegister("RAX"),
@@ -68,7 +68,7 @@ public class FunctionsTest {
             // Test invalid source register
             IllegalArgumentException thrown = assertThrows(
                 IllegalArgumentException.class,
-                () -> functions.mov(memory, "RAX", "INVALID_REG"),
+                () -> functions.mov(memory, "RAX", "INVALID_REG", instrs),
                 "Should throw IllegalArgumentException for invalid source register"
             );
 //            assertTrue(thrown.getMessage().contains("Invalid source register"));
@@ -76,7 +76,7 @@ public class FunctionsTest {
             // Test invalid destination register
             thrown = assertThrows(
                 IllegalArgumentException.class,
-                () -> functions.mov(memory, "INVALID_REG", "10"),
+                () -> functions.mov(memory, "INVALID_REG", "10", instrs),
                 "Should throw IllegalArgumentException for invalid destination register"
             );
             assertTrue(
@@ -86,7 +86,7 @@ public class FunctionsTest {
             // Test invalid memory reference
             thrown = assertThrows(
                 IllegalArgumentException.class,
-                () -> functions.mov(memory, "RAX", "$invalid"),
+                () -> functions.mov(memory, "RAX", "$invalid", instrs),
                 "Should throw IllegalArgumentException for invalid memory address"
             );
             assertTrue(thrown.getMessage().contains("Invalid memory address"));
@@ -99,53 +99,53 @@ public class FunctionsTest {
             @BeforeEach
             void validateMov() {
                 // Verify MOV works before running dependent tests
-                functions.mov(memory, "RAX", "5");
+                functions.mov(memory, "RAX", "5", instrs);
                 Assertions.assertEquals(5, common.ReadRegister("RAX"));
             }
 
             @Test
             @DisplayName("Test ADD function")
             void testAdd() {
-                functions.mov(memory, "RAX", "5");
-                functions.mov(memory, "RBX", "3");
-                functions.add(memory, "RAX", "RBX");
+                functions.mov(memory, "RAX", "5", instrs);
+                functions.mov(memory, "RBX", "3", instrs);
+                functions.add(memory, "RAX", "RBX", instrs);
                 assertEquals(8, common.ReadRegister("RAX"));
             }
 
             @Test
             @DisplayName("Test SUB function")
             void testSub() {
-                functions.mov(memory, "RAX", "10");
-                functions.mov(memory, "RBX", "4");
-                functions.sub(memory, "RAX", "RBX");
+                functions.mov(memory, "RAX", "10", instrs);
+                functions.mov(memory, "RBX", "4", instrs);
+                functions.sub(memory, "RAX", "RBX", instrs);
                 assertEquals(6, common.ReadRegister("RAX"));
             }
 
             @Test
             @DisplayName("Test MUL function")
             void testMul() {
-                functions.mov(memory, "RAX", "5");
-                functions.mov(memory, "RBX", "4");
-                functions.mul(memory, "RAX", "RBX");
+                functions.mov(memory, "RAX", "5", instrs);
+                functions.mov(memory, "RBX", "4", instrs);
+                functions.mul(memory, "RAX", "RBX", instrs);
                 assertEquals(20, common.ReadRegister("RAX"));
             }
 
             @Test
             @DisplayName("Test DIV function")
             void testDiv() {
-                functions.mov(memory, "RAX", "15");
-                functions.mov(memory, "RBX", "3");
-                functions.div(memory, "RAX", "RBX");
+                functions.mov(memory, "RAX", "15", instrs);
+                functions.mov(memory, "RBX", "3", instrs);
+                functions.div(memory, "RAX", "RBX", instrs);
                 assertEquals(5, common.ReadRegister("RAX"));
             }
 
             @Test
             @DisplayName("Test DIV by zero")
             void testDivByZero() {
-                functions.mov(memory, "RAX", "10");
-                functions.mov(memory, "RBX", "0");
+                functions.mov(memory, "RAX", "10", instrs);
+                functions.mov(memory, "RBX", "0", instrs);
                 assertThrows(ArithmeticException.class, () -> {
-                    functions.div(memory, "RAX", "RBX");
+                    functions.div(memory, "RAX", "RBX", instrs);
                 });
             }
 
@@ -153,8 +153,8 @@ public class FunctionsTest {
             @DisplayName("Test shl function")
             @Disabled
             void testShl() {
-                functions.mov(memory, "RAX", "1");
-                functions.shl(memory, "RAX", "3");
+                functions.mov(memory, "RAX", "1", instrs);
+                functions.shl(memory, "RAX", "3", instrs);
                 assertEquals(8, common.ReadRegister("RAX"));
             }
 
@@ -162,67 +162,67 @@ public class FunctionsTest {
             @DisplayName("Test shr function")
             @Disabled
             void testShr() {
-                functions.mov(memory, "RAX", "8");
-                functions.shr(memory, "RAX", "3");
+                functions.mov(memory, "RAX", "8", instrs);
+                functions.shr(memory, "RAX", "3", instrs);
                 assertEquals(1, common.ReadRegister("RAX"));
             }
 
             @Test
             @DisplayName("Test inc function")
             void testInc() {
-                functions.mov(memory, "RAX", "5");
-                functions.inc(memory, "RAX");
+                functions.mov(memory, "RAX", "5", instrs);
+                functions.inc(memory, "RAX", instrs);
                 assertEquals(6, common.ReadRegister("RAX"));
             }
 
             @Test
             @DisplayName("Test dec function")
             void testDec() {
-                functions.mov(memory, "RAX", "5");
-                functions.dec(memory, "RAX");
+                functions.mov(memory, "RAX", "5", instrs);
+                functions.dec(memory, "RAX", instrs);
                 assertEquals(4, common.ReadRegister("RAX"));
             }
 
             @Test
             @DisplayName("Test neg function")
             void testNeg() {
-                functions.mov(memory, "RAX", "5");
-                functions.neg(memory, "RAX");
+                functions.mov(memory, "RAX", "5", instrs);
+                functions.neg(memory, "RAX", instrs);
                 assertEquals(-5, common.ReadRegister("RAX"));
             }
 
             @Test
             @DisplayName("Test not function")
             void testNot() {
-                functions.mov(memory, "RAX", "5");
-                functions.not(memory, "RAX");
+                functions.mov(memory, "RAX", "5", instrs);
+                functions.not(memory, "RAX", instrs);
                 assertEquals(-6, common.ReadRegister("RAX"));
             }
 
             @Test
             @DisplayName("Test xor function")
             void testXor() {
-                functions.mov(memory, "RAX", "5");
-                functions.mov(memory, "RBX", "3");
-                functions.xor(memory, "RAX", "RBX");
+                functions.mov(memory, "RAX", "5", instrs);
+                functions.mov(memory, "RBX", "3", instrs);
+                functions.xor(memory, "RAX", "RBX", instrs);
                 assertEquals(6, common.ReadRegister("RAX"));
             }
 
             @Test
             @DisplayName("Test or function")
             void testOr() {
-                functions.mov(memory, "RAX", "5");
-                functions.mov(memory, "RBX", "3");
-                functions.or(memory, "RAX", "RBX");
+                functions.mov(memory, "RAX", "5", instrs);
+                functions.mov(memory, "RBX", "3", instrs);
+                functions.or(memory, "RAX", "RBX", instrs);
                 assertEquals(7, common.ReadRegister("RAX"));
             }
 
             @Test
             @DisplayName("Test and function")
             void testAnd() {
-                functions.mov(memory, "RAX", "5");
-                functions.mov(memory, "RBX", "3");
-                functions.and(memory, "RAX", "RBX");
+                functions.mov(memory, "RAX", "5", instrs);
+                functions.mov(memory, "RBX", "3", instrs);
+                functions.and(memory, "RAX", "RBX", instrs);
                 assertEquals(1, common.ReadRegister("RAX"));
             }
 
@@ -230,13 +230,13 @@ public class FunctionsTest {
             @DisplayName("Test arithmetic with invalid registers")
             void testInvalidRegisters() {
                 assertThrows(Exception.class, () -> {
-                    functions.add(memory, "INVALID_REG", "RAX");
+                    functions.add(memory, "INVALID_REG", "RAX", instrs);
                 });
                 assertThrows(Exception.class, () -> {
-                    functions.sub(memory, "RAX", "INVALID_REG");
+                    functions.sub(memory, "RAX", "INVALID_REG", instrs);
                 });
                 assertThrows(Exception.class, () -> {
-                    functions.mul(memory, "INVALID_REG", "INVALID_REG");
+                    functions.mul(memory, "INVALID_REG", "INVALID_REG", instrs);
                 });
 //                assertThrows(Exception.class, () -> {
 //                    functions.div(memory, "RAX", "INVALID_REG");
@@ -250,9 +250,9 @@ public class FunctionsTest {
                     memory,
                     "RAX",
                     Integer.toString(Integer.MAX_VALUE)
-                );
-                functions.mov(memory, "RBX", "1");
-                functions.add(memory, "RAX", "RBX");
+                        , instrs);
+                functions.mov(memory, "RBX", "1", instrs);
+                functions.add(memory, "RAX", "RBX", instrs);
                 assertEquals(Integer.MIN_VALUE, common.ReadRegister("RAX"));
             }
         }
@@ -376,14 +376,17 @@ public class FunctionsTest {
             @DisplayName("Test OUT function")
             void testOut() {
                 // Test invalid file descriptor
-                functions.mov(memory, "RAX", "65"); // ASCII 'A'
-                functions.out(memory, "3", "RAX"); // Should not output anything
+                functions.mov(memory, "RAX", "65", instrs); // ASCII 'A'
+                functions.out(memory, "3", "RAX", instrs); // Should not output anything
 
                 // Test null source
-                functions.out(memory, "1", null);
+                functions.out(memory, "1", null, instrs);
 
                 // Test invalid register
-                functions.out(memory, "1", "INVALID_REG");
+                functions.out(memory, "1", "INVALID_REG", instrs);
+
+                // Test valid output
+                functions.out(memory, "1", "RAX", instrs);
             }
 
             @Test
@@ -395,7 +398,7 @@ public class FunctionsTest {
                     common.WrapStdinToFile("test input");
 
                     // Test valid input first
-                    functions.in(memory, "1", "$0");
+                    functions.in(memory, "1", "$0", instrs);
                     assertEquals('t', memory[0]);
                     assertEquals('e', memory[1]);
                     assertEquals('s', memory[2]);
@@ -404,7 +407,7 @@ public class FunctionsTest {
                     // Test invalid file descriptor (non-zero)
                     IllegalArgumentException thrown = assertThrows(
                         IllegalArgumentException.class,
-                        () -> functions.in(memory, "999", "$0")
+                        () -> functions.in(memory, "999", "$0", instrs)
                     );
                     assertEquals(
                         "Only stdin (fd 1) is supported",
@@ -413,7 +416,7 @@ public class FunctionsTest {
 
                     // Test invalid file descriptor format
                     thrown = assertThrows(IllegalArgumentException.class, () ->
-                        functions.in(memory, "xyz", "$0")
+                        functions.in(memory, "xyz", "$0", instrs)
                     );
                     assertEquals(
                         "Invalid file descriptor format: xyz",
@@ -423,25 +426,25 @@ public class FunctionsTest {
                     // Test null inputs
                     assertThrows(
                         IllegalArgumentException.class,
-                        () -> functions.in(memory, null, "$0"),
+                        () -> functions.in(memory, null, "$0", instrs),
                         "File descriptor and destination cannot be null"
                     );
 
                     assertThrows(
                         IllegalArgumentException.class,
-                        () -> functions.in(memory, "0", null),
+                        () -> functions.in(memory, "0", null, instrs),
                         "File descriptor and destination cannot be null"
                     );
 
                     // Test invalid destination format
                     thrown = assertThrows(IllegalArgumentException.class, () ->
-                        functions.in(memory, "0", "invalid_dest")
+                        functions.in(memory, "0", "invalid_dest", instrs)
                     );
 
 
                     // Test invalid memory address format
                     thrown = assertThrows(IllegalArgumentException.class, () ->
-                        functions.in(memory, "0", "$invalid")
+                        functions.in(memory, "0", "$invalid", instrs)
                     );
 //                    assertEquals(
 //                        "Invalid memory address format: $invalid",
@@ -458,24 +461,22 @@ public class FunctionsTest {
         @DisplayName("Test CMP function")
         void testCmp() {
             // Test equal values
-            functions.mov(memory, "RAX", "10");
-            functions.mov(memory, "RBX", "10");
-            functions.cmp(memory, "RAX", "RBX");
+            functions.mov(memory, "RAX", "10", instrs);
+            functions.mov(memory, "RBX", "10", instrs);
+            functions.cmp(memory, "RAX", "RBX", instrs);
             assertEquals(1, common.ReadRegister("RFLAGS"));
 
             // Test unequal values
-            functions.mov(memory, "RBX", "20");
-            functions.cmp(memory, "RAX", "RBX");
+            functions.mov(memory, "RBX", "20", instrs);
+            functions.cmp(memory, "RAX", "RBX", instrs);
             assertEquals(0, common.ReadRegister("RFLAGS"));
 
             // Test with immediate value
-            functions.cmp(memory, "RAX", "10");
+            functions.cmp(memory, "RAX", "10", instrs);
             assertEquals(1, common.ReadRegister("RFLAGS"));
 
             // Test with invalid register
-            assertThrows(Exception.class, () -> {
-                functions.cmp(memory, "INVALID_REG", "10");
-            });
+            assertThrows(Exception.class, () -> functions.cmp(memory, "INVALID_REG", "10", instrs));
         }
     }
 }

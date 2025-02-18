@@ -5,4 +5,4 @@ Usage:
     -r : run the Micro-Assembly REPL
     -modules : display the available modules ether included with the program or in the modules directory
     -v : display the version of the program
-    -init : initialize
+    -init : initialize the folders required if the program didn't do it automatically
