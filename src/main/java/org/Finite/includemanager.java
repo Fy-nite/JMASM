@@ -17,9 +17,9 @@ public class includemanager {
 
     static {
         // Configure logger level based on debug flag
-        if (!config.getBoolean("debug.enabled", false)) {
+        
             ((ch.qos.logback.classic.Logger) log).setLevel(ch.qos.logback.classic.Level.INFO);
-        }
+        
     }
 
     public static String include(String filename, String currentFileContents) {

@@ -518,8 +518,6 @@ public class Functions {
                 dataPart,
                 memoryAddress
             );
-            print("Writing '%s' to memory address %d\n", dataPart, memoryAddress);
-
             // Write to memory
             for (int i = 0; i < dataPart.length(); i++) {
                 memory[memoryAddress + i] = dataPart.charAt(i);

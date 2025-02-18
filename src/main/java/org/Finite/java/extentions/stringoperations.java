@@ -24,4 +24,7 @@ public class stringoperations {
             obj.setRegister("RFLAGS",0);
         }
     }
+
+    
+
 }

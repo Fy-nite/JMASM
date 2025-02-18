@@ -5,10 +5,10 @@ lbl yes
     mov RBX 100
     call #printf
     mov RBX 500
-    db $500 "yes"
+    db $500 "\nyes\n"
     ;; push rip to stack automaticly
     call #printf
-    hlt
+    jmp #main
 
 
 lbl no
@@ -16,7 +16,7 @@ lbl no
     mov RBX 100
     call #printf
     mov RBX 500
-    db $500 "no"
+    db $500 "\nno\n"
     ;; push rip to stack automaticly
     call #printf
-    hlt
+    jmp #main

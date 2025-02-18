@@ -35,7 +35,7 @@ public class MASMConfig {
     public static MASMConfig getInstance() {
         return INSTANCE;
     }
-    public static boolean getBoolean
+
     public String getPath(String key) {
         String value = properties.getProperty(key);
         if (value != null) {
