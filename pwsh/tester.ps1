@@ -1,3 +1,4 @@
+#!/bin/env pwsh
 # tester.ps1
 
 # Run maven test and capture output

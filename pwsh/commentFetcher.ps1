@@ -1,3 +1,4 @@
+#!/bin/env pwsh
 param (
     [Parameter(Mandatory=$false)]
     [string]$SourceDirectory,

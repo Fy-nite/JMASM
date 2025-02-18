@@ -1,3 +1,4 @@
+#!/bin/env pwsh
 # Script to generate documentation from .masm file comments
 param(
     [Parameter(Mandatory=$true)]
