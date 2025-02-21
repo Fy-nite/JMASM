@@ -1,10 +1,8 @@
-package org.Finite.kotlin.extentions
+package org.finite.kotlin.extentions
 import java.io.File
-import org.Finite.*;
-import org.Finite.Exceptions.MASMException
-import org.Finite.Exceptions.MNIException
-import org.Finite.ModuleManager.*;
-import org.Finite.ModuleManager.annotations.*;
+import org.finite.Exceptions.MNIException
+import org.finite.ModuleManager.*;
+import org.finite.ModuleManager.annotations.*;
 @MNIClass("FIleOperations")
 class fileoperations {
     // file operations go like this,

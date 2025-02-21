@@ -1,8 +1,7 @@
-package org.Finite;
+package org.finite;
 
-import org.Finite.Common.common;
-import org.Finite.Config.MASMConfig;
-import org.Finite.Exceptions.IncludeException;
+import org.finite.Config.MASMConfig;
+import org.finite.Exceptions.IncludeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

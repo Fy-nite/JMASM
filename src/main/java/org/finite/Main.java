@@ -2,7 +2,7 @@ package org.Finite;
 import org.Finite.Common.common;
 import org.Finite.Exceptions.MASMException;  // Add this import
 import com.beust.jcommander.JCommander;
-import org.Finite.java.extentions.stringoperations;
+import org.Finite.java.extentions.StringOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.Finite.ModuleManager.ModuleInit;
@@ -22,7 +22,7 @@ public class Main {
             ModuleInit.init();
             ModuleInit.registerBuiltInModule(MathModule.class);
             ModuleInit.registerBuiltInModule(WindowModule.class);
-            ModuleInit.registerBuiltInModule(stringoperations.class);
+            ModuleInit.registerBuiltInModule(StringOperations.class);
          
             arguments = new ArgumentParser.Args();  // Initialize arguments
             JCommander.newBuilder()

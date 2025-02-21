@@ -1,4 +1,4 @@
-package org.Finite;
+package org.finite;
 
 public class help {
     private static final String[][] INSTRUCTION_HELP = {
