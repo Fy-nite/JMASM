@@ -1,9 +1,8 @@
-package org.Finite;
+package org.finite;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 
-import static org.Finite.interp.functions;
 import static org.junit.jupiter.api.Assertions.*;
 import java.nio.file.Path;
 import java.io.*;
@@ -48,7 +47,7 @@ public class FileTest1 {
             }
 
 
-            String contents = includemanager.include("stdlib.test.meow", CurrentFileContents);
+            String contents = Includemanager.include("stdlib.test.meow", CurrentFileContents);
 
             try
             {

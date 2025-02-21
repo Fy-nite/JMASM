@@ -1,8 +1,8 @@
-package org.Finite.ModuleManager.examples;
+package org.finite.ModuleManager.examples;
 
-import org.Finite.ModuleManager.annotations.MNIClass;
-import org.Finite.ModuleManager.annotations.MNIFunction;
-import org.Finite.ModuleManager.MNIMethodObject;
+import org.finite.ModuleManager.annotations.MNIClass;
+import org.finite.ModuleManager.annotations.MNIFunction;
+import org.finite.ModuleManager.MNIMethodObject;
 
 @MNIClass("math")
 public class MathModule {

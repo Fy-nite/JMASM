@@ -1,4 +1,4 @@
-package org.Finite.ModuleManager.annotations;
+package org.finite.ModuleManager.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

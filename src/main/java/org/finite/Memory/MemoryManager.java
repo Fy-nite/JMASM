@@ -1,7 +1,7 @@
-package org.Finite.Memory;
+package org.finite.Memory;
 
-import org.Finite.Config.MASMConfig;
-import org.Finite.Exceptions.MASMException;
+import org.finite.Config.MASMConfig;
+import org.finite.Exceptions.MASMException;
 
 public class MemoryManager {
     private static final MemoryManager INSTANCE = new MemoryManager();

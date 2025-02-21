@@ -1,15 +1,17 @@
-package org.Finite.Common;
+package org.finite.Common;
 
-import org.Finite.ReadResourceFile;
+import org.finite.ReadResourceFile;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.*;
 import java.io.*;
 
-import static org.Finite.interp.arguments;
+import static org.finite.interp.arguments;
 
 public class common {
+    public static boolean isRunning = true;
+    public static boolean exitOnHLT = true;
     String modulesDir = "JMASM/modules";
     String configDir = "JMASM/config";
     String configPath = configDir + "/config.toml";

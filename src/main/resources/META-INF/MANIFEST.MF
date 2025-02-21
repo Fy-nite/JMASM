@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Main-Class: org.Finite.Main
+Main-Class: org.finite.Main
 Add-Opens: java.base/java.lang
 Class-Path: .
 

@@ -1,8 +1,8 @@
-package org.Finite;
+package org.finite;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.Finite.Common.common;
+import org.finite.Common.common;
 import org.junit.jupiter.api.*;
 
 public class FunctionsTest {

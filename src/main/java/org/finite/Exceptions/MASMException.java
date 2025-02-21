@@ -1,4 +1,4 @@
-package org.Finite.Exceptions;
+package org.finite.Exceptions;
 
 public class MASMException extends RuntimeException {
     private final int lineNumber;

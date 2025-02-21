@@ -1,7 +1,7 @@
-package org.Finite;
+package org.finite;
 
-import static org.Finite.Common.common.print;
-import static org.Finite.Common.common.printerr;
+import static org.finite.Common.common.print;
+import static org.finite.Common.common.printerr;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,9 +10,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import org.Finite.Common.common;
-import org.Finite.Exceptions.MASMException;
-import org.Finite.interp.instructions;
+import org.finite.Common.common;
+import org.finite.Exceptions.MASMException;
+import org.finite.interp.instructions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +84,13 @@ public class Functions {
             return CurrentFileContents;
         }
     }
-
+    public static void hlt()
+    {
+        common.isRunning = false;
+        if (common.exitOnHLT) {
+            System.exit(0);
+        }
+    }
     // Stack operations using last 1024 bytes of memory
     public static void push(int[] memory, String reg1, instructions instrs) {
         try {

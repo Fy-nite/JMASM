@@ -1,6 +1,6 @@
-package org.Finite;
+package org.finite;
 
-import static org.Finite.Common.common.*;
+import static org.finite.Common.common.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
-import org.Finite.Common.common;
-import org.Finite.ModuleManager.MNIMethodObject;
-import org.Finite.ModuleManager.MNIHandler;
-import org.Finite.Exceptions.MASMException;  // Add this import
+import org.finite.Common.common;
+import org.finite.ModuleManager.MNIMethodObject;
+import org.finite.ModuleManager.MNIHandler;
+import org.finite.Exceptions.MASMException;  // Add this import
 
 public class interp {
 
@@ -43,7 +43,7 @@ public class interp {
                     int end = line.lastIndexOf("\"");
                     if (start != -1 && end != -1 && start != end) {
                         String path = line.substring(start + 1, end);
-                        newProcessed.append(includemanager.include(path, line));
+                        newProcessed.append(Includemanager.include(path, line));
                     }
                 } else if (line.startsWith(";")) {
                     continue;
@@ -215,7 +215,8 @@ public class interp {
         common.WriteRegister("RIP", mainAddress != null ? mainAddress : 0);
         String instrString = "";
         int rip = common.ReadRegister("RIP");
-        while (rip < instrs.length) {
+        common.isRunning = true;  // Reset running state
+        while (rip < instrs.length && common.isRunning) {
             instruction instr = instrs.instructions[rip];
             if (arguments.debug) {
                 common.box(
@@ -230,6 +231,7 @@ public class interp {
             instrString = instr.name + " " + (instr.sop1 != null ? instr.sop1 : "") + " " + (instr.sop2 != null ? instr.sop2 : "");
             instrs.currentlineContents = instrString;
             terp.ExecuteSingleInstruction(instr, instrs.Memory, instrs);
+            if (!common.isRunning) break;  // Exit if HLT was called
             rip = common.ReadRegister("RIP") + 1;
             common.WriteRegister("RIP", rip);
         }
@@ -395,7 +397,7 @@ public class interp {
                     functions.ret(instrs);
                     break;
                 case "hlt":
-                    System.exit(0);
+                    functions.hlt();
                     break;
                 case "out":
                     // out wants a fd or "place to output to"

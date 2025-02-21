@@ -1,31 +1,10 @@
-package org.Finite.java.extentions;
-import static org.Finite.Common.common.print;
+package org.finite.Modules.extentions;
 
-import java.io.File;
-import org.Finite.Common.common;
-import org.Finite.ModuleManager.*;
-import org.Finite.ModuleManager.annotations.*;
+import org.finite.ModuleManager.MNIMethodObject;
+import org.finite.ModuleManager.annotations.MNIFunction;
 
-@MNIClass("StringOperations")
-public class stringoperations {
-
-    @MNIFunction(name = "cmp", module = "StringOperations")
-    public static void cmp(MNIMethodObject obj)
-    {
-        String st1 = obj.readString(obj.arg1);
-        String st2 = obj.readString(obj.arg2);
-
-
-        if (st1.equals(st2))
-        {
-            obj.setRegister("RFLAGS", 1);
-        }
-        else{
-            obj.setRegister("RFLAGS",0);
-        }
-    }
-
-    @MNIFunction(name = "length", module = "StringOperations")
+public class stringhelpers {
+        @MNIFunction(name = "length", module = "StringOperations")
     public static void length(MNIMethodObject obj)
     {
         String st1 = obj.readString(obj.arg1);
@@ -49,5 +28,5 @@ public class stringoperations {
         obj.writeString(obj.arg1, st1.substring(start, end));
     }
 
-
+    
 }

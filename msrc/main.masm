@@ -1,23 +1,7 @@
-#include "msrc/extras"
-
+#include "stdio.io"
 lbl main
-    
-    dB $100 "$: "
-    db $200 "ls"
-    db $210 "dir"
     mov RAX 1
     mov RBX 100
+    db $100 "Hello world\n"
     call #printf
-    in 1 $100
-    
-    
-    ; ls cmp 
-    MNI StringOperations.cmp 100 200
-    je #ls
-
-    ; dir cmp
-
-    MNI StringOperations.cmp 100 250
-    je #dir
-
-    jmp #invalid
+    hlt

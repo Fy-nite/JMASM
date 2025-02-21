@@ -1,4 +1,4 @@
-package org.Finite.ModuleManager;
+package org.finite.ModuleManager;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;

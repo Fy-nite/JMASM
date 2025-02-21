@@ -1,6 +1,6 @@
-package org.Finite.ModuleManager;
+package org.finite.ModuleManager;
 
-import org.Finite.Common.common;
+import org.finite.Common.common;
 import java.lang.reflect.Method;
 
 public class MNIHandler {

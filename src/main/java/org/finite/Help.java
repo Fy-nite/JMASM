@@ -1,6 +1,6 @@
 package org.finite;
 
-public class help {
+public class Help {
     private static final String[][] INSTRUCTION_HELP = {
         {"mov", "Moves data between registers or memory\nUsage: MOV dest, source\nExample: MOV RAX, 42"},
         {"add", "Adds two values and stores the result\nUsage: ADD dest, source\nExample: ADD RAX, RBX"},

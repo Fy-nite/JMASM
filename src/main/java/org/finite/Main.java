@@ -1,13 +1,13 @@
-package org.Finite;
-import org.Finite.Common.common;
-import org.Finite.Exceptions.MASMException;  // Add this import
+package org.finite;
+import org.finite.Common.common;
+import org.finite.Exceptions.MASMException;  // Add this import
 import com.beust.jcommander.JCommander;
-import org.Finite.java.extentions.StringOperations;
+import org.finite.Modules.extentions.StringOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.Finite.ModuleManager.ModuleInit;
-import org.Finite.ModuleManager.examples.MathModule;
-import org.Finite.ModuleManager.examples.WindowModule;
+import org.finite.ModuleManager.ModuleInit;
+import org.finite.ModuleManager.examples.MathModule;
+import org.finite.ModuleManager.examples.WindowModule;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -19,11 +19,8 @@ public class Main {
             System.out.print("\033[H\033[2J");
             System.out.flush();
             
-            ModuleInit.init();
-            ModuleInit.registerBuiltInModule(MathModule.class);
-            ModuleInit.registerBuiltInModule(WindowModule.class);
-            ModuleInit.registerBuiltInModule(StringOperations.class);
-         
+            ModuleInit.initallmodules();  // Initialize modules
+
             arguments = new ArgumentParser.Args();  // Initialize arguments
             JCommander.newBuilder()
                 .addObject(arguments)
@@ -35,13 +32,13 @@ public class Main {
                 common.box("Help", "This is the help message", "info");
             }
 //            if (arguments.debug) {
-//                common.box("java MASM interpreter", "2025 (C) Finite\nType 'help' for a list of commands\n", "info");
+//                common.box("java MASM interpreter", "2025 (C) finite\nType 'help' for a list of commands\n", "info");
 //                logger.debug("Starting debug REPL");
 //                debug.DebugRepl();
 //            }
             if (arguments.file != null && !arguments.file.isEmpty()) {
                 logger.info("Running file: {}", arguments.file);
-                common.box("java MASM interpreter", "2025 (C) Finite\nrunning file: " + arguments.file + "\n", "info");
+                common.box("java MASM interpreter", "2025 (C) finite\nrunning file: " + arguments.file + "\n", "info");
                 interp.runFile(arguments.file);
             }
             else {

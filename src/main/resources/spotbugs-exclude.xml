@@ -7,26 +7,26 @@
 
     <!-- Ignore warnings about public fields in instruction classes since they're used as data structures -->
     <Match>
-        <Class name="org.Finite.interp$instruction"/>
+        <Class name="org.finite.interp$instruction"/>
         <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"/>
     </Match>
 
     <!-- Ignore warnings about public fields in instructions class -->
     <Match>
-        <Class name="org.Finite.interp$instructions"/>
+        <Class name="org.finite.interp$instructions"/>
         <Bug pattern="MS_SHOULD_BE_FINAL"/>
     </Match>
 
     <!-- Ignore System.exit() calls in Main class -->
     <Match>
-        <Class name="org.Finite.Main"/>
+        <Class name="org.finite.Main"/>
         <Method name="main"/>
         <Bug pattern="DM_EXIT"/>
     </Match>
 
     <!-- Ignore scanner resource warnings in interactive mode -->
     <Match>
-        <Class name="org.Finite.debug"/>
+        <Class name="org.finite.debug"/>
         <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
     </Match>
 
@@ -37,7 +37,7 @@
 
     <!-- Ignore non-serializable warnings for command line args -->
     <Match>
-        <Class name="org.Finite.ArgumentParser$Args"/>
+        <Class name="org.finite.ArgumentParser$Args"/>
         <Bug pattern="SE_BAD_FIELD"/>
     </Match>
 
@@ -54,13 +54,13 @@
 
     <!-- Ignore public static field warnings in common class since it's used as a global state -->
     <Match>
-        <Class name="org.Finite.Common.common"/>
+        <Class name="org.finite.Common.common"/>
         <Bug pattern="MS_SHOULD_BE_FINAL,MS_MUTABLE_ARRAY"/>
     </Match>
 
     <!-- Ignore resource loading warnings -->
     <Match>
-        <Class name="org.Finite.includemanager"/>
+        <Class name="org.finite.Includemanager"/>
         <Bug pattern="RR_NOT_CHECKED,OS_OPEN_STREAM"/>
     </Match>
 </FindBugsFilter>

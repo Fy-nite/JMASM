@@ -1,4 +1,4 @@
-package org.Finite.ModuleManager;
+package org.finite.ModuleManager;
 
 import java.io.File;
 import java.lang.reflect.*;
@@ -9,8 +9,11 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.Finite.ModuleManager.annotations.MNIClass;
-import org.Finite.ModuleManager.annotations.MNIFunction;
+import org.finite.ModuleManager.annotations.MNIClass;
+import org.finite.ModuleManager.annotations.MNIFunction;
+import org.finite.ModuleManager.examples.MathModule;
+import org.finite.ModuleManager.examples.WindowModule;
+import org.finite.Modules.extentions.StringOperations;
 
 /*
     * Module init is a class that is responsible for initializing the modules that are loaded into the interpreter.
@@ -35,7 +38,13 @@ public class ModuleInit {
             e.printStackTrace();
         }
     }
-
+    public static void initallmodules() {
+            ModuleInit.init();
+            ModuleInit.registerBuiltInModule(MathModule.class);
+            ModuleInit.registerBuiltInModule(WindowModule.class);
+            ModuleInit.registerBuiltInModule(StringOperations.class);
+         
+    }
     private static String getModuleDirectory() {
         // TODO: Read from TOML config
         return DEFAULT_MODULE_DIR;

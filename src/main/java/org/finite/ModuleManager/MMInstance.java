@@ -1,7 +1,7 @@
-package org.Finite.ModuleManager;
+package org.finite.ModuleManager;
 
 
-// ModuleManager For Finite's MASM Interpreter
+// ModuleManager For finite's MASM Interpreter
 
 /*
     * ModuleManager is a class that manages the modules that are loaded into the interpreter

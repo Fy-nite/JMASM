@@ -1,4 +1,4 @@
-package org.Finite;
+package org.finite;
 import com.beust.jcommander.Parameter;
 public class ArgumentParser {
     public static class Args {

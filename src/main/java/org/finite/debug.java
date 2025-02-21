@@ -1,11 +1,11 @@
-package org.Finite;
+package org.finite;
 
-import org.Finite.Common.common;
+import org.finite.Common.common;
 
 import java.util.Arrays;
 import java.util.Scanner;
 
-import static org.Finite.Common.common.*;
+import static org.finite.Common.common.*;
 
 public class debug {
 
@@ -58,7 +58,7 @@ public class debug {
                         break;
                     case "#include":
                         try {
-                            includemanager.include(args[0], input);
+                            Includemanager.include(args[0], input);
                         } catch (Exception e) {
                             printerr("Error: " + e.getMessage());
                         }
@@ -89,9 +89,9 @@ public class debug {
                         return;
                         case "help":
                         if (di.instructions[0].sop1 != null) {
-                            help.help(di.instructions[0].sop1);
+                            Help.help(di.instructions[0].sop1);
                         } else {
-                            help.help();
+                            Help.help();
                         }
                         break;
 

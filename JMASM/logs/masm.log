@@ -2,150 +2,150 @@
 2025-02-19 05:02:48,261 INFO [main] o.F.M.ModuleInit [ModuleInit.java:30] Initializing module system
 2025-02-19 05:02:48,262 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:32] Using module directory: /media/cat/MASM/target/JMASM/modules
 2025-02-19 05:02:48,263 WARN [main] o.F.M.ModuleInit [ModuleInit.java:56] Module directory does not exist, creating: /media/cat/MASM/target/JMASM/modules
-2025-02-19 05:02:48,265 INFO [main] o.F.M.ModuleInit [ModuleInit.java:131] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-19 05:02:48,265 INFO [main] o.F.M.ModuleInit [ModuleInit.java:131] Registering built-in module: org.finite.ModuleManager.examples.MathModule
 2025-02-19 05:02:48,274 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:111] Registered MNI function: math.add
 2025-02-19 05:02:48,277 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:111] Registered MNI function: math.square
-2025-02-19 05:02:48,278 INFO [main] o.F.M.ModuleInit [ModuleInit.java:131] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-19 05:02:48,278 INFO [main] o.F.M.ModuleInit [ModuleInit.java:131] Registering built-in module: org.finite.ModuleManager.examples.WindowModule
 2025-02-19 05:02:48,286 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:111] Registered MNI function: window.create
 2025-02-19 05:02:48,288 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:111] Registered MNI function: window.show
 2025-02-19 05:02:48,289 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:111] Registered MNI function: window.button
 2025-02-19 05:02:48,291 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:111] Registered MNI function: window.label
-2025-02-19 05:02:48,292 INFO [main] o.F.M.ModuleInit [ModuleInit.java:131] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-19 05:02:48,292 INFO [main] o.F.M.ModuleInit [ModuleInit.java:131] Registering built-in module: org.finite.java.extentions.stringoperations
 2025-02-19 05:02:48,294 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:111] Registered MNI function: StringOperations.cmp
 2025-02-19 05:02:48,353 INFO [main] o.F.Main [Main.java:43] Running file: msrc/main.masm
 2025-02-19 05:20:19,547 INFO [main] o.F.Main [Main.java:18] Starting MASM interpreter
 2025-02-19 05:20:19,550 INFO [main] o.F.M.ModuleInit [ModuleInit.java:29] Initializing module system
 2025-02-19 05:20:19,550 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:31] Using module directory: modules
 2025-02-19 05:20:19,551 WARN [main] o.F.M.ModuleInit [ModuleInit.java:46] Module directory does not exist, creating: modules
-2025-02-19 05:20:19,551 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-19 05:20:19,551 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.MathModule
 2025-02-19 05:20:19,556 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.add
 2025-02-19 05:20:19,557 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.square
-2025-02-19 05:20:19,558 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-19 05:20:19,558 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.WindowModule
 2025-02-19 05:20:19,561 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.create
 2025-02-19 05:20:19,562 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.show
 2025-02-19 05:20:19,562 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.button
 2025-02-19 05:20:19,562 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.label
-2025-02-19 05:20:19,563 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-19 05:20:19,563 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.java.extentions.stringoperations
 2025-02-19 05:20:19,563 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: StringOperations.cmp
 2025-02-19 05:20:19,590 INFO [main] o.F.Main [Main.java:43] Running file: msrc/main.masm
 2025-02-19 05:26:34,907 INFO [main] o.F.Main [Main.java:18] Starting MASM interpreter
 2025-02-19 05:26:34,918 INFO [main] o.F.M.ModuleInit [ModuleInit.java:29] Initializing module system
 2025-02-19 05:26:34,920 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:31] Using module directory: modules
 2025-02-19 05:26:34,931 INFO [main] o.F.M.ModuleInit [ModuleInit.java:57] Found 0 potential module files
-2025-02-19 05:26:34,935 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-19 05:26:34,935 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.MathModule
 2025-02-19 05:26:34,955 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.add
 2025-02-19 05:26:34,958 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.square
-2025-02-19 05:26:34,962 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-19 05:26:34,962 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.WindowModule
 2025-02-19 05:26:34,970 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.create
 2025-02-19 05:26:34,971 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.show
 2025-02-19 05:26:34,972 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.button
 2025-02-19 05:26:34,974 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.label
-2025-02-19 05:26:34,976 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-19 05:26:34,976 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.java.extentions.stringoperations
 2025-02-19 05:26:34,978 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: StringOperations.cmp
 2025-02-19 05:26:35,049 INFO [main] o.F.Main [Main.java:43] Running file: msrc/main.masm
 2025-02-19 05:54:54,430 INFO [main] o.F.Main [Main.java:18] Starting MASM interpreter
 2025-02-19 05:54:54,436 INFO [main] o.F.M.ModuleInit [ModuleInit.java:29] Initializing module system
 2025-02-19 05:54:54,436 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:31] Using module directory: modules
 2025-02-19 05:54:54,438 INFO [main] o.F.M.ModuleInit [ModuleInit.java:57] Found 0 potential module files
-2025-02-19 05:54:54,438 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-19 05:54:54,438 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.MathModule
 2025-02-19 05:54:54,443 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.add
 2025-02-19 05:54:54,443 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.square
-2025-02-19 05:54:54,443 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-19 05:54:54,443 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.WindowModule
 2025-02-19 05:54:54,446 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.create
 2025-02-19 05:54:54,446 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.show
 2025-02-19 05:54:54,446 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.button
 2025-02-19 05:54:54,447 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.label
-2025-02-19 05:54:54,447 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-19 05:54:54,447 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.java.extentions.stringoperations
 2025-02-19 05:54:54,448 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: StringOperations.cmp
 2025-02-19 05:54:54,478 INFO [main] o.F.Main [Main.java:43] Running file: msrc/main.masm
 2025-02-19 06:08:05,057 INFO [main] o.F.Main [Main.java:18] Starting MASM interpreter
 2025-02-19 06:08:05,075 INFO [main] o.F.M.ModuleInit [ModuleInit.java:29] Initializing module system
 2025-02-19 06:08:05,076 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:31] Using module directory: modules
 2025-02-19 06:08:05,094 INFO [main] o.F.M.ModuleInit [ModuleInit.java:57] Found 0 potential module files
-2025-02-19 06:08:05,097 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-19 06:08:05,097 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.MathModule
 2025-02-19 06:08:05,125 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.add
 2025-02-19 06:08:05,128 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.square
-2025-02-19 06:08:05,138 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-19 06:08:05,138 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.WindowModule
 2025-02-19 06:08:05,155 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.create
 2025-02-19 06:08:05,160 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.show
 2025-02-19 06:08:05,162 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.button
 2025-02-19 06:08:05,165 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.label
-2025-02-19 06:08:05,166 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-19 06:08:05,166 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.java.extentions.stringoperations
 2025-02-19 06:08:05,168 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: StringOperations.cmp
 2025-02-19 06:08:05,232 INFO [main] o.F.Main [Main.java:43] Running file: msrc/main.masm
 2025-02-19 06:11:15,295 INFO [main] o.F.Main [Main.java:18] Starting MASM interpreter
 2025-02-19 06:11:15,298 INFO [main] o.F.M.ModuleInit [ModuleInit.java:29] Initializing module system
 2025-02-19 06:11:15,298 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:31] Using module directory: modules
 2025-02-19 06:11:15,300 INFO [main] o.F.M.ModuleInit [ModuleInit.java:57] Found 0 potential module files
-2025-02-19 06:11:15,301 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-19 06:11:15,301 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.MathModule
 2025-02-19 06:11:15,312 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.add
 2025-02-19 06:11:15,312 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.square
-2025-02-19 06:11:15,313 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-19 06:11:15,313 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.WindowModule
 2025-02-19 06:11:15,318 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.create
 2025-02-19 06:11:15,320 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.show
 2025-02-19 06:11:15,322 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.button
 2025-02-19 06:11:15,323 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.label
-2025-02-19 06:11:15,327 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-19 06:11:15,327 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.java.extentions.stringoperations
 2025-02-19 06:11:15,328 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: StringOperations.cmp
 2025-02-19 06:11:15,368 INFO [main] o.F.Main [Main.java:43] Running file: main.masm
 2025-02-19 06:11:26,651 INFO [main] o.F.Main [Main.java:18] Starting MASM interpreter
 2025-02-19 06:11:26,662 INFO [main] o.F.M.ModuleInit [ModuleInit.java:29] Initializing module system
 2025-02-19 06:11:26,663 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:31] Using module directory: modules
 2025-02-19 06:11:26,666 INFO [main] o.F.M.ModuleInit [ModuleInit.java:57] Found 0 potential module files
-2025-02-19 06:11:26,667 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-19 06:11:26,667 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.MathModule
 2025-02-19 06:11:26,673 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.add
 2025-02-19 06:11:26,673 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.square
-2025-02-19 06:11:26,674 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-19 06:11:26,674 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.WindowModule
 2025-02-19 06:11:26,677 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.create
 2025-02-19 06:11:26,677 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.show
 2025-02-19 06:11:26,678 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.button
 2025-02-19 06:11:26,678 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.label
-2025-02-19 06:11:26,678 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-19 06:11:26,678 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.java.extentions.stringoperations
 2025-02-19 06:11:26,678 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: StringOperations.cmp
 2025-02-19 06:11:26,713 INFO [main] o.F.Main [Main.java:43] Running file: msrc/main.masm
 2025-02-19 06:32:58,452 INFO [main] o.F.Main [Main.java:18] Starting MASM interpreter
 2025-02-19 06:32:58,458 INFO [main] o.F.M.ModuleInit [ModuleInit.java:29] Initializing module system
 2025-02-19 06:32:58,458 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:31] Using module directory: modules
 2025-02-19 06:32:58,460 INFO [main] o.F.M.ModuleInit [ModuleInit.java:57] Found 0 potential module files
-2025-02-19 06:32:58,461 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-19 06:32:58,461 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.MathModule
 2025-02-19 06:32:58,467 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.add
 2025-02-19 06:32:58,468 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.square
-2025-02-19 06:32:58,469 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-19 06:32:58,469 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.WindowModule
 2025-02-19 06:32:58,474 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.create
 2025-02-19 06:32:58,475 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.show
 2025-02-19 06:32:58,475 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.button
 2025-02-19 06:32:58,475 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.label
-2025-02-19 06:32:58,476 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-19 06:32:58,476 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.java.extentions.stringoperations
 2025-02-19 06:32:58,476 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: StringOperations.cmp
 2025-02-19 06:32:58,502 INFO [main] o.F.Main [Main.java:43] Running file: msrc/main.masm
 2025-02-19 06:37:07,504 INFO [main] o.F.Main [Main.java:18] Starting MASM interpreter
 2025-02-19 06:37:07,509 INFO [main] o.F.M.ModuleInit [ModuleInit.java:29] Initializing module system
 2025-02-19 06:37:07,509 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:31] Using module directory: modules
 2025-02-19 06:37:07,510 INFO [main] o.F.M.ModuleInit [ModuleInit.java:57] Found 0 potential module files
-2025-02-19 06:37:07,511 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-19 06:37:07,511 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.MathModule
 2025-02-19 06:37:07,516 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.add
 2025-02-19 06:37:07,516 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.square
-2025-02-19 06:37:07,517 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-19 06:37:07,517 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.WindowModule
 2025-02-19 06:37:07,521 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.create
 2025-02-19 06:37:07,522 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.show
 2025-02-19 06:37:07,522 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.button
 2025-02-19 06:37:07,523 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.label
-2025-02-19 06:37:07,524 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-19 06:37:07,524 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.java.extentions.stringoperations
 2025-02-19 06:37:07,524 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: StringOperations.cmp
 2025-02-19 06:37:07,550 INFO [main] o.F.Main [Main.java:43] Running file: msrc/main.masm
 2025-02-19 06:40:16,906 INFO [main] o.F.Main [Main.java:18] Starting MASM interpreter
 2025-02-19 06:40:16,909 INFO [main] o.F.M.ModuleInit [ModuleInit.java:29] Initializing module system
 2025-02-19 06:40:16,909 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:31] Using module directory: modules
 2025-02-19 06:40:16,910 INFO [main] o.F.M.ModuleInit [ModuleInit.java:57] Found 0 potential module files
-2025-02-19 06:40:16,910 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-19 06:40:16,910 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.MathModule
 2025-02-19 06:40:16,913 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.add
 2025-02-19 06:40:16,914 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.square
-2025-02-19 06:40:16,914 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-19 06:40:16,914 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.WindowModule
 2025-02-19 06:40:16,916 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.create
 2025-02-19 06:40:16,917 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.show
 2025-02-19 06:40:16,917 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.button
 2025-02-19 06:40:16,917 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.label
-2025-02-19 06:40:16,917 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-19 06:40:16,917 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.java.extentions.stringoperations
 2025-02-19 06:40:16,918 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: StringOperations.cmp
 2025-02-19 06:40:16,936 INFO [main] o.F.Main [Main.java:43] Running file: msrc/main.masm
 2025-02-19 06:40:16,946 DEBUG [main] o.F.Functions [Functions.java:454] DB instruction received: '$100 "meow"'
@@ -170,15 +170,15 @@
 2025-02-19 06:41:18,022 INFO [main] o.F.M.ModuleInit [ModuleInit.java:29] Initializing module system
 2025-02-19 06:41:18,022 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:31] Using module directory: modules
 2025-02-19 06:41:18,023 INFO [main] o.F.M.ModuleInit [ModuleInit.java:57] Found 0 potential module files
-2025-02-19 06:41:18,023 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-19 06:41:18,023 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.MathModule
 2025-02-19 06:41:18,027 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.add
 2025-02-19 06:41:18,027 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.square
-2025-02-19 06:41:18,027 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-19 06:41:18,027 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.WindowModule
 2025-02-19 06:41:18,030 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.create
 2025-02-19 06:41:18,030 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.show
 2025-02-19 06:41:18,030 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.button
 2025-02-19 06:41:18,030 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.label
-2025-02-19 06:41:18,031 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-19 06:41:18,031 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.java.extentions.stringoperations
 2025-02-19 06:41:18,031 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: StringOperations.cmp
 2025-02-19 06:41:18,049 INFO [main] o.F.Main [Main.java:43] Running file: msrc/main.masm
 2025-02-19 06:41:18,060 DEBUG [main] o.F.Functions [Functions.java:454] DB instruction received: '$100 "meow"'
@@ -203,15 +203,15 @@
 2025-02-19 06:42:08,884 INFO [main] o.F.M.ModuleInit [ModuleInit.java:29] Initializing module system
 2025-02-19 06:42:08,885 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:31] Using module directory: modules
 2025-02-19 06:42:08,887 INFO [main] o.F.M.ModuleInit [ModuleInit.java:57] Found 0 potential module files
-2025-02-19 06:42:08,889 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.MathModule
+2025-02-19 06:42:08,889 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.MathModule
 2025-02-19 06:42:08,895 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.add
 2025-02-19 06:42:08,896 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: math.square
-2025-02-19 06:42:08,896 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.ModuleManager.examples.WindowModule
+2025-02-19 06:42:08,896 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.ModuleManager.examples.WindowModule
 2025-02-19 06:42:08,899 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.create
 2025-02-19 06:42:08,899 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.show
 2025-02-19 06:42:08,899 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.button
 2025-02-19 06:42:08,899 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: window.label
-2025-02-19 06:42:08,900 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.Finite.java.extentions.stringoperations
+2025-02-19 06:42:08,900 INFO [main] o.F.M.ModuleInit [ModuleInit.java:121] Registering built-in module: org.finite.java.extentions.stringoperations
 2025-02-19 06:42:08,900 DEBUG [main] o.F.M.ModuleInit [ModuleInit.java:101] Registered MNI function: StringOperations.cmp
 2025-02-19 06:42:08,925 INFO [main] o.F.Main [Main.java:43] Running file: msrc/main.masm
 2025-02-19 06:42:08,942 DEBUG [main] o.F.Functions [Functions.java:454] DB instruction received: '$100 "meow"'

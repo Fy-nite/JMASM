@@ -1,4 +1,4 @@
-package org.Finite;
+package org.finite;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

@@ -9,8 +9,8 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class includemanager {
-    private static final Logger log = LoggerFactory.getLogger(includemanager.class);
+public class Includemanager {
+    private static final Logger log = LoggerFactory.getLogger(Includemanager.class);
     private static final Set<String> includedFiles = new HashSet<>();
     private static final MASMConfig config = MASMConfig.getInstance();
 
@@ -54,7 +54,7 @@ public class includemanager {
         // First try loading from classpath if it's a stdlib file
         String resourcePath = filename.replace(".", "/") + ".masm";
         if (filename.startsWith("std")) {
-            try (InputStream is = includemanager.class.getClassLoader().getResourceAsStream(resourcePath)) {
+            try (InputStream is = Includemanager.class.getClassLoader().getResourceAsStream(resourcePath)) {
                 if (is != null) {
                     return new String(is.readAllBytes(), StandardCharsets.UTF_8);
                 }

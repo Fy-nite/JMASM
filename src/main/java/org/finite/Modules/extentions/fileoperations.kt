@@ -1,4 +1,4 @@
-package org.finite.kotlin.extentions
+package org.finite.Modules.extentions
 import java.io.File
 import org.finite.Exceptions.MNIException
 import org.finite.ModuleManager.*;

@@ -1,6 +1,5 @@
-package org.Finite.Config;
+package org.finite.Config;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
 

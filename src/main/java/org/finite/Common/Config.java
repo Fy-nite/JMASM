@@ -1,4 +1,4 @@
-package org.Finite.Common;
+package org.finite.Common;
 
 import org.tomlj.*;
 import java.io.File;
