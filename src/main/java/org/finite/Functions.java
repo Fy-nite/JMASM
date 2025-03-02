@@ -903,6 +903,21 @@ public class Functions {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jeq");
         }
     }
+    // call but only if rflags is 1
+    public void calle(int[] memory, String target, instructions instrs) {
+        // if rflags is 1, jump to the target
+        if (common.ReadRegister("RFLAGS") == 1) {
+            call(memory, target, instrs);
+        }
+
+    }
+
+    public void callne(int[] memory, String target, instructions instrs) {
+        // if rflags is 0, jump to the target
+        if (common.ReadRegister("RFLAGS") == 0) {
+            call(memory, target, instrs);
+        }
+    }
 
     public void jne(int[] memory, String target, instructions instrs) {
         try {

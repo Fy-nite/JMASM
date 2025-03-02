@@ -399,6 +399,16 @@ public class interp {
                 case "hlt":
                     functions.hlt();
                     break;
+                case "nop":
+                    // skip
+                    break;
+                case "calle":
+                // memory,  target  , instrs
+                    functions.calle(memory, instr.sop1, instrs);
+                    break;
+                case "callne":
+                    functions.callne(memory, instr.sop1, instrs);
+                    break;
                 case "out":
                     // out wants a fd or "place to output to"
                     // 1 is stdout where as 2 is stderr
