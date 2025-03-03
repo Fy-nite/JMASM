@@ -455,6 +455,12 @@ public class Functions {
                     "Error in instruction: db"
                 );
             }
+            // check if any arguments are comments ;
+            for (String arg : argz) {
+                if (arg.startsWith(";")) {
+                    break;
+                }
+            }
 
             String fullArg = String.join(" ", argz).trim();
             logger.debug("DB instruction received: '{}'", fullArg);
@@ -1058,5 +1064,73 @@ public class Functions {
                 return -1;
             }
         }
+    }
+    public static String parseAnsiTerminal(String input) {
+        // ANSI escape codes for terminal colors
+        // https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
+        // https://misc.flogisoft.com/bash/tip_colors_and_formatting
+        // https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
+        // https://stackoverflow.com/questions/5762491/how-to-print-color-in-console-using-system-out-println
+        
+        // Reset
+        input = input.replaceAll("\\[reset\\]", "\u001B[0m");
+        // Bold
+        input = input.replaceAll("\\[bold\\]", "\u001B[1m");
+        // Dim
+        input = input.replaceAll("\\[dim\\]", "\u001B[2m");
+        // Italic
+        input = input.replaceAll("\\[italic\\]", "\u001B[3m");
+        // Underline
+        input = input.replaceAll("\\[underline\\]", "\u001B[4m");
+        // Blink
+        input = input.replaceAll("\\[blink\\]", "\u001B[5m");
+        // Reverse
+        input = input.replaceAll("\\[reverse\\]", "\u001B[7m");
+        // Hidden
+        input = input.replaceAll("\\[hidden\\]", "\u001B[8m");
+        // Strikethrough
+        input = input.replaceAll("\\[strikethrough\\]", "\u001B[9m");
+        // Reset all attributes
+        input = input.replaceAll("\\[resetall\\]", "\u001B[0m");
+        // Reset bold
+        input = input.replaceAll("\\[resetbold\\]", "\u001B[21m");
+        // Clear screen
+        input = input.replaceAll("\\[clear\\]", "\u001B[2J");
+        // Foreground colors
+        // Black
+        input = input.replaceAll("\\[black\\]", "\u001B[30m");
+        // Red
+        input = input.replaceAll("\\[red\\]", "\u001B[31m");
+        // Green
+        input = input.replaceAll("\\[green\\]", "\u001B[32m");
+        // Yellow
+        input = input.replaceAll("\\[yellow\\]", "\u001B[33m");
+        // Blue
+        input = input.replaceAll("\\[blue\\]", "\u001B[34m");
+        // Magenta
+        input = input.replaceAll("\\[magenta\\]", "\u001B[35m");
+        // Cyan
+        input = input.replaceAll("\\[cyan\\]", "\u001B[36m");
+        // White
+        input = input.replaceAll("\\[white\\]", "\u001B[37m");
+        // Background colors
+        // Black
+        input = input.replaceAll("\\[bg_black\\]", "\u001B[40m");
+        // Red
+        input = input.replaceAll("\\[bg_red\\]", "\u001B[41m");
+        // Green
+        input = input.replaceAll("\\[bg_green\\]", "\u001B[42m");
+        // Yellow
+        input = input.replaceAll("\\[bg_yellow\\]", "\u001B[43m");
+        // Blue
+        input = input.replaceAll("\\[bg_blue\\]", "\u001B[44m");
+        // Magenta
+        input = input.replaceAll("\\[bg_magenta\\]", "\u001B[45m");
+        // Cyan
+        input = input.replaceAll("\\[bg_cyan\\]", "\u001B[46m");
+        // White
+        input = input.replaceAll("\\[bg_white\\]", "\u001B[47m");
+
+        return input;
     }
 }

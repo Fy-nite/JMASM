@@ -13,6 +13,7 @@ import org.finite.ModuleManager.annotations.MNIClass;
 import org.finite.ModuleManager.annotations.MNIFunction;
 import org.finite.ModuleManager.examples.MathModule;
 import org.finite.ModuleManager.examples.WindowModule;
+import org.finite.Modules.extentions.IO;
 import org.finite.Modules.extentions.StringOperations;
 
 /*
@@ -41,8 +42,8 @@ public class ModuleInit {
     public static void initallmodules() {
             ModuleInit.init();
             ModuleInit.registerBuiltInModule(MathModule.class);
-            ModuleInit.registerBuiltInModule(WindowModule.class);
             ModuleInit.registerBuiltInModule(StringOperations.class);
+            ModuleInit.registerBuiltInModule(IO.class);
          
     }
     private static String getModuleDirectory() {
