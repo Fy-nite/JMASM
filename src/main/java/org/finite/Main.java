@@ -51,13 +51,17 @@ public class Main {
             if (arguments.debug) {
                 e.printStackTrace();
             }
-            System.exit(1);
+            if (common.exitOnHLT) {
+                System.exit(1);
+            }
         } catch (Exception e) {
             common.box("Error", "Unexpected error: " + e.getMessage(), "error");
             if (arguments.debug) {
                 e.printStackTrace();
             }
-            System.exit(1);
+            if (common.exitOnHLT) {
+                System.exit(1);
+            }
         }
     }
 }
