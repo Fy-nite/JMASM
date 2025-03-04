@@ -1,6 +1,8 @@
 package org.finite.ModuleManager;
 
 import org.finite.Common.common;
+import org.finite.Exceptions.MASMException;
+
 import java.lang.reflect.Method;
 
 public class MNIHandler {
@@ -10,7 +12,7 @@ public class MNIHandler {
         try {
             Method method = registry.getMNIMethod(moduleName, functionName);
             if (method == null) {
-                throw new RuntimeException("MNI function not found: " + moduleName + "." + functionName);
+                throw new MASMException("MNI method not found", 0, functionName, "MNI method not found");
             }
             method.invoke(null, methodObj);
         } catch (Exception e) {

@@ -63,7 +63,7 @@ public class interp {
         }
         
         if (currentPass >= maxPasses) {
-            throw new RuntimeException("Maximum include depth exceeded. Possible circular inclusion detected.");
+            throw new MASMException("Too many include passes", 0, "", "Error in instruction: #include");
         }
         
         return result;
@@ -477,13 +477,23 @@ public class interp {
                 case "mni":
                     // MNI format: MNI module.function reg1 reg2
                     if (instr.sop1 == null) {
-                        throw new RuntimeException("Invalid MNI call format. Expected: MNI module.function reg1 reg2");
+                        throw new MASMException(
+                            "Missing MNI function name",
+                            instr.lineNumber,
+                            instr.originalLine,
+                            "Error in instruction: MNI"
+                        );
                     }
 
                     String[] mniParts = instr.sop1.split("\\.");
              
                     if (mniParts.length != 2) {
-                        throw new RuntimeException("Invalid MNI function format. Expected: module.function");
+                        throw new MASMException(
+                            "Invalid MNI function name",
+                            instr.lineNumber,
+                            instr.originalLine,
+                            "Error in instruction: MNI"
+                        );
                     }
 
                     String moduleName = mniParts[0];
@@ -491,13 +501,23 @@ public class interp {
 
                     // Parse the register arguments
                     if (instr.sop2 == null) {
-                        throw new RuntimeException("Missing register arguments for MNI call");
+                        throw new MASMException(
+                            "Missing MNI register arguments",
+                            instr.lineNumber,
+                            instr.originalLine,
+                            "Error in instruction: MNI"
+                        );
                     }
 
                     String[] registerArgs = instr.sop2.trim().split("\\s+");
                    // do not care about min and max args
                     if (registerArgs.length < 2) {
-                        throw new RuntimeException("MNI call requires at least 2 register arguments");
+                        throw new MASMException(
+                            "MNI requires at least two register arguments",
+                            instr.lineNumber,
+                            instr.originalLine,
+                            "Error in instruction: MNI"
+                        );
                     }
                     // Create MNI object with register names
                     MNIMethodObject methodObj = new MNIMethodObject(memory, registerArgs[0], registerArgs[1]);
@@ -544,7 +564,12 @@ public class interp {
             try {
                 return Integer.parseInt(arg);
             } catch (NumberFormatException e) {
-                throw new RuntimeException("Invalid number format: " + arg);
+                throw new MASMException(
+                    "Invalid number format: " + arg,
+                    0,
+                    "",
+                    "Error in instruction"
+                );
             }
         }
     }

@@ -1,6 +1,7 @@
 package org.finite.Common;
 
 import org.finite.ReadResourceFile;
+import org.finite.Exceptions.MASMException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -199,7 +200,7 @@ public class common {
                 // Reset scanner if no more input
                 scanner.close();
                 scanner = new Scanner(System.in);
-                throw new IllegalArgumentException("No input available");
+                throw new MASMException("Error reading input", 0, "", "No more input");
             }
             
             return scanner.nextLine();
@@ -210,7 +211,7 @@ public class common {
                 scanner.close();
             }
             scanner = new Scanner(System.in);
-            throw new IllegalArgumentException("Invalid input operation");
+            throw new MASMException("Error reading input", 0, "", e.getMessage());
         }
     }
 

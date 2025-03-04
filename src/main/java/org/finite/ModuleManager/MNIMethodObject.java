@@ -1,6 +1,7 @@
 package org.finite.ModuleManager;
 
 import org.finite.Common.common;
+import org.finite.Exceptions.MASMException;
 
 public class MNIMethodObject {
     // Register constants
@@ -34,7 +35,7 @@ public class MNIMethodObject {
                 int address = Integer.parseInt(reg1.substring(1));
                 this.arg1 = memory[address];
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid memory address: " + reg1);
+                throw new MASMException("Invalid memory address: " + reg1, 0, reg1, "Invalid memory address");
             }
         } else if (reg1.startsWith("0x")) {
             this.arg1 = Integer.parseInt(reg1.substring(2), 16);
@@ -53,7 +54,7 @@ public class MNIMethodObject {
                 int address = Integer.parseInt(reg2.substring(1));
                 this.arg2 = memory[address];
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid memory address: " + reg2);
+                throw new MASMException("Invalid memory address: " + reg2, 0, reg2, "Invalid memory address");
             }
         } else if (reg2.startsWith("0x")) {
             this.arg2 = Integer.parseInt(reg2.substring(2), 16);

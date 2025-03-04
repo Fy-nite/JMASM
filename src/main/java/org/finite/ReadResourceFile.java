@@ -3,6 +3,9 @@ package org.finite;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
+import org.finite.Exceptions.MASMException;
+
 import java.io.IOException;
 
 public class ReadResourceFile {
@@ -11,7 +14,7 @@ public class ReadResourceFile {
         try {
             InputStream inputStream = ReadResourceFile.class.getClassLoader().getResourceAsStream(path);
             if (inputStream == null) {
-                throw new IllegalArgumentException("Resource not found: " + path);
+                throw new MASMException("Resource not found: ", 0, path, "Resource not found");
             }
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             String line;
@@ -29,7 +32,7 @@ public class ReadResourceFile {
         try (InputStream inputStream = ReadResourceFile.class.getClassLoader().getResourceAsStream(resourceName);
              BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             if (inputStream == null) {
-                throw new IllegalArgumentException("Resource not found: " + resourceName);
+                throw new MASMException("Resource not found: ", 0, resourceName, "Resource not found");
             }
             String line;
             while ((line = reader.readLine()) != null) {

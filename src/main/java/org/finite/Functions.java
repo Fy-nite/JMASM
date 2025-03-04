@@ -48,8 +48,11 @@ public class Functions {
                 if (localFile.exists()) {
                     inputStream = new FileInputStream(localFile);
                 } else {
-                    throw new IOException(
-                        "Resource not found: " + resourcePath
+                    throw new MASMException(
+                        "Resource not found: " + resourcePath,
+                        0,
+                        "",
+                        "Error including file"
                     );
                 }
             }
@@ -146,8 +149,11 @@ public class Functions {
                 if (localFile.exists()) {
                     inputStream = new FileInputStream(localFile);
                 } else {
-                    throw new IOException(
-                        "Resource not found: " + resourcePath
+                    throw new MASMException(
+                        "Resource not found: " + resourcePath,
+                        instrs.currentLine,
+                        instrs.currentlineContents,
+                        "Error including file"
                     );
                 }
             }
@@ -381,9 +387,7 @@ public class Functions {
         try {
             // Validate inputs first
             if (fd == null || dest == null) {
-                throw new IllegalArgumentException(
-                    "File descriptor and destination cannot be null"
-                );
+                throw new MASMException("Invalid arguments", instrs.currentLine, instrs.currentlineContents, "Error in instruction: in");
             }
 
             // Validate file descriptor
@@ -391,36 +395,26 @@ public class Functions {
             try {
                 fileDescriptor = Integer.parseInt(fd);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(
-                    "Invalid file descriptor format: " + fd
-                );
+                throw new MASMException("Invalid file descriptor: " + fd, instrs.currentLine, instrs.currentlineContents, "Error in instruction: in");
             }
 
             if (fileDescriptor != 1) {
-                throw new IllegalArgumentException(
-                    "Only stdin (fd 1) is supported"
-                );
+                throw new MASMException("Invalid file descriptor: " + fd, instrs.currentLine, instrs.currentlineContents, "Error in instruction: in");
             }
 
             // Validate destination format first
             if (!dest.startsWith("$")) {
-                throw new IllegalArgumentException(
-                    "Invalid destination format. Must be memory address ($)"
-                );
+                throw new MASMException("Invalid destination format: " + dest, instrs.currentLine, instrs.currentlineContents, "Error in instruction: in");
             }
 
             // Validate memory address format before attempting input
             try {
                 int address = Integer.parseInt(dest.substring(1));
                 if (address < 0 || address >= common.MAX_MEMORY) {
-                    throw new IllegalArgumentException(
-                        "Memory address out of bounds: " + address
-                    );
+                    throw new MASMException("Invalid memory address: " + dest, instrs.currentLine, instrs.currentlineContents, "Error in instruction: in");
                 }
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(
-                    "Invalid memory address format: " + dest
-                );
+                throw new MASMException("Invalid memory address: " + dest, instrs.currentLine, instrs.currentlineContents, "Error in instruction: in");
             }
 
             // After all validation passes, try to read input
@@ -436,9 +430,7 @@ public class Functions {
             } catch (IllegalArgumentException e) {
                 throw e;
             } catch (Exception e) {
-                throw new IllegalArgumentException(
-                    "Input operation failed: " + e.getMessage()
-                );
+                throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: in");
             }
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: in");
@@ -597,7 +589,7 @@ public class Functions {
             // Get current stack pointer
             int sp = common.ReadRegister("RSP");
             if (sp >= common.MAX_MEMORY) {
-                throw new IllegalStateException("Stack underflow in ret");
+                throw new MASMException("Stack underflow", instrs.currentLine, instrs.currentlineContents, "Error in instruction: ret");
             }
 
             // Get return address from stack
@@ -837,7 +829,7 @@ public class Functions {
         try {
             logger.debug("CALL to target: {}", target);
             if (target == null || instrs == null) {
-                throw new NullPointerException("Target or instructions cannot be null");
+                throw new MASMException("Target or instructions cannot be null", instrs.currentLine, instrs.currentlineContents, "Error in instruction: call");
             }
 
             // Save current instruction pointer
@@ -930,7 +922,7 @@ public class Functions {
             logger.debug("JNE instruction with target: {}", target);
             
             if (target == null || instrs == null) {
-                throw new NullPointerException("Target or instructions cannot be null");
+                throw new MASMException("Target or instructions cannot be null", instrs.currentLine, instrs.currentlineContents, "Error in instruction: jne");
             }
 
             // read the RFLAGS register
@@ -971,9 +963,7 @@ public class Functions {
             int value;
             if (target == null || instrs == null) {
                 //  print("DEBUG: ERROR - Null target or instructions\n");
-                throw new NullPointerException(
-                    "Target or instructions cannot be null"
-                );
+                throw new MASMException("Target or instructions cannot be null", instrs.currentLine, instrs.currentlineContents, "Error in instruction: jmp");
             }
             //print("DEBUG: Attempting to jump to target: %s with instructions context\n", target);
             try
