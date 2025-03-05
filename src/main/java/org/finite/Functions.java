@@ -296,6 +296,8 @@ public class Functions {
 
     public void out(int[] memory, String fd, String source, instructions instrs) {
         try {
+            common.print("Writing to file descriptor %s: %s\n", fd, source);
+            
             String value = "";
             int fileDescriptor;
             if (source == null) {
@@ -440,147 +442,150 @@ public class Functions {
     public void db(int[] memory, instructions instrs, String... argz) {
         try {
             if (argz == null || argz.length == 0) {
-                throw new MASMException(
-                    "DB instruction requires arguments",
-                    instrs.currentLine,
-                    instrs.currentlineContents,
-                    "Error in instruction: db"
-                );
-            }
-            // check if any arguments are comments ;
-            for (String arg : argz) {
-                if (arg.startsWith(";")) {
-                    break;
-                }
+                throw new MASMException("DB instruction requires arguments", instrs.currentLine, instrs.currentlineContents, "Error in instruction: db");
             }
 
-            String fullArg = String.join(" ", argz).trim();
+            // For bytecode execution, the arguments might come as a single string
+            String fullArg;
+            if (argz.length == 1 && argz[0].contains(" ")) {
+                fullArg = argz[0];
+            } else {
+                fullArg = String.join(" ", argz);
+            }
+            
             logger.debug("DB instruction received: '{}'", fullArg);
 
-            // Skip any extra whitespace after DB
-            fullArg = fullArg.replaceAll("\\s+", " ");
-
-            String[] parts = fullArg.split(" ", 2);
-            if (parts.length < 2) {
-                logger.error("Invalid DB format: '{}'", fullArg);
-                throw new MASMException(
-                    "DB instruction requires address and data",
-                    instrs.currentLine,
-                    instrs.currentlineContents,
-                    "Error in instruction: db"
-                );
+            // Extract address and data parts
+            int spaceIdx = fullArg.indexOf(' ');
+            if (spaceIdx == -1) {
+                throw new MASMException("DB instruction requires address and data", instrs.currentLine, instrs.currentlineContents, "Error in instruction: db");
             }
 
-            String addressPart = parts[0];
-            String dataPart = parts[1];
-
-            logger.debug(
-                "DB parsed - Address: '{}', Data: '{}'",
-                addressPart,
-                dataPart
-            );
+            String addressPart = fullArg.substring(0, spaceIdx).trim();
+            String dataPart = fullArg.substring(spaceIdx + 1).trim();
 
             // Parse memory address
-            int memoryAddress;
-            try {
-                if (addressPart.startsWith("$")) {
-                    String addressStr = addressPart.substring(1);
-                    try {
-                        memoryAddress = Integer.parseInt(addressStr);
-                    } catch (NumberFormatException e) {
-                        memoryAddress = common.ReadRegister(addressStr);
-                    }
-                } else {
-                    memoryAddress = Integer.parseInt(addressPart);
-                }
+            int memoryAddress = parseAddress(addressPart, instrs);
 
-                if (memoryAddress < 0 || memoryAddress >= common.MAX_MEMORY) {
-                    throw new MASMException(
-                        "Invalid memory address: " + memoryAddress,
-                        instrs.currentLine,
-                        instrs.currentlineContents,
-                        "Error in instruction: db"
-                    );
-                }
-            } catch (NumberFormatException e) {
-                logger.error("Invalid memory address: '{}'", addressPart);
-                throw new MASMException(
-                    "Invalid memory address: " + addressPart,
-                    instrs.currentLine,
-                    instrs.currentlineContents,
-                    "Error in instruction: db"
-                );
-            }
-
-            // Clean up the data string
+            // Handle data part
             if (dataPart.startsWith("\"") && dataPart.endsWith("\"")) {
-                dataPart = dataPart.substring(1, dataPart.length() - 1);
+                // String literal
+                String strContent = dataPart.substring(1, dataPart.length() - 1);
+                strContent = processEscapeSequences(strContent);
+                byte[] bytes = strContent.getBytes();
+                for (int i = 0; i < bytes.length; i++) {
+                    memory[memoryAddress + i] = bytes[i] & 0xFF;
+                }
+                memory[memoryAddress + bytes.length] = 0; // Null terminator
+            } else {
+                // Handle other data types (hex, decimal, etc.)
+                // ...existing data handling code...
             }
-
-            logger.debug(
-                "Writing '{}' to memory address {}",
-                dataPart,
-                memoryAddress
-            );
-            // Write to memory
-            for (int i = 0; i < dataPart.length(); i++) {
-                memory[memoryAddress + i] = dataPart.charAt(i);
-            }
-            memory[memoryAddress + dataPart.length()] = 0; // Null terminate
         } catch (Exception e) {
-            throw new MASMException(
-                e.getMessage(),
-                instrs.currentLine,
-                instrs.currentlineContents,
-                "Error in instruction: db"
-            );
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: db");
         }
+    }
+
+    private int parseAddress(String addressPart, instructions instrs) {
+        int memoryAddress;
+        if (addressPart.startsWith("$")) {
+            String addressStr = addressPart.substring(1);
+            try {
+                memoryAddress = Integer.parseInt(addressStr);
+            } catch (NumberFormatException e) {
+                memoryAddress = common.ReadRegister(addressStr);
+            }
+        } else {
+            memoryAddress = Integer.parseInt(addressPart);
+        }
+
+        if (memoryAddress < 0 || memoryAddress >= common.MAX_MEMORY) {
+            throw new MASMException("Invalid memory address: " + memoryAddress, instrs.currentLine, instrs.currentlineContents, "Error in instruction: db");
+        }
+
+        return memoryAddress;
     }
 
     public void mov(int[] memory, String dest, String source, instructions instrs) {
         try {
-            logger.trace("MOV {} {}", dest, source);
-            
+            if (dest == null || source == null) {
+                throw new MASMException("MOV requires two operands", instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+            }
+
+            logger.debug("MOV {} {}", dest, source);
             int value;
-            // Handle source operand first
+
+            // Handle source operand
             if (source.startsWith("$")) {
-                // Source is memory address
+                // Memory access
+                String memAddr = source.substring(1);
                 try {
-                    int address = Integer.parseInt(source.substring(1));
+                    int address = Integer.parseInt(memAddr);
+                    if (address < 0 || address >= memory.length) {
+                        throw new MASMException("Memory address out of bounds: " + address, 
+                            instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                    }
                     value = memory[address];
                 } catch (NumberFormatException e) {
-                    throw new MASMException("Invalid memory address: " + source, instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                    // Could be a register-based memory access
+                    if (!common.registersMap.containsKey(memAddr.toUpperCase())) {
+                        throw new MASMException("Invalid memory address or register: " + memAddr,
+                            instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                    }
+                    value = memory[common.registersMap.get(memAddr.toUpperCase())];
                 }
+            } else if (source.startsWith("R")) {
+                // Register access
+                if (!common.registersMap.containsKey(source.toUpperCase())) {
+                    throw new MASMException("Invalid register: " + source,
+                        instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                }
+                value = common.ReadRegister(source);
             } else {
-                // Source is register or immediate value
+                // Immediate value
                 try {
                     value = Integer.parseInt(source);
                 } catch (NumberFormatException e) {
-                    if (!isValidRegister(source)) {
-                        throw new MASMException("Invalid source: " + source, instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
-                    }
-                    value = common.ReadRegister(source);
+                    throw new MASMException("Invalid immediate value: " + source,
+                        instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                 }
             }
 
             // Handle destination operand
             if (dest.startsWith("$")) {
-                // Destination is memory address
+                // Memory destination
+                String memAddr = dest.substring(1);
                 try {
-                    int address = Integer.parseInt(dest.substring(1));
+                    int address = Integer.parseInt(memAddr);
+                    if (address < 0 || address >= memory.length) {
+                        throw new MASMException("Memory address out of bounds: " + address,
+                            instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                    }
                     memory[address] = value;
                 } catch (NumberFormatException e) {
-                    throw new MASMException("Invalid memory address: " + dest, instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                    throw new MASMException("Invalid memory address: " + memAddr,
+                        instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                 }
-            } else {
-                // Destination is register
-                if (!isValidRegister(dest)) {
-                    throw new MASMException("Invalid destination register: " + dest, instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+            } else if (dest.startsWith("R")) {
+                // Register destination
+                if (!common.registersMap.containsKey(dest.toUpperCase())) {
+                    throw new MASMException("Invalid register: " + dest,
+                        instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                 }
                 common.WriteRegister(dest, value);
+            } else {
+                throw new MASMException("Invalid destination: " + dest,
+                    instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
             }
+
+            logger.debug("MOV completed: {} <- {}", dest, value);
+
         } catch (Exception e) {
-            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+            if (e instanceof MASMException) {
+                throw e;
+            }
+            throw new MASMException(e.getMessage(), 
+                instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
         }
     }
 
@@ -835,32 +840,25 @@ public class Functions {
             // Save current instruction pointer
             int currentRIP = common.ReadRegister("RIP");
             
-            // Push return address (next instruction) onto stack
-            common.WriteRegister("RIP", currentRIP);
-            Functions.push(memory, "RIP", instrs);
-
-            try {
-                // Handle labels similar to jmp
-                if (target.startsWith("#")) {
-                    String labelName = target.substring(1);
-                    Integer labelAddress = instrs.labelMap.get(labelName);
-                    if (labelAddress == null) {
-                        common.box("Error", "Unknown label: " + labelName, "error");
-                        return;
-                    }
-                    common.WriteRegister("RIP", labelAddress - 1);
-                    return;
+            // Handle labels
+            if (target.startsWith("#")) {
+                String labelName = target.substring(1);
+                Integer labelAddress = instrs.labelMap.get(labelName);
+                
+                logger.debug("Looking up label '{}' -> address: {}", labelName, labelAddress);
+                
+                if (labelAddress == null) {
+                    throw new MASMException("Unknown label: " + labelName, instrs.currentLine, instrs.currentlineContents, "Error in instruction: call");
                 }
-
-                // Handle direct addresses
-                int targetAddress = parseTarget(target, instrs);
-                if (targetAddress == -1) {
-                    common.box("Error", "Invalid call target: " + target, "error");
-                    return;
-                }
-                common.WriteRegister("RIP", targetAddress - 1);
-            } catch (Exception e) {
-                common.box("Error", "Call failed: " + e.getMessage(), "error");
+                
+                // Push return address (next instruction) onto stack
+                push(memory, "RIP", instrs);
+                
+                // Jump to label
+                common.WriteRegister("RIP", labelAddress - 1);
+                logger.debug("Jumped to address {} for label {}", labelAddress - 1, labelName);
+            } else {
+                throw new MASMException("Call target must be a label", instrs.currentLine, instrs.currentlineContents, "Error in instruction: call");
             }
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: call");

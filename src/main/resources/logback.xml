@@ -6,8 +6,11 @@
         </encoder>
     </appender>
 
-    <!-- Default root level is INFO -->
+    <!-- Set root logger to DEBUG when -d flag is used -->
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
     </root>
+
+    <!-- Package specific logging -->
+    <logger name="org.finite" level="DEBUG" />
 </configuration>

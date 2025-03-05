@@ -101,6 +101,33 @@ public class common {
 
     }
 
+    public static void WriteToFile(String filename, String contents)
+    {
+        try {
+            FileWriter writer = new FileWriter(filename);
+            writer.write(contents);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void dbgprint(String message)
+    {
+        if (arguments.debug)
+        {
+            print(message + "\n");
+        }
+    }
+
+    public static void dbgprinterr(String message)
+    {
+        if (arguments.debug)
+        {
+            printerr(message + "\n");
+        }
+    }
+
     public static String ReadFromFile(String filename)
     {
         try {

@@ -42,9 +42,14 @@ public class Main {
                 interp.runFile(arguments.file);
             }
             else {
-                logger.warn("No input file specified");
-                String help = ReadResourceFile.read("help.txt");
-                common.box("Error", help, "error");
+            // get the argument regardless, could be a file or a command
+                String arg = arguments.getEffectiveFile();
+                if (arg != null) {
+                    logger.info("Running file: {}", arg);
+                    common.box("java MASM interpreter", "2025 (C) finite\nrunning file: " + arg + "\n", "info");
+                    interp.runFile(arg);
+                }
+             
             }
         } catch (MASMException e) {
             common.box("Error", e.getMessage(), "error");
