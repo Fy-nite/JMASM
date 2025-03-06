@@ -442,47 +442,97 @@ public class Functions {
     public void db(int[] memory, instructions instrs, String... argz) {
         try {
             if (argz == null || argz.length == 0) {
-                throw new MASMException("DB instruction requires arguments", instrs.currentLine, instrs.currentlineContents, "Error in instruction: db");
+                throw new MASMException("DB instruction requires arguments", 
+                    instrs.currentLine, instrs.currentlineContents, 
+                    "Error in instruction: db");
             }
 
-            // For bytecode execution, the arguments might come as a single string
-            String fullArg;
-            if (argz.length == 1 && argz[0].contains(" ")) {
-                fullArg = argz[0];
-            } else {
-                fullArg = String.join(" ", argz);
-            }
-            
-            logger.debug("DB instruction received: '{}'", fullArg);
+            // Join arguments and handle quotes properly
+            String fullArg = String.join(" ", argz).trim();
+            logger.debug("DB instruction processing: '{}'", fullArg);
 
-            // Extract address and data parts
+            // Validate minimum format
+            if (!fullArg.contains(" ")) {
+                throw new MASMException("DB instruction requires address and data separated by space", 
+                    instrs.currentLine, instrs.currentlineContents, 
+                    "Error in instruction: db");
+            }
+
+            // Extract address and data parts safely
             int spaceIdx = fullArg.indexOf(' ');
-            if (spaceIdx == -1) {
-                throw new MASMException("DB instruction requires address and data", instrs.currentLine, instrs.currentlineContents, "Error in instruction: db");
-            }
-
             String addressPart = fullArg.substring(0, spaceIdx).trim();
             String dataPart = fullArg.substring(spaceIdx + 1).trim();
 
-            // Parse memory address
-            int memoryAddress = parseAddress(addressPart, instrs);
+            logger.debug("DB parsed address: '{}', data: '{}'", addressPart, dataPart);
 
-            // Handle data part
+            // Validate and parse memory address
+            if (!addressPart.startsWith("$")) {
+                throw new MASMException("DB address must start with $", 
+                    instrs.currentLine, instrs.currentlineContents, 
+                    "Error in instruction: db");
+            }
+
+            int memoryAddress;
+            try {
+                memoryAddress = Integer.parseInt(addressPart.substring(1));
+                if (memoryAddress < 0 || memoryAddress >= memory.length) {
+                    throw new MASMException("Memory address out of bounds: " + memoryAddress, 
+                        instrs.currentLine, instrs.currentlineContents, 
+                        "Error in instruction: db");
+                }
+            } catch (NumberFormatException e) {
+                throw new MASMException("Invalid memory address format: " + addressPart, 
+                    instrs.currentLine, instrs.currentlineContents, 
+                    "Error in instruction: db");
+            }
+
+            // Handle the data part
             if (dataPart.startsWith("\"") && dataPart.endsWith("\"")) {
                 // String literal
                 String strContent = dataPart.substring(1, dataPart.length() - 1);
                 strContent = processEscapeSequences(strContent);
                 byte[] bytes = strContent.getBytes();
+                
+                if (memoryAddress + bytes.length >= memory.length) {
+                    throw new MASMException("String data exceeds memory bounds", 
+                        instrs.currentLine, instrs.currentlineContents, 
+                        "Error in instruction: db");
+                }
+                
                 for (int i = 0; i < bytes.length; i++) {
                     memory[memoryAddress + i] = bytes[i] & 0xFF;
                 }
                 memory[memoryAddress + bytes.length] = 0; // Null terminator
+                
+                logger.debug("DB stored string of length {} at address {}", bytes.length, memoryAddress);
             } else {
-                // Handle other data types (hex, decimal, etc.)
-                // ...existing data handling code...
+                // Numeric data
+                String[] values = dataPart.split(",");
+                if (memoryAddress + values.length >= memory.length) {
+                    throw new MASMException("Numeric data exceeds memory bounds", 
+                        instrs.currentLine, instrs.currentlineContents, 
+                        "Error in instruction: db");
+                }
+                
+                for (int i = 0; i < values.length; i++) {
+                    try {
+                        memory[memoryAddress + i] = Integer.parseInt(values[i].trim());
+                    } catch (NumberFormatException e) {
+                        throw new MASMException("Invalid numeric value: " + values[i], 
+                            instrs.currentLine, instrs.currentlineContents, 
+                            "Error in instruction: db");
+                    }
+                }
+                
+                logger.debug("DB stored {} numeric values at address {}", values.length, memoryAddress);
             }
         } catch (Exception e) {
-            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: db");
+            if (e instanceof MASMException) {
+                throw e;
+            }
+            throw new MASMException(e.getMessage(), 
+                instrs.currentLine, instrs.currentlineContents, 
+                "Error in instruction: db");
         }
     }
 

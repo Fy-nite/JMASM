@@ -49,6 +49,12 @@ public class Main {
                     common.box("java MASM interpreter", "2025 (C) finite\nrunning file: " + arg + "\n", "info");
                     interp.runFile(arg);
                 }
+                else 
+                {
+                    common.box("java MASM interpreter", "2025 (C) finite\nType 'help' for a list of commands\n", "info");
+                    logger.debug("Starting debug REPL");
+                    debug.DebugRepl();
+                }
              
             }
         } catch (MASMException e) {
