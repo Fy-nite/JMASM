@@ -1,0 +1,117 @@
+; Cowsay Program in MicroASM
+; Initialize registers
+MOV R0 0
+MOV R1 0
+MOV R2 0
+MOV R3 0
+MOV R4 0
+MOV R5 0
+
+LBL main
+    ; Define message
+    DB $100 "g'day mate"
+    MOV R5 100
+    ; Start printing top border
+    MOV RAX 32
+    COUT 1 RAX
+    MOV R0 0
+    JMP #topborder_loop
+
+; Calculate the length of the message
+MNI StringOperations.len 100 R6
+
+LBL topborder_loop
+MOV RAX 95   ; _
+COUT 1 RAX
+INC R0
+CMP R0 R6
+JE #topborder_loop   ; Jump back to loop if less
+MOV RAX 10   ; Newline
+COUT 1 RAX
+JMP #start_message   ; Jump to next section
+
+LBL start_message
+    MOV RAX 60   ; <
+    COUT 1 RAX
+    MOV R1 100   ; Set starting address
+    JMP #print_loop   ; Jump to print loop
+
+LBL print_loop
+    OUT 1 $100
+    MOV RAX 62   ; >
+    COUT 1 RAX
+    ;; out just printed it normaly
+    jmp #end_message 
+
+LBL end_message
+    MOV RAX 10   ; Newline
+    COUT 1 RAX
+    JMP #bottom_border   ; Continue with rest of program
+
+LBL bottom_border
+    MOV RAX 32
+    COUT 1 RAX
+    MOV R0 0
+    JMP #bottomborder_loop
+
+LBL bottomborder_loop
+    MOV RAX 45   ; -
+    COUT 1 RAX
+    INC R0
+    CMP R0 20
+    JE #bottomborder_loop
+    MOV RAX 10
+    COUT 1 RAX
+    JMP #draw_cow    ; Jump to cow drawing
+
+LBL draw_cow
+    ; Print the cow
+    MOV RAX 32   ; Space
+    COUT 1 RAX
+    MOV RAX 92   ; \
+    COUT 1 RAX
+    MOV RAX 32   ; Space
+    COUT 1 RAX
+    MOV RAX 94   ; ^
+    COUT 1 RAX
+    MOV RAX 95   ; _
+    COUT 1 RAX
+    MOV RAX 94   ; ^
+    COUT 1 RAX
+    MOV RAX 10   ; Newline
+    COUT 1 RAX
+    JMP #draw_face
+
+LBL draw_face
+    MOV RAX 32   ; Space
+    COUT 1 RAX
+    MOV RAX 32   ; Space
+    COUT 1 RAX
+    MOV RAX 40   ; (
+    COUT 1 RAX
+    MOV RAX 111  ; o
+    COUT 1 RAX
+    MOV RAX 111  ; o
+    COUT 1 RAX
+    MOV RAX 41   ; )
+    COUT 1 RAX
+    MOV RAX 10   ; Newline
+    COUT 1 RAX
+    JMP #draw_body
+
+LBL draw_body
+    MOV RAX 32   ; Space
+    COUT 1 RAX
+    MOV RAX 32   ; Space
+    COUT 1 RAX
+    MOV RAX 40   ; (
+    COUT 1 RAX
+    MOV RAX 95   ; _
+    COUT 1 RAX
+    MOV RAX 41   ; )
+    COUT 1 RAX
+    MOV RAX 92   ; \
+    COUT 1 RAX
+    MOV RAX 10   ; Newline
+    COUT 1 RAX
+    HLT

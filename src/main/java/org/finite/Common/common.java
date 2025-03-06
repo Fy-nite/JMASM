@@ -112,7 +112,7 @@ public class common {
         }
     }
 
-    public static void dbgprint(String message)
+    public static void dbgprint(Object...  message)
     {
         if (arguments.debug)
         {
@@ -120,7 +120,7 @@ public class common {
         }
     }
 
-    public static void dbgprinterr(String message)
+    public static void dbgprinterr(String... message)
     {
         if (arguments.debug)
         {
@@ -202,13 +202,10 @@ public class common {
     }
 
     public static int ReadRegister(String register) {
-        // use the hashmap to get the register
         if (!registersMap.containsKey(register)) {
             printerr("Error: Invalid register name: " + register + "\n");
             return -1;
         }
-        //print("Reading %s\n",register);
-       // print("Reading %d from %s\n", memory[registersMap.get(register)], register);
         if (arguments.debug) {
             print("Reading %d from %s\n", memory[registersMap.get(register)], register);
         }

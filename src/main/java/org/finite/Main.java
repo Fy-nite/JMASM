@@ -15,25 +15,29 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            logger.info("Starting MASM interpreter");
-            System.out.print("\033[H\033[2J");
-            System.out.flush();
-            
-            ModuleInit.initallmodules();  // Initialize modules
-
             arguments = new ArgumentParser.Args();  // Initialize arguments
             JCommander.newBuilder()
                 .addObject(arguments)
                 .build()
                 .parse(args);
             
+            arguments.configureLogging();  // Configure logging based on debug flag
+            
+            if (arguments.debug) {
+                logger.info("Starting MASM interpreter");
+            }
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
+            
+            ModuleInit.initallmodules();  // Initialize modules
+
             if (arguments.help) {
-                logger.debug("Showing help message");
+                common.dbgprint("Showing help message");
                 common.box("Help", "This is the help message", "info");
             }
 //            if (arguments.debug) {
 //                common.box("java MASM interpreter", "2025 (C) finite\nType 'help' for a list of commands\n", "info");
-//                logger.debug("Starting debug REPL");
+//                common.dbgprint("Starting debug REPL");
 //                debug.DebugRepl();
 //            }
             if (arguments.file != null && !arguments.file.isEmpty()) {
@@ -52,7 +56,7 @@ public class Main {
                 else 
                 {
                     common.box("java MASM interpreter", "2025 (C) finite\nType 'help' for a list of commands\n", "info");
-                    logger.debug("Starting debug REPL");
+                    common.dbgprint("Starting debug REPL");
                     debug.DebugRepl();
                 }
              

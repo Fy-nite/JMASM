@@ -1,0 +1,110 @@
+# Query: Logger.debug
+# ContextLines: 1
+
+26 results - 4 files
+
+src/main/java/org/finite/debug.java:
+  176              
+  177:             common.dbgprint("Loaded program with {} instructions", currentProgram.length);
+  178              printDisplay();
+
+src/main/java/org/finite/Functions.java:
+    25      public static String include(String filename, String CurrentFileContents) {
+    26:         logger.debug("Including file: {}", filename);
+    27          // Convert the dot notation to path
+
+    36              if (inputStream == null) {
+    37:                 logger.debug(
+    38                      "Resource not found in classpath, trying local directory"
+
+   137              if (inputStream == null) {
+   138:                 logger.debug(
+   139                      "Resource not found in classpath, trying local directory"
+
+   451              String fullArg = String.join(" ", argz).trim();
+   452:             logger.debug("DB instruction processing: '{}'", fullArg);
+   453  
+
+   465  
+   466:             logger.debug("DB parsed address: '{}', data: '{}'", addressPart, dataPart);
+   467  
+
+   506                  
+   507:                 logger.debug("DB stored string of length {} at address {}", bytes.length, memoryAddress);
+   508              } else {
+
+   526                  
+   527:                 logger.debug("DB stored {} numeric values at address {}", values.length, memoryAddress);
+   528              }
+
+   564  
+   565:             logger.debug("MOV {} {}", dest, source);
+   566              int value;
+
+   630  
+   631:             logger.debug("MOV completed: {} <- {}", dest, value);
+   632  
+
+   884          try {
+   885:             logger.debug("CALL to target: {}", target);
+   886              if (target == null || instrs == null) {
+
+   897                  
+   898:                 logger.debug("Looking up label '{}' -> address: {}", labelName, labelAddress);
+   899                  
+
+   908                  common.WriteRegister("RIP", labelAddress - 1);
+   909:                 logger.debug("Jumped to address {} for label {}", labelAddress - 1, labelName);
+   910              } else {
+
+   935              for (String key : instrs.labelMap.keySet()) {
+   936:                 logger.debug(
+   937                      "Label: {} Address: {}",
+
+   969          try {
+   970:             logger.debug("JNE instruction with target: {}", target);
+   971              
+
+   977              int value = common.ReadRegister("RFLAGS");
+   978:             logger.debug("RFLAGS value: {}", value);
+   979  
+
+   993  
+   994:             logger.debug("Target address for label {}: {}", labelName, targetAddress);
+   995  
+
+   998                  common.WriteRegister("RIP", targetAddress - 1);
+   999:                 logger.debug("Jump taken - setting RIP to {}", targetAddress - 1);
+  1000              } else {
+  1001:                 logger.debug("Jump not taken - RFLAGS was 1");
+  1002              }
+
+  1009          try {
+  1010:             logger.debug("JMP to target: {}", target);
+  1011              int value;
+
+src/main/java/org/finite/Main.java:
+  34              if (arguments.help) {
+  35:                 logger.debug("Showing help message");
+  36                  common.box("Help", "This is the help message", "info");
+
+  39  //                common.box("java MASM interpreter", "2025 (C) finite\nType 'help' for a list of commands\n", "info");
+  40: //                logger.debug("Starting debug REPL");
+  41  //                debug.DebugRepl();
+
+  58                      common.box("java MASM interpreter", "2025 (C) finite\nType 'help' for a list of commands\n", "info");
+  59:                     logger.debug("Starting debug REPL");
+  60                      debug.DebugRepl();
+
+src/main/java/org/finite/ModuleManager/ModuleInit.java:
+   34              String moduleDir = getModuleDirectory();
+   35:             logger.debug("Using module directory: {}", moduleDir);
+   36              loadModulesFromDirectory(new File(moduleDir));
+
+   79      private static void loadJarFile(File jarFile) throws Exception {
+   80:         logger.debug("Loading jar file: {}", jarFile.getName());
+   81          URL[] urls = { jarFile.toURI().toURL() };
+
+  110                      registry.registerMNIModule(moduleName, mniFunction.name(), method);
+  111:                     logger.debug("Registered MNI function: {}.{}", moduleName, mniFunction.name());
+  112                  }

@@ -174,7 +174,7 @@ public class debug {
             String[] lines = java.nio.file.Files.readAllLines(path).toArray(new String[0]);
             currentProgram = interp.parseInstructions(lines);
             
-            logger.debug("Loaded program with {} instructions", currentProgram.length);
+            common.dbgprint("Loaded program with {} instructions", currentProgram.length);
             printDisplay();
         } catch (Exception e) {
             logger.error("Error loading program: ", e);

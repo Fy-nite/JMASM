@@ -9,6 +9,7 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.finite.Common.common;
 import org.finite.ModuleManager.annotations.MNIClass;
 import org.finite.ModuleManager.annotations.MNIFunction;
 import org.finite.ModuleManager.examples.MathModule;
@@ -32,7 +33,7 @@ public class ModuleInit {
         try {
             logger.info("Initializing module system");
             String moduleDir = getModuleDirectory();
-            logger.debug("Using module directory: {}", moduleDir);
+            common.dbgprint("Using module directory: {}", moduleDir);
             loadModulesFromDirectory(new File(moduleDir));
         } catch (Exception e) {
             logger.error("Failed to initialize module system", e);
@@ -77,7 +78,7 @@ public class ModuleInit {
     }
 
     private static void loadJarFile(File jarFile) throws Exception {
-        logger.debug("Loading jar file: {}", jarFile.getName());
+        common.dbgprint("Loading jar file: {}", jarFile.getName());
         URL[] urls = { jarFile.toURI().toURL() };
         try (URLClassLoader classLoader = new URLClassLoader(urls);
              JarFile jar = new JarFile(jarFile)) {
@@ -108,7 +109,7 @@ public class ModuleInit {
                 MNIFunction mniFunction = method.getAnnotation(MNIFunction.class);
                 if (mniFunction != null) {
                     registry.registerMNIModule(moduleName, mniFunction.name(), method);
-                    logger.debug("Registered MNI function: {}.{}", moduleName, mniFunction.name());
+                    common.dbgprint("Registered MNI function: {}.{}", moduleName, mniFunction.name());
                 }
             }
         }

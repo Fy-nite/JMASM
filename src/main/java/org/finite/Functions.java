@@ -23,7 +23,7 @@ public class Functions {
     );
 
     public static String include(String filename, String CurrentFileContents) {
-        logger.debug("Including file: {}", filename);
+        common.dbgprint("Including file: {}", filename);
         // Convert the dot notation to path
         String resourcePath =
             filename.replace("\"", "").replace(".", "/") + ".masm";
@@ -34,7 +34,7 @@ public class Functions {
                 resourcePath
             );
             if (inputStream == null) {
-                logger.debug(
+                common.dbgprint(
                     "Resource not found in classpath, trying local directory"
                 );
                 File localFile = new File(resourcePath);
@@ -135,7 +135,7 @@ public class Functions {
                 resourcePath
             );
             if (inputStream == null) {
-                logger.debug(
+                common.dbgprint(
                     "Resource not found in classpath, trying local directory"
                 );
                 File localFile = new File(resourcePath);
@@ -296,7 +296,7 @@ public class Functions {
 
     public void out(int[] memory, String fd, String source, instructions instrs) {
         try {
-            common.print("Writing to file descriptor %s: %s\n", fd, source);
+            common.dbgprint("Writing to file descriptor %s: %s\n", fd, source);
             
             String value = "";
             int fileDescriptor;
@@ -449,7 +449,7 @@ public class Functions {
 
             // Join arguments and handle quotes properly
             String fullArg = String.join(" ", argz).trim();
-            logger.debug("DB instruction processing: '{}'", fullArg);
+            common.dbgprint("DB instruction processing: '{}'", fullArg);
 
             // Validate minimum format
             if (!fullArg.contains(" ")) {
@@ -463,7 +463,7 @@ public class Functions {
             String addressPart = fullArg.substring(0, spaceIdx).trim();
             String dataPart = fullArg.substring(spaceIdx + 1).trim();
 
-            logger.debug("DB parsed address: '{}', data: '{}'", addressPart, dataPart);
+            common.dbgprint("DB parsed address: '{}', data: '{}'", addressPart, dataPart);
 
             // Validate and parse memory address
             if (!addressPart.startsWith("$")) {
@@ -504,7 +504,7 @@ public class Functions {
                 }
                 memory[memoryAddress + bytes.length] = 0; // Null terminator
                 
-                logger.debug("DB stored string of length {} at address {}", bytes.length, memoryAddress);
+                common.dbgprint("DB stored string of length {} at address {}", bytes.length, memoryAddress);
             } else {
                 // Numeric data
                 String[] values = dataPart.split(",");
@@ -524,7 +524,7 @@ public class Functions {
                     }
                 }
                 
-                logger.debug("DB stored {} numeric values at address {}", values.length, memoryAddress);
+                common.dbgprint("DB stored {} numeric values at address {}", values.length, memoryAddress);
             }
         } catch (Exception e) {
             if (e instanceof MASMException) {
@@ -562,7 +562,7 @@ public class Functions {
                 throw new MASMException("MOV requires two operands", instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
             }
 
-            logger.debug("MOV {} {}", dest, source);
+            common.dbgprint("MOV {} {}", dest, source);
             int value;
 
             // Handle source operand
@@ -628,7 +628,7 @@ public class Functions {
                     instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
             }
 
-            logger.debug("MOV completed: {} <- {}", dest, value);
+            common.dbgprint("MOV completed: {} <- {}", dest, value);
 
         } catch (Exception e) {
             if (e instanceof MASMException) {
@@ -882,7 +882,7 @@ public class Functions {
 
     public void call(int[] memory, String target, instructions instrs) {
         try {
-            logger.debug("CALL to target: {}", target);
+            common.dbgprint("CALL to target: {}", target);
             if (target == null || instrs == null) {
                 throw new MASMException("Target or instructions cannot be null", instrs.currentLine, instrs.currentlineContents, "Error in instruction: call");
             }
@@ -895,7 +895,7 @@ public class Functions {
                 String labelName = target.substring(1);
                 Integer labelAddress = instrs.labelMap.get(labelName);
                 
-                logger.debug("Looking up label '{}' -> address: {}", labelName, labelAddress);
+                common.dbgprint("Looking up label '{}' -> address: {}", labelName, labelAddress);
                 
                 if (labelAddress == null) {
                     throw new MASMException("Unknown label: " + labelName, instrs.currentLine, instrs.currentlineContents, "Error in instruction: call");
@@ -906,7 +906,7 @@ public class Functions {
                 
                 // Jump to label
                 common.WriteRegister("RIP", labelAddress - 1);
-                logger.debug("Jumped to address {} for label {}", labelAddress - 1, labelName);
+                common.dbgprint("Jumped to address {} for label {}", labelAddress - 1, labelName);
             } else {
                 throw new MASMException("Call target must be a label", instrs.currentLine, instrs.currentlineContents, "Error in instruction: call");
             }
@@ -933,7 +933,7 @@ public class Functions {
             // debug print the label map
 
             for (String key : instrs.labelMap.keySet()) {
-                logger.debug(
+                common.dbgprint(
                     "Label: {} Address: {}",
                     key,
                     instrs.labelMap.get(key)
@@ -967,7 +967,7 @@ public class Functions {
 
     public void jne(int[] memory, String target, instructions instrs) {
         try {
-            logger.debug("JNE instruction with target: {}", target);
+            common.dbgprint("JNE instruction with target: {}", target);
             
             if (target == null || instrs == null) {
                 throw new MASMException("Target or instructions cannot be null", instrs.currentLine, instrs.currentlineContents, "Error in instruction: jne");
@@ -975,7 +975,7 @@ public class Functions {
 
             // read the RFLAGS register
             int value = common.ReadRegister("RFLAGS");
-            logger.debug("RFLAGS value: {}", value);
+            common.dbgprint("RFLAGS value: {}", value);
 
             // Get label name by removing the '#' prefix
             if (!target.startsWith("#")) {
@@ -991,14 +991,14 @@ public class Functions {
                 return;
             }
 
-            logger.debug("Target address for label {}: {}", labelName, targetAddress);
+            common.dbgprint("Target address for label {}: {}", labelName, targetAddress);
 
             // Jump if RFLAGS is 0 (values were not equal)
             if (value == 0) {
                 common.WriteRegister("RIP", targetAddress - 1);
-                logger.debug("Jump taken - setting RIP to {}", targetAddress - 1);
+                common.dbgprint("Jump taken - setting RIP to {}", targetAddress - 1);
             } else {
-                logger.debug("Jump not taken - RFLAGS was 1");
+                common.dbgprint("Jump not taken - RFLAGS was 1");
             }
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jne");
@@ -1007,7 +1007,7 @@ public class Functions {
 
     public void jmp(int[] memory, String target, instructions instrs) {
         try {
-            logger.debug("JMP to target: {}", target);
+            common.dbgprint("JMP to target: {}", target);
             int value;
             if (target == null || instrs == null) {
                 //  print("DEBUG: ERROR - Null target or instructions\n");

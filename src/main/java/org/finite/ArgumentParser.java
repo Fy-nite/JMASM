@@ -32,10 +32,12 @@ public class ArgumentParser {
         }
 
         public void configureLogging() {
+            ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) 
+                org.slf4j.LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
             if (debug) {
-                ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) 
-                    org.slf4j.LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
                 root.setLevel(ch.qos.logback.classic.Level.DEBUG);
+            } else {
+                root.setLevel(ch.qos.logback.classic.Level.INFO);
             }
         }
 

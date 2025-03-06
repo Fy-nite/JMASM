@@ -5,6 +5,14 @@ This document details all instructions available in the MicroASM language.
 all instructions are case-insensitive, so `MOV` is the same as `mov`
 arguments however are case-sensitive, so `MOV R1 r2` is not the same as `MOV R1 R2`
 
+there are no commas, we don't do the whole 
+```js
+mov RAX, RBX
+```
+
+it's just 
+`mov RAX RBX `
+
 ## Registers
 - RAX
 - RBX
