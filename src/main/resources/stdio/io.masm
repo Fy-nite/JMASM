@@ -12,5 +12,3 @@ lbl printint
     ;; print's an integer in RBX
     out RAX RBX
     ret
-
-lbl io.write

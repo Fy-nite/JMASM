@@ -277,7 +277,8 @@ public class interp {
             
             // Preprocess and parse
             String preprocessed = preprocess(lines.toArray(new String[0]));
-
+            printinstructions(instrs);
+            System.out.println(preprocessed);
             String[] processedLines = preprocessed.split("\n");
 
             // First pass: collect labels
