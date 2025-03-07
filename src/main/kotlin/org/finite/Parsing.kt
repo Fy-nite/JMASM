@@ -3,9 +3,9 @@ package org.finite
 import org.finite.interp.instructions;
 import org.finite.Exceptions.MASMException;
 import org.finite.common;
-object Parsing {
+public class Parsing {
     // Static methods for Java interop
-    @JvmStatic
+    
     fun parseAnsiTerminal(input: String): String {
         var result = input
         
@@ -58,7 +58,7 @@ object Parsing {
         return result
     }
 
-    @JvmStatic
+    
     fun parseTarget(target: String?, instrs: instructions?): Int {
         if (target == null || instrs == null) {
             return -1
@@ -89,7 +89,13 @@ object Parsing {
         }
     }
 
-    @JvmStatic
+    fun parseRegister(reg: String?): Int {
+        return try {
+            reg!!.toInt()
+        } catch (e: NumberFormatException) {
+            common.ReadRegister(reg)
+        }
+    }
     fun processEscapeSequences(input: String): String {
         val result = StringBuilder()
         var inEscape = false
@@ -118,7 +124,6 @@ object Parsing {
         return result.toString()
     }
 
-    @JvmStatic
     fun parseAddress(addressPart: String, instrs: instructions): Int {
         if (!addressPart.startsWith("$")) {
             throw MASMException("Address must start with $", instrs.currentLine, instrs.currentlineContents, "Error in parsing address")
@@ -138,7 +143,8 @@ object Parsing {
         return memoryAddress
     }
 
-    @JvmStatic
+
+    
     fun isValidRegister(reg: String?): Boolean {
         return reg != null && arrayOf(
             "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "RIP", "RSP", "RBP",

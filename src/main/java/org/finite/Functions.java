@@ -194,7 +194,7 @@ public class Functions {
 
     public void add(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
-            if (!Parsing.isValidRegister(reg1) || !Parsing.isValidRegister(reg2)) {
+            if (!Parsing.INSTANCE.isValidRegister(reg1) || !Parsing.INSTANCE.isValidRegister(reg2)) {
                 throw new MASMException("Invalid register name", instrs.currentLine, instrs.currentlineContents, "Error in instruction: add");
             }
             int value1 = common.ReadRegister(reg1);
@@ -208,7 +208,7 @@ public class Functions {
 
     public void sub(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
-            if (!Parsing.isValidRegister(reg1) || !Parsing.isValidRegister(reg2)) {
+            if (!Parsing.INSTANCE.isValidRegister(reg1) || !Parsing.INSTANCE.isValidRegister(reg2)) {
                 throw new MASMException("Invalid register name", instrs.currentLine, instrs.currentlineContents, "Error in instruction: sub");
             }
             int value1 = common.ReadRegister(reg1);
@@ -222,7 +222,7 @@ public class Functions {
 
     public void mul(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
-            if (!Parsing.isValidRegister(reg1) || !Parsing.isValidRegister(reg2)) {
+            if (!Parsing.INSTANCE.isValidRegister(reg1) || !Parsing.INSTANCE.isValidRegister(reg2)) {
                 throw new MASMException("Invalid register name", instrs.currentLine, instrs.currentlineContents, "Error in instruction: mul");
             }
             int value1 = common.ReadRegister(reg1);
@@ -280,7 +280,7 @@ public class Functions {
                         sb.append((char) memory[address + i]);
                         i++;
                     }
-                    value = Parsing.processEscapeSequences(sb.toString());
+                    value = Parsing.INSTANCE.processEscapeSequences(sb.toString());
 
                     // If empty, try as number
                     if (value.isEmpty()) {
@@ -297,7 +297,7 @@ public class Functions {
                         sb.append((char) memory[regAddr + i]);
                         i++;
                     }
-                    value = Parsing.processEscapeSequences(sb.toString());
+                    value = Parsing.INSTANCE.processEscapeSequences(sb.toString());
 
                     // If empty, try as number
                     if (value.isEmpty()) {
@@ -316,7 +316,7 @@ public class Functions {
                         value = Integer.toString(common.ReadRegister(source));
                     } catch (Exception ex) {
                         // If all else fails, treat as string literal with escape sequences
-                        value = Parsing.processEscapeSequences(source);
+                        value = Parsing.INSTANCE.processEscapeSequences(source);
                     }
                 }
             }
@@ -445,7 +445,7 @@ public class Functions {
             if (dataPart.startsWith("\"") && dataPart.endsWith("\"")) {
                 // String literal
                 String strContent = dataPart.substring(1, dataPart.length() - 1);
-                strContent = Parsing.processEscapeSequences(strContent);
+                strContent = Parsing.INSTANCE.processEscapeSequences(strContent);
                 byte[] bytes = strContent.getBytes();
                 
                 if (memoryAddress + bytes.length >= memory.length) {
