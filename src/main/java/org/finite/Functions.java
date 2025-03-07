@@ -614,7 +614,7 @@ public class Functions {
                     throw new MASMException("Invalid memory address: " + reg1, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
                 }
             } else {
-                if (!Parsing.isValidRegister(reg1)) {
+                if (!Parsing.INSTANCE.isValidRegister(reg1)) {
                     throw new MASMException("Invalid register name: " + reg1, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
                 }
                 value1 = common.ReadRegister(reg1);
@@ -632,7 +632,7 @@ public class Functions {
                         throw new MASMException("Invalid memory address: " + reg2, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
                     }
                 } else {
-                    if (!Parsing.isValidRegister(reg2)) {
+                    if (!Parsing.INSTANCE.isValidRegister(reg2)) {
                         throw new MASMException("Invalid register name: " + reg2, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
                     }
                     value2 = common.ReadRegister(reg2);
@@ -923,7 +923,7 @@ public class Functions {
             try
             {
 
-            value = Parsing.parseTarget(target, instrs);
+            value = Parsing.INSTANCE.parseTarget(target, instrs);
             if (value == -1) {
                 //print("DEBUG: Jump failed - invalid target: %s\n", target);
                 common.box("Error", "Unknown address or label: " + target, "error");

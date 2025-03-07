@@ -4,28 +4,7 @@ import org.finite.interp.instructions;
 import org.finite.Exceptions.MASMException;
 import org.finite.common;
 
-// does parsing need to be a object or can it be a class if i call it from java?
 
-// Object is a singleton class, meaning that it can only have one instance
-// This is useful for utility classes that don't need to be instantiated multiple times
-// It's also useful for static methods, as Kotlin doesn't have static methods
-// This is because Kotlin doesn't have static methods, so you can't call a method without an instance of the class
-// This is a workaround for that
-
-// when i'm compiling my kotlin code with java in maven, java tells me that cannot find symbol Parsing
-
-// This is because the Kotlin object is compiled to a class with a static method, but Java doesn't recognize it as a static method
-// You can call the method as a static method from Java by using the class name, like Parsing.parseAnsiTerminal(input)
-// Or you can change the object to a class, and call the method as a normal method, like Parsing parsing = new Parsing(); parsing.parseAnsiTerminal(input);
-// The object is a singleton class, so it can only have one instance, and it's useful for utility classes that don't need to be instantiated multiple times
-
-// wouldn't i just use something like Parsing.INSTANCE.parseAnsiTerminal(input) to call the method from java?
-
-// You can do that, but it's not necessary to use an instance of the object, as it's a singleton class
-
-// thanks!
-
-// You're welcome!
 
 
 

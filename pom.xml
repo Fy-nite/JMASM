@@ -13,7 +13,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
         <maven-jar-plugin.mainClass>org.finite.MASM.Main</maven-jar-plugin.mainClass>
-        <maven-jar-plugin.jarName>masm</maven-jar-plugin.jarName>
+        <maven-jar-plugin.jarName>MASM</maven-jar-plugin.jarName>
         <launch4j.version>2.3.3</launch4j.version>
         <kotlin.version>2.1.10</kotlin.version>
         <scala.version>2.13.12</scala.version>
@@ -21,53 +21,103 @@
     </properties>
 
 
+
         <!-- Kotlin Compilation (First) -->
 <build>
-    <plugins>
-        <!-- Kotlin Compilation (Handles Java + Kotlin) -->
-        <plugin>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-maven-plugin</artifactId>
-            <version>${kotlin.version}</version>
-            <executions>
-                <execution>
-                    <id>compile</id>
-                    <phase>compile</phase>
-                    <goals>
-                        <goal>compile</goal>
-                    </goals>
-                </execution>
-            </executions>
-            <configuration>
-                <sourceDirs>
-                    <sourceDir>src/main/kotlin</sourceDir>
-                    <sourceDir>src/main/java</sourceDir>
-                </sourceDirs>
-                <jvmTarget>${maven.compiler.target}</jvmTarget>
-            </configuration>
-        </plugin>
 
-        <!-- Scala Compilation (Depends on Kotlin) -->
+
+    <plugins>
+        <!-- Kotlin and Java Compilation (Single Plugin) -->
         <plugin>
-            <groupId>net.alchim31.maven</groupId>
-            <artifactId>scala-maven-plugin</artifactId>
-            <version>4.8.1</version>
-            <executions>
-                <execution>
-                    <id>compile</id>
-                    <phase>compile</phase>
-                    <goals>
-                        <goal>compile</goal>
-                    </goals>
-                    <configuration>
-                        <dependsOn>
-                            <dependency>org.jetbrains.kotlin:kotlin-maven-plugin</dependency>
-                        </dependsOn>
-                        <classpath>${project.build.outputDirectory}</classpath>
-                    </configuration>
-                </execution>
-            </executions>
-        </plugin>
+    <groupId>org.jetbrains.kotlin</groupId>
+    <artifactId>kotlin-maven-plugin</artifactId>
+    <version>${kotlin.version}</version>
+    <executions>
+        <execution>
+            <id>compile</id>
+            <phase>compile</phase>
+            <goals>
+                <goal>compile</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>test-compile</id>
+            <phase>test-compile</phase>
+            <goals>
+                <goal>test-compile</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <jvmTarget>${maven.compiler.target}</jvmTarget>
+        <sourceDirs>
+            <sourceDir>src/main/kotlin</sourceDir> <!-- Kotlin Source Directory -->
+        </sourceDirs>
+    </configuration>
+</plugin>
+
+        <!-- Scala Compilation (Second) -->
+<plugin>
+    <groupId>net.alchim31.maven</groupId>
+    <artifactId>scala-maven-plugin</artifactId>
+    <version>4.8.1</version>
+    <executions>
+        <execution>
+            <id>compile</id>
+            <phase>compile</phase>
+            <goals>
+                <goal>compile</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>test-compile</id>
+            <phase>test-compile</phase>
+            <goals>
+                <goal>testCompile</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <!-- Scala-specific configurations can go here -->
+    </configuration>
+</plugin>
+
+
+        <!-- Disable Default Java Compilation (Handled by Kotlin Plugin) -->
+       <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.8.1</version>
+    <configuration>
+        <source>${maven.compiler.source}</source>
+        <target>${maven.compiler.target}</target>
+        <excludes>
+            <exclude>**/*.java</exclude>
+        </excludes>
+    </configuration>
+</plugin>
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-jar-plugin</artifactId>
+    <version>${maven-jar-plugin.version}</version>
+    <executions>
+        <execution>
+            <id>default-jar</id>
+            <phase>package</phase>
+            <goals>
+                <goal>jar</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <archive>
+            <manifest>
+                <mainClass>${maven-jar-plugin.mainClass}</mainClass>
+            </manifest>
+        </archive>
+    </configuration>
+</plugin>
+
     </plugins>
 </build>
 

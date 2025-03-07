@@ -13,12 +13,12 @@ public class IO {
     {
         if (obj.arg1 == 1) {
             String contents = obj.readString(obj.arg2);
-            String output = Parsing.parseAnsiTerminal(contents);
+            String output = Parsing.INSTANCE.parseAnsiTerminal(contents);
             System.out.print(output);
         } else {
             // printerr
             String contents = obj.readString(obj.arg2);
-            String output = Parsing.parseAnsiTerminal(contents);
+            String output = Parsing.INSTANCE.parseAnsiTerminal(contents);
             System.err.print(output);
         }
     }
