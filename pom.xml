@@ -23,10 +23,8 @@
 
         <!-- Kotlin Compilation (First) -->
 <build>
-
-
     <plugins>
-        <!-- Kotlin and Java Compilation (Single Plugin) -->
+        <!-- Kotlin Compilation (Handles Java + Kotlin) -->
         <plugin>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-maven-plugin</artifactId>
@@ -39,61 +37,34 @@
                         <goal>compile</goal>
                     </goals>
                 </execution>
-                <execution>
-                    <id>test-compile</id>
-                    <phase>test-compile</phase>
-                    <goals>
-                        <goal>test-compile</goal>
-                    </goals>
-                </execution>
             </executions>
             <configuration>
-                <jvmTarget>${maven.compiler.target}</jvmTarget>
-                       <sourceDirs>
-                    <sourceDir>src/main/kotlin</sourceDir> <!-- Kotlin Source Directory -->
+                <sourceDirs>
+                    <sourceDir>src/main/kotlin</sourceDir>
+                    <sourceDir>src/main/java</sourceDir>
                 </sourceDirs>
+                <jvmTarget>${maven.compiler.target}</jvmTarget>
             </configuration>
         </plugin>
 
-<plugin>
-    <groupId>net.alchim31.maven</groupId>
-    <artifactId>scala-maven-plugin</artifactId>
-    <version>4.8.1</version>
-    <executions>
-        <execution>
-            <id>compile</id>
-            <phase>compile</phase>
-            <goals>
-                <goal>compile</goal>
-            </goals>
-        </execution>
-        <execution>
-            <id>test-compile</id>
-            <phase>test-compile</phase>
-            <goals>
-                <goal>testCompile</goal>
-            </goals>
-        </execution>
-    </executions>
-    <configuration>
-    <!-- never compile java, we have that with kotlin above -->
-        <sendJavaToScalac>false</sendJavaToScalac>
-    </configuration>
-</plugin>
-
-        <!-- Disable Default Java Compilation (Handled by Kotlin Plugin) -->
+        <!-- Scala Compilation (Depends on Kotlin) -->
         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.8.1</version>
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <version>4.8.1</version>
             <executions>
                 <execution>
-                    <id>default-compile</id>
-                    <phase>none</phase> <!-- Disable default Java compilation -->
-                </execution>
-                <execution>
-                    <id>default-testCompile</id>
-                    <phase>none</phase> <!-- Disable default Java test compilation -->
+                    <id>compile</id>
+                    <phase>compile</phase>
+                    <goals>
+                        <goal>compile</goal>
+                    </goals>
+                    <configuration>
+                        <dependsOn>
+                            <dependency>org.jetbrains.kotlin:kotlin-maven-plugin</dependency>
+                        </dependsOn>
+                        <classpath>${project.build.outputDirectory}</classpath>
+                    </configuration>
                 </execution>
             </executions>
         </plugin>
