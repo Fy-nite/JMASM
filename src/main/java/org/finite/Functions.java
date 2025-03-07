@@ -1,7 +1,7 @@
 package org.finite;
 
-import static org.finite.Common.common.print;
-import static org.finite.Common.common.printerr;
+import static org.finite.common.print;
+import static org.finite.common.printerr;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,11 +10,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import org.finite.Common.common;
 import org.finite.Exceptions.MASMException;
 import org.finite.interp.instructions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.finite.Parsing;
 
 public class Functions {
 
@@ -194,7 +194,7 @@ public class Functions {
 
     public void add(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
-            if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
+            if (!Parsing.isValidRegister(reg1) || !Parsing.isValidRegister(reg2)) {
                 throw new MASMException("Invalid register name", instrs.currentLine, instrs.currentlineContents, "Error in instruction: add");
             }
             int value1 = common.ReadRegister(reg1);
@@ -208,7 +208,7 @@ public class Functions {
 
     public void sub(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
-            if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
+            if (!Parsing.isValidRegister(reg1) || !Parsing.isValidRegister(reg2)) {
                 throw new MASMException("Invalid register name", instrs.currentLine, instrs.currentlineContents, "Error in instruction: sub");
             }
             int value1 = common.ReadRegister(reg1);
@@ -222,7 +222,7 @@ public class Functions {
 
     public void mul(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
-            if (!isValidRegister(reg1) || !isValidRegister(reg2)) {
+            if (!Parsing.isValidRegister(reg1) || !Parsing.isValidRegister(reg2)) {
                 throw new MASMException("Invalid register name", instrs.currentLine, instrs.currentlineContents, "Error in instruction: mul");
             }
             int value1 = common.ReadRegister(reg1);
@@ -247,52 +247,7 @@ public class Functions {
         }
     }
 
-    private String processEscapeSequences(String input) {
-        StringBuilder result = new StringBuilder();
-        boolean inEscape = false;
-
-        for (int i = 0; i < input.length(); i++) {
-            char c = input.charAt(i);
-
-            if (inEscape) {
-                switch (c) {
-                    case 'n':
-                        result.append('\n');
-                        break; // newline
-                    case 't':
-                        result.append('\t');
-                        break; // tab
-                    case 'r':
-                        result.append('\r');
-                        break; // carriage return
-                    case 'b':
-                        result.append('\b');
-                        break; // backspace
-                    case 'f':
-                        result.append('\f');
-                        break; // form feed
-                    case 'a':
-                        result.append('\007');
-                        break; // bell/alert
-                    case '\\':
-                        result.append('\\');
-                        break; // backslash
-                    case '0':
-                        result.append('\0');
-                        break; // null character
-                    default:
-                        result.append(c);
-                }
-                inEscape = false;
-            } else if (c == '\\') {
-                inEscape = true;
-            } else {
-                result.append(c);
-            }
-        }
-
-        return result.toString();
-    }
+    
 
     public void out(int[] memory, String fd, String source, instructions instrs) {
         try {
@@ -325,7 +280,7 @@ public class Functions {
                         sb.append((char) memory[address + i]);
                         i++;
                     }
-                    value = processEscapeSequences(sb.toString());
+                    value = Parsing.processEscapeSequences(sb.toString());
 
                     // If empty, try as number
                     if (value.isEmpty()) {
@@ -342,7 +297,7 @@ public class Functions {
                         sb.append((char) memory[regAddr + i]);
                         i++;
                     }
-                    value = processEscapeSequences(sb.toString());
+                    value = Parsing.processEscapeSequences(sb.toString());
 
                     // If empty, try as number
                     if (value.isEmpty()) {
@@ -361,7 +316,7 @@ public class Functions {
                         value = Integer.toString(common.ReadRegister(source));
                     } catch (Exception ex) {
                         // If all else fails, treat as string literal with escape sequences
-                        value = processEscapeSequences(source);
+                        value = Parsing.processEscapeSequences(source);
                     }
                 }
             }
@@ -490,7 +445,7 @@ public class Functions {
             if (dataPart.startsWith("\"") && dataPart.endsWith("\"")) {
                 // String literal
                 String strContent = dataPart.substring(1, dataPart.length() - 1);
-                strContent = processEscapeSequences(strContent);
+                strContent = Parsing.processEscapeSequences(strContent);
                 byte[] bytes = strContent.getBytes();
                 
                 if (memoryAddress + bytes.length >= memory.length) {
@@ -536,25 +491,7 @@ public class Functions {
         }
     }
 
-    private int parseAddress(String addressPart, instructions instrs) {
-        int memoryAddress;
-        if (addressPart.startsWith("$")) {
-            String addressStr = addressPart.substring(1);
-            try {
-                memoryAddress = Integer.parseInt(addressStr);
-            } catch (NumberFormatException e) {
-                memoryAddress = common.ReadRegister(addressStr);
-            }
-        } else {
-            memoryAddress = Integer.parseInt(addressPart);
-        }
 
-        if (memoryAddress < 0 || memoryAddress >= common.MAX_MEMORY) {
-            throw new MASMException("Invalid memory address: " + memoryAddress, instrs.currentLine, instrs.currentlineContents, "Error in instruction: db");
-        }
-
-        return memoryAddress;
-    }
 
     public void mov(int[] memory, String dest, String source, instructions instrs) {
         try {
@@ -661,44 +598,13 @@ public class Functions {
         }
     }
 
-    // Helper method to validate registers
-    private boolean isValidRegister(String reg) {
-        return (
-            reg != null &&
-            (reg.equals("RAX") ||
-                reg.equals("RBX") ||
-                reg.equals("RCX") ||
-                reg.equals("RDX") ||
-                reg.equals("RSI") ||
-                reg.equals("RDI") ||
-                reg.equals("RIP") ||
-                reg.equals("RSP") ||
-                reg.equals("RBP") ||
-                reg.equals("R0") ||
-                reg.equals("R1") ||
-                reg.equals("R2") ||
-                reg.equals("R3") ||
-                reg.equals("R4") ||
-                reg.equals("R5") ||
-                reg.equals("R6") ||
-                reg.equals("R7") ||
-                reg.equals("R8") ||
-                reg.equals("R9") ||
-                reg.equals("R10") ||
-                reg.equals("R11") ||
-                reg.equals("R12") ||
-                reg.equals("R13") ||
-                reg.equals("R14") ||
-                reg.equals("R15") ||
-                reg.equals("RFLAGS"))
-        );
-    }
+    
 
     public void cmp(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
             int value1;
             int value2;
-            print("Comparing %s and %s\n", reg1, reg2);
+            common.dbgprint("Comparing %s and %s\n", reg1, reg2);
             // Handle first operand
             if (reg1.startsWith("$")) {
                 try {
@@ -708,7 +614,7 @@ public class Functions {
                     throw new MASMException("Invalid memory address: " + reg1, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
                 }
             } else {
-                if (!isValidRegister(reg1)) {
+                if (!Parsing.isValidRegister(reg1)) {
                     throw new MASMException("Invalid register name: " + reg1, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
                 }
                 value1 = common.ReadRegister(reg1);
@@ -726,7 +632,7 @@ public class Functions {
                         throw new MASMException("Invalid memory address: " + reg2, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
                     }
                 } else {
-                    if (!isValidRegister(reg2)) {
+                    if (!Parsing.isValidRegister(reg2)) {
                         throw new MASMException("Invalid register name: " + reg2, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
                     }
                     value2 = common.ReadRegister(reg2);
@@ -1017,7 +923,7 @@ public class Functions {
             try
             {
 
-            value = parseTarget(target, instrs);
+            value = Parsing.parseTarget(target, instrs);
             if (value == -1) {
                 //print("DEBUG: Jump failed - invalid target: %s\n", target);
                 common.box("Error", "Unknown address or label: " + target, "error");
@@ -1054,121 +960,6 @@ public class Functions {
         }
     }
 
-    private static int parseTarget(String target, instructions instrs) {
-        if (target == null || instrs == null) {
-            // print("DEBUG: ERROR - Null target or instructions in parseTarget\n");
-            return -1;
-        }
-        //  print("DEBUG: Parsing target with instructions context: %s\n", target);
 
-        // If it's a label reference
-        if (target.startsWith("#")) {
-            String labelName = target.substring(1);
-            // print("DEBUG: Processing as label: %s\n", labelName);
-            //print("DEBUG: Label map contents: %s\n", instrs.labelMap);
-
-            if (instrs.labelMap == null) {
-                //     print("DEBUG: ERROR - Label map is null!\n");
-                return -1;
-            }
-
-            Integer labelAddress = instrs.labelMap.get(labelName);
-            //   print("DEBUG: Label lookup result: %s\n", labelAddress);
-
-            if (labelAddress != null) {
-                //      print("DEBUG: Found label address: %d\n", labelAddress);
-                return labelAddress;
-            } else {
-                //     print("DEBUG: Label '%s' not found in map\n", labelName);
-                return -1;
-            }
-        }
-
-        // Try parsing as direct number
-        try {
-            int value = Integer.parseInt(target);
-            //  print("DEBUG: Parsed as direct number: %d\n", value);
-            return value;
-        } catch (NumberFormatException e) {
-            // print("DEBUG: Not a number, trying as register name: %s\n", target);
-
-            // Try as register
-            try {
-                int regValue = common.ReadRegister(target);
-                //    print("DEBUG: Found in register with value: %d\n", regValue);
-                return regValue;
-            } catch (Exception ex) {
-                //   print("DEBUG: Register lookup failed: %s\n", ex.getMessage());
-                return -1;
-            }
-        }
-    }
-    public static String parseAnsiTerminal(String input) {
-        // ANSI escape codes for terminal colors
-        // https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
-        // https://misc.flogisoft.com/bash/tip_colors_and_formatting
-        // https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
-        // https://stackoverflow.com/questions/5762491/how-to-print-color-in-console-using-system-out-println
-        
-        // Reset
-        input = input.replaceAll("\\[reset\\]", "\u001B[0m");
-        // Bold
-        input = input.replaceAll("\\[bold\\]", "\u001B[1m");
-        // Dim
-        input = input.replaceAll("\\[dim\\]", "\u001B[2m");
-        // Italic
-        input = input.replaceAll("\\[italic\\]", "\u001B[3m");
-        // Underline
-        input = input.replaceAll("\\[underline\\]", "\u001B[4m");
-        // Blink
-        input = input.replaceAll("\\[blink\\]", "\u001B[5m");
-        // Reverse
-        input = input.replaceAll("\\[reverse\\]", "\u001B[7m");
-        // Hidden
-        input = input.replaceAll("\\[hidden\\]", "\u001B[8m");
-        // Strikethrough
-        input = input.replaceAll("\\[strikethrough\\]", "\u001B[9m");
-        // Reset all attributes
-        input = input.replaceAll("\\[resetall\\]", "\u001B[0m");
-        // Reset bold
-        input = input.replaceAll("\\[resetbold\\]", "\u001B[21m");
-        // Clear screen
-        input = input.replaceAll("\\[clear\\]", "\u001B[2J");
-        // Foreground colors
-        // Black
-        input = input.replaceAll("\\[black\\]", "\u001B[30m");
-        // Red
-        input = input.replaceAll("\\[red\\]", "\u001B[31m");
-        // Green
-        input = input.replaceAll("\\[green\\]", "\u001B[32m");
-        // Yellow
-        input = input.replaceAll("\\[yellow\\]", "\u001B[33m");
-        // Blue
-        input = input.replaceAll("\\[blue\\]", "\u001B[34m");
-        // Magenta
-        input = input.replaceAll("\\[magenta\\]", "\u001B[35m");
-        // Cyan
-        input = input.replaceAll("\\[cyan\\]", "\u001B[36m");
-        // White
-        input = input.replaceAll("\\[white\\]", "\u001B[37m");
-        // Background colors
-        // Black
-        input = input.replaceAll("\\[bg_black\\]", "\u001B[40m");
-        // Red
-        input = input.replaceAll("\\[bg_red\\]", "\u001B[41m");
-        // Green
-        input = input.replaceAll("\\[bg_green\\]", "\u001B[42m");
-        // Yellow
-        input = input.replaceAll("\\[bg_yellow\\]", "\u001B[43m");
-        // Blue
-        input = input.replaceAll("\\[bg_blue\\]", "\u001B[44m");
-        // Magenta
-        input = input.replaceAll("\\[bg_magenta\\]", "\u001B[45m");
-        // Cyan
-        input = input.replaceAll("\\[bg_cyan\\]", "\u001B[46m");
-        // White
-        input = input.replaceAll("\\[bg_white\\]", "\u001B[47m");
-
-        return input;
-    }
+    
 }

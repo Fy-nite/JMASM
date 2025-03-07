@@ -9,7 +9,7 @@ MOV R5 0
 
 LBL main
     ; Define message
-    DB $100 "g'day mate"
+    DB $100 "[green]g'day mate[reset]"
     MOV R5 100
     ; Start printing top border
     MOV RAX 32
@@ -37,7 +37,7 @@ LBL start_message
     JMP #print_loop   ; Jump to print loop
 
 LBL print_loop
-    OUT 1 $100
+    MNI IO.write 1 100
     MOV RAX 62   ; >
     COUT 1 RAX
     ;; out just printed it normaly

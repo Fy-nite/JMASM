@@ -1,6 +1,5 @@
-package org.finite.Common;
+package org.finite;
 
-import org.finite.ReadResourceFile;
 import org.finite.Exceptions.MASMException;
 
 import java.util.HashMap;

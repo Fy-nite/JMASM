@@ -1,6 +1,6 @@
 package org.finite;
 
-import static org.finite.Common.common.*;
+import static org.finite.common.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
-import org.finite.Common.common;
 import org.finite.ModuleManager.MNIMethodObject;
 import org.finite.ModuleManager.MNIHandler;
 import org.finite.Exceptions.MASMException;  // Add this import
+import org.finite.Exceptions.MNIException;
 
 public class interp {
 
@@ -536,7 +536,15 @@ public class interp {
             return 0;
         } catch (Exception e) {
             if (e instanceof MASMException) {
-                throw e;
+               // throw e;
+            }
+            else if (e instanceof MNIException) {
+                throw new MASMException(
+                    e.getMessage(),
+                    instr.lineNumber,
+                    instr.originalLine,
+                    "Error in instruction: " + instr.name
+                );
             }
             throw new MASMException(
                 e.getMessage(),

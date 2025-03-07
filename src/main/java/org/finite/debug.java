@@ -1,10 +1,12 @@
 package org.finite;
 
-import org.finite.Common.common;
 import org.jline.reader.*;
 import org.jline.terminal.*;
+
+import static org.finite.common.*;
+
 import java.util.Arrays;
-import static org.finite.Common.common.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

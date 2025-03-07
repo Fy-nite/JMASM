@@ -16,6 +16,8 @@
         <maven-jar-plugin.jarName>masm</maven-jar-plugin.jarName>
         <launch4j.version>2.3.3</launch4j.version>
         <kotlin.version>2.1.10</kotlin.version>
+        <scala.version>2.13.12</scala.version>
+        <scala.compat.version>2.13</scala.compat.version>
     </properties>
 
     <build>
@@ -160,6 +162,20 @@
                         <id>testCompile</id>
                         <phase>test-compile</phase>
                         <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Scala compiler plugin -->
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>4.8.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
                             <goal>testCompile</goal>
                         </goals>
                     </execution>
@@ -377,5 +393,19 @@
         <artifactId>jline</artifactId>
         <version>3.5.0</version>
       </dependency>
+        <!-- Jython -->
+        <dependency>
+            <groupId>org.python</groupId>
+            <artifactId>jython-standalone</artifactId>
+            <version>2.7.3</version>
+        </dependency>
+
+        <!-- Scala -->
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
+        </dependency>
+
     </dependencies>
 </project>

@@ -1,6 +1,5 @@
 package org.finite;
 
-import org.finite.Common.common;
 import org.finite.Exceptions.MASMException;
 
 public class Instructions {
