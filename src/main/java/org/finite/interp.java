@@ -271,7 +271,10 @@ public class interp {
                 lines.add(scanner.nextLine());
             }
             scanner.close();
-
+            for (String line : lines) {
+                System.out.println(line);
+            }
+            
             // Preprocess and parse
             String preprocessed = preprocess(lines.toArray(new String[0]));
 
