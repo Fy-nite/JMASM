@@ -13,7 +13,7 @@ import org.finite.common;
 import org.finite.ModuleManager.annotations.MNIClass;
 import org.finite.ModuleManager.annotations.MNIFunction;
 import org.finite.ModuleManager.examples.MathModule;
-import org.finite.ModuleManager.examples.WindowModule;
+import org.finite.Interpreterops;  // Changed from interpreterops to Interpreterops
 import org.finite.Modules.extentions.IO;
 import org.finite.Modules.extentions.StringOperations;
 
@@ -45,6 +45,7 @@ public class ModuleInit {
             ModuleInit.registerBuiltInModule(MathModule.class);
             ModuleInit.registerBuiltInModule(StringOperations.class);
             ModuleInit.registerBuiltInModule(IO.class);
+            ModuleInit.registerBuiltInModule(Interpreterops.class);  // Changed from interpreterops to Interpreterops
          
     }
     private static String getModuleDirectory() {

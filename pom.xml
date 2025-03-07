@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.Finite</groupId>
     <artifactId>MASM</artifactId>
@@ -168,19 +168,7 @@
                 </executions>
             </plugin>
             <!-- Scala compiler plugin -->
-            <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-                <version>4.8.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+            
         </plugins>
     </build>
 
@@ -203,7 +191,8 @@
                                 <configuration>
                                     <headerType>console</headerType>
                                     <outfile>target/MASM.exe</outfile>
-                                    <jar>${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar</jar>
+                                    <jar>
+                                        ${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar</jar>
                                     <errTitle>MASM Error</errTitle>
                                     <classPath>
                                         <mainClass>org.finite.Main</mainClass>
@@ -232,7 +221,7 @@
                 </plugins>
             </build>
         </profile>
-        
+
         <profile>
             <id>linux</id>
             <build>
@@ -249,60 +238,63 @@
                                 </goals>
                                 <configuration>
                                     <target>
-                                        <mkdir dir="${project.build.directory}/linux"/>
-                                        <copy file="${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar"
-                                              tofile="${project.build.directory}/linux/masm.jar"/>
-                                        <echo file="${project.build.directory}/linux/masm" message="#!/bin/sh${line.separator}java -jar `dirname $0`/masm.jar $@"/>
-                                        <chmod file="${project.build.directory}/linux/masm" perm="755"/>
+                                        <mkdir dir="${project.build.directory}/linux" />
+                                        <copy
+                                            file="${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar"
+                                            tofile="${project.build.directory}/linux/masm.jar" />
+                                        <echo file="${project.build.directory}/linux/masm"
+                                            message="#!/bin/sh${line.separator}java -jar `dirname $0`/masm.jar $@" />
+                                        <chmod file="${project.build.directory}/linux/masm"
+                                            perm="755" />
                                     </target>
                                 </configuration>
                             </execution>
                         </executions>
                     </plugin>
-                      <!-- SpotBugs - Static code analysis -->
-        <plugin>
-            <groupId>com.github.spotbugs</groupId>
-            <artifactId>spotbugs-maven-plugin</artifactId>
-            <version>4.8.2.0</version>
-        </plugin>
-        
-        <!-- JaCoCo - Code coverage -->
-        <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.8.11</version>
-            <executions>
-                <execution>
-                    <goals>
-                        <goal>prepare-agent</goal>
-                    </goals>
-                </execution>
-                <execution>
-                    <id>report</id>
-                    <phase>test</phase>
-                    <goals>
-                        <goal>report</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
-        <plugin>
-    <groupId>com.github.spotbugs</groupId>
-    <artifactId>spotbugs-maven-plugin</artifactId>
-    <version>4.8.2.0</version>
-    <configuration>
-        <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
-        <effort>Max</effort>
-        <threshold>Low</threshold>
-    </configuration>
-    <executions>
-        <execution>
-            <goals>
-                <goal>check</goal>
-            </goals>
-        </execution>
-    </executions>
-</plugin>
+                    <!-- SpotBugs - Static code analysis -->
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>4.8.2.0</version>
+                    </plugin>
+
+                    <!-- JaCoCo - Code coverage -->
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.8.11</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>report</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>4.8.2.0</version>
+                        <configuration>
+                            <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
+                            <effort>Max</effort>
+                            <threshold>Low</threshold>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -311,38 +303,38 @@
     <dependencies>
 
         <!-- AssertJ - Fluent assertions -->
-    <dependency>
-        <groupId>org.assertj</groupId>
-        <artifactId>assertj-core</artifactId>
-        <version>3.25.3</version>
-        <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.25.3</version>
+            <scope>test</scope>
+        </dependency>
         <!-- Apache Commons Lang - Utility classes -->
-    <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
-        <version>3.14.0</version>
-    </dependency>
-    <!-- Mockito - Mocking framework -->
-    <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-core</artifactId>
-        <version>5.10.0</version>
-        <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.14.0</version>
+        </dependency>
+        <!-- Mockito - Mocking framework -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
         <!-- SLF4J API -->
-    <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>2.0.12</version>
-    </dependency>
-    
-    <!-- Logback Implementation -->
-    <dependency>
-        <groupId>ch.qos.logback</groupId>
-        <artifactId>logback-classic</artifactId>
-        <version>1.4.14</version>
-    </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.12</version>
+        </dependency>
+
+        <!-- Logback Implementation -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.14</version>
+        </dependency>
         <dependency>
             <groupId>org.tomlj</groupId>
             <artifactId>tomlj</artifactId>
@@ -387,12 +379,12 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
-    
-      <dependency>
-        <groupId>org.jline</groupId>
-        <artifactId>jline</artifactId>
-        <version>3.5.0</version>
-      </dependency>
+
+        <dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline</artifactId>
+            <version>3.5.0</version>
+        </dependency>
         <!-- Jython -->
         <dependency>
             <groupId>org.python</groupId>

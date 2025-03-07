@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.finite.ModuleManager.ModuleInit;
 import org.finite.ModuleManager.examples.MathModule;
-import org.finite.ModuleManager.examples.WindowModule;
+import org.finite.debug;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
