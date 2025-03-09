@@ -12,7 +12,7 @@ import org.finite.ModuleManager.MNIMethodObject;
 import org.finite.ModuleManager.MNIHandler;
 import org.finite.Exceptions.MASMException;  // Add this import
 import org.finite.Exceptions.MNIException;
-
+import org.finite.ArgumentParser;
 public class interp {
 
     public static boolean testmode = true;
@@ -73,7 +73,7 @@ public class interp {
         // Preprocess includes first
         String preprocessed = preprocess(ops);
         String[] processedOps = preprocessed.split("\n");
-        System.out.println(preprocessed);
+   
         interp.instructions instrs = new interp.instructions();
         instrs.instructions = new interp.instruction[100]; // reasonable default size
         instrs.Memory = new int[1000]; // reasonable default memory size
@@ -149,13 +149,13 @@ public class interp {
             }
         }
 
-        if (arguments.debug) {
+        if (ArgumentParser.Args.debug) {
             print(
                 "Read %d instructions and %d labels\n",
                 instrs.length,
                 instrs.labelMap.size()
             );
-            printinstructions(instrs);
+           
         }
 
         return instrs;
@@ -218,7 +218,7 @@ public class interp {
         common.isRunning = true;  // Reset running state
         while (rip < instrs.length && common.isRunning) {
             instruction instr = instrs.instructions[rip];
-            if (arguments.debug) {
+            if (ArgumentParser.Args.debug) {
                 common.box(
                     "Debug",
                     "Executing instruction: " + instr.name,
@@ -271,14 +271,12 @@ public class interp {
                 lines.add(scanner.nextLine());
             }
             scanner.close();
-            for (String line : lines) {
-                System.out.println(line);
-            }
+     
             
             // Preprocess and parse
             String preprocessed = preprocess(lines.toArray(new String[0]));
-            printinstructions(instrs);
-            System.out.println(preprocessed);
+       
+
             String[] processedLines = preprocessed.split("\n");
 
             // First pass: collect labels
@@ -371,10 +369,15 @@ public class interp {
         instructions instrs
     ) {
         try {
-            if (arguments.debug) {
+            if (ArgumentParser.Args.debug) {
                 common.box("Debug", "Executing instruction: " + instr.name, "info");
+                //read common.registersMap
+                for (String key : common.registersMap.keySet()) {
+                    print("%s:uih;AQEWDJ %d\n", key, common.ReadRegister(key));
+                    print("en");
+                }
             }
-
+            
             switch (instr.name.toLowerCase()) {
                 case "mov":
                     functions.mov(memory, instr.sop1, instr.sop2,instrs);

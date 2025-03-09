@@ -22,7 +22,7 @@ public class Main {
             
             arguments.configureLogging();  // Configure logging based on debug flag
             
-            if (arguments.debug) {
+            if (ArgumentParser.Args.debug) {
                 logger.info("Starting MASM interpreter");
             }
             System.out.print("\033[H\033[2J");
@@ -34,7 +34,7 @@ public class Main {
                 common.dbgprint("Showing help message");
                 common.box("Help", "This is the help message", "info");
             }
-//            if (arguments.debug) {
+//            if (ArgumentParser.Args.debug) {
 //                common.box("java MASM interpreter", "2025 (C) finite\nType 'help' for a list of commands\n", "info");
 //                common.dbgprint("Starting debug REPL");
 //                debug.DebugRepl();
@@ -62,7 +62,7 @@ public class Main {
             }
         } catch (MASMException e) {
             common.box("Error", e.getMessage(), "error");
-            if (arguments.debug) {
+            if (ArgumentParser.Args.debug) {
                 e.printStackTrace();
             }
             if (common.exitOnHLT) {
@@ -70,7 +70,7 @@ public class Main {
             }
         } catch (Exception e) {
             common.box("Error", "Unexpected error: " + e.getMessage(), "error");
-            if (arguments.debug) {
+            if (ArgumentParser.Args.debug) {
                 e.printStackTrace();
             }
             if (common.exitOnHLT) {

@@ -113,7 +113,7 @@ public class common {
 
     public static void dbgprint(Object...  message)
     {
-        if (arguments.debug)
+        if (ArgumentParser.Args.debug)
         {
             print(message + "\n");
         }
@@ -121,7 +121,7 @@ public class common {
 
     public static void dbgprinterr(String... message)
     {
-        if (arguments.debug)
+        if (ArgumentParser.Args.debug)
         {
             printerr(message + "\n");
         }
@@ -192,7 +192,7 @@ public class common {
             printerr("Error: Invalid register name: " + Register + "\n");
             return;
         }
-        if (arguments.debug)
+        if (ArgumentParser.Args.debug)
         {
 
             print("Writing %d to %s\n", value, Register);
@@ -205,7 +205,7 @@ public class common {
             printerr("Error: Invalid register name: " + register + "\n");
             return -1;
         }
-        if (arguments.debug) {
+        if (ArgumentParser.Args.debug) {
             print("Reading %d from %s\n", memory[registersMap.get(register)], register);
         }
         return memory[registersMap.get(register)];

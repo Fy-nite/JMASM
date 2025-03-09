@@ -376,14 +376,18 @@ public class Functions {
 
             // After all validation passes, try to read input
             try {
-                String value = common.inbox("Enter input: ");
-                int address = Integer.parseInt(dest.substring(1));
-
-                // Write input to memory
-                for (int i = 0; i < value.length(); i++) {
-                    memory[address + i] = value.charAt(i);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+                String input = reader.readLine();
+                if (input == null) {
+                    throw new MASMException("End of input stream", instrs.currentLine, instrs.currentlineContents, "Error in instruction: in");
                 }
-                memory[address + value.length()] = 0; // Null terminate
+
+                // Write the input to memory
+                int address = Integer.parseInt(dest.substring(1));
+                for (int i = 0; i < input.length(); i++) {
+                    memory[address + i] = input.charAt(i);
+                }
+                memory[address + input.length()] = 0; // Null terminator
             } catch (IllegalArgumentException e) {
                 throw e;
             } catch (Exception e) {

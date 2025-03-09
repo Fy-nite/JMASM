@@ -11,6 +11,8 @@
         <appender-ref ref="CONSOLE" />
     </root>
 
-    <!-- Package specific logging -->
-    <logger name="org.finite" level="DEBUG" />
+
+    
+
+    <logger name="org.finite.JMASM" level="DEBUG" />
 </configuration>
