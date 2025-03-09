@@ -1,14 +1,4 @@
-lbl printf
-    ;; print's a string where memory address is in RBX
-    out RAX $RBX
-    ret
-
-lbl printchar
-    ;; print's a character in RBX
-    cout RAX RBX
-    ret
-
-lbl printint
-    ;; print's an integer in RBX
-    out RAX RBX
+lbl io.write
+    ;; Writes a string to the console using MNI functions
+    MNI IO.write RAX RBX
     ret

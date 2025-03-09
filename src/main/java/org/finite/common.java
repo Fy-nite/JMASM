@@ -213,6 +213,7 @@ public class common {
 
     private static Scanner scanner = null;
     //TODO: remove this function at somepoint because wtf?
+    @Deprecated(forRemoval = true, since = "1.0")
     public static String inbox(String prompt) {
         try {
             if (scanner == null) {
@@ -247,6 +248,11 @@ public class common {
                 color = "\u001B[31m"; // Red
                 break;
             case "info":
+                color = "\u001B[32m"; // Green
+                break;
+            case "warning":
+                color = "\u001B[33m"; // Yellow
+                break;
             default:
                 color = "\u001B[34m"; // Blue
                 break;
