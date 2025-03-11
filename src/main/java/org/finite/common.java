@@ -35,6 +35,28 @@ public class common {
     public static String[] registers = {"RAX", "RBX", "RCX", "RDX", "RBP", "RSP", "RIP", "RDI", "RSI", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "RFLAGS"};
     public static String[] instructions = {"MOV", "ADD", "SUB", "MUL", "DIV", "AND", "OR", "XOR", "NOT", "SHL", "SHR", "CMP", "JMP", "JE", "JNE", "JG", "JGE", "JL", "JLE", "CALL", "RET", "PUSH", "POP", "HLT", "NOP","OUT"};
     public static int[] memory = new int[MAX_MEMORY];
+    public static float version = 1;
+    
+    public static String joined(String[] items, String separator) {
+        String output = "";
+        for (int i = 0; i < items.length; i++) {
+            output += items[i];
+            if (i < items.length - 1) {
+                output += separator;
+            }
+        }
+        return output;
+    }
+    
+    public static String[] information = {
+        "max Memory: " + memory.length,
+        "Number of Registers: " + Integer.toString(registers.length),
+        "Registers: " + joined(registers,","),
+        "Number of instructions: " +  Integer.toString(instructions.length),
+        "Instructions: " + joined(instructions,","),
+        "Version: " + Float.toString(version)
+    };
+
     public static Map<String, Integer> registersMap = new HashMap<String, Integer>() {{
         put("RAX", 0);
         put("RBX", 1);
