@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.Finite</groupId>
     <artifactId>MASM</artifactId>
-    <version>0.01</version>
+    <version>0.2</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -17,6 +17,8 @@
         <maven-jar-plugin.jarName>MASM</maven-jar-plugin.jarName>
         <launch4j.version>2.3.3</launch4j.version>
         <kotlin.version>2.1.10</kotlin.version>
+           <!-- TeaVM Version -->
+        <teavm.version>0.8.1</teavm.version>
         <scala.version>2.13.12</scala.version>
         <scala.compat.version>2.13</scala.compat.version>
     </properties>
@@ -122,10 +124,9 @@
         </excludes>
     </configuration>
 </plugin>
-
+ 
     </plugins>
 </build>
-
     <profiles>
         <profile>
             <id>windows</id>
@@ -255,7 +256,12 @@
     </profiles>
 
     <dependencies>
-
+            <!-- TeaVM Core Dependency -->
+        <dependency>
+            <groupId>org.teavm</groupId>
+            <artifactId>teavm-classlib</artifactId>
+            <version>${teavm.version}</version>
+        </dependency>
         <!-- AssertJ - Fluent assertions -->
         <dependency>
             <groupId>org.assertj</groupId>

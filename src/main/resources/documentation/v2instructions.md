@@ -2,7 +2,6 @@
 
 This document details all instructions available in the MicroASM language.
 
-
 ### notes
 
 Instructions are case-insensitive (MOV = mov)
@@ -10,8 +9,8 @@ Arguments are case-sensitive (R1 ≠ r1)
 No commas between arguments (use mov RAX RBX not mov RAX, RBX)
 Currently lacks memory addressing with offsets (no mov RBX [RBX + 5] style syntax)
 
-
 ## Registers
+
 - RAX
 - RBX
 - RCX
@@ -22,7 +21,6 @@ Currently lacks memory addressing with offsets (no mov RBX [RBX + 5] style synta
 - RSP
 - RIP (Instruction Pointer, though you shouldn't use this besides reading it and maybe comparing it? or using it as a jump destination)
 - R0 -> 15 (General Purpose Registers, use as you wish, but be careful with RSP and RBP. allways push and pop in pairs, and allways pop in the reverse order you pushed) don't be like me and forget to pop the registers you pushed, or you'll have a bad time
-
 
 ## Basic Instructions
 
@@ -117,9 +115,6 @@ JL label
 
 Jumps to the specified label if the previous comparison result was "less than".
 Example: `JL #less`
-
-
-
 
 ### CALL (Call Function)
 
@@ -244,19 +239,11 @@ Example: `LBL loop`
 - Labels are referenced with a # prefix in jump instructions
 - All numeric values are treated as 64-bit integers
 
-
-
-
-
 # MNI
 
 Micro assembly can interact with native java code through JMASM or python to pymasm to allow users to make native system calls ether through the JNI or using C in python through `python.h`
 
 examples of MNI can be found inside [mni-functions](mni-instructions.md)
-
-
-
-
 
 # Extended MicroASM Instruction Set Documentation
 
@@ -439,7 +426,7 @@ MNI Math.log R1 R2        ; Calculate natural logarithm of R1, result in R2
 MNI Math.round R1 R2      ; Round R1 to nearest integer, result in R2
 MNI Math.floor R1 R2      ; Floor R1, result in R2
 MNI Math.ceil R1 R2       ; Ceiling R1, result in R2
-MNI Math.random R1        ; Generate random number between 0 and 1, result in R1
+MNI Math.random R1        ; Generate random number between 0 and 100, result in R1
 ```
 
 ### Memory Management

@@ -373,7 +373,7 @@ public class interp {
                 common.box("Debug", "Executing instruction: " + instr.name, "info");
                 //read common.registersMap
                 for (String key : common.registersMap.keySet()) {
-                    print("%s:uih;AQEWDJ %d\n", key, common.ReadRegister(key));
+                    print("%s: %d\n", key, common.ReadRegister(key));
                     print("en");
                 }
             }
