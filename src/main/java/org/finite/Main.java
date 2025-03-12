@@ -44,6 +44,14 @@ public class Main {
                 common.box("java MASM interpreter", "2025 (C) finite\nrunning file: " + arguments.file + "\n", "info");
                 interp.runFile(arguments.file);
             }
+            if (arguments.info)
+            {
+                common.box("infomation",common.joined(common.information,"\n"),"info");
+                if (common.exitOnHLT)
+                {
+                    System.exit(6969420);
+                }
+            }
             else {
             // get the argument regardless, could be a file or a command
                 String arg = arguments.getEffectiveFile();

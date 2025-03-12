@@ -20,6 +20,9 @@ public class ArgumentParser {
         @Parameter(names = {"--file", "-f"}, description = "Path to the MASM file to run")
         public static String file = null;
 
+        @Parameter(names = {"--info","-info"}, description = "display's infomation about the current runtime enviroment")
+        public static Boolean info = false;
+
         // Get the effective file path from either main parameter or --file option
         public static String getEffectiveFile() {
             if (file != null && !file.isEmpty()) {
