@@ -9,18 +9,27 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.finite.Exceptions.MASMException;
 import org.finite.interp.instructions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.finite.Parsing;
+import org.finite.Memory.MemoryMappedManager;
+import org.finite.Memory.MemoryAdapter;
 
 public class Functions {
 
     private static final Logger logger = LoggerFactory.getLogger(
         Functions.class
     );
+
+    // Create adapter method to convert between MemoryMappedManager and int[]
+    private MemoryAdapter getAdapter(MemoryMappedManager memory) {
+        return new MemoryAdapter(memory);
+    }
 
     public static String include(String filename, String CurrentFileContents) {
         common.dbgprint("Including file: {}", filename);
@@ -87,6 +96,18 @@ public class Functions {
             return CurrentFileContents;
         }
     }
+
+    public static void include(String filename, instructions instrs) {
+        try {
+            String includeStatement = "#include \"" + filename.replace("\"", "") + "\"";
+            String content = new String(Files.readAllBytes(Paths.get(filename)));
+            instrs.currentlineContents = instrs.currentlineContents.replace(includeStatement, content);
+        } catch (IOException e) {
+            logger.error("Failed to include file: {}", filename, e);
+            printerr("Error including file %s: %s\n", filename, e.getMessage());
+        }
+    }
+
     public static void hlt()
     {
         common.isRunning = false;
@@ -95,7 +116,8 @@ public class Functions {
         }
     }
     // Stack operations using last 1024 bytes of memory
-    public static void push(int[] memory, String reg1, instructions instrs) {
+    public static void push(MemoryMappedManager memory, String reg1, instructions instrs) {
+        MemoryAdapter adapter = new MemoryAdapter(memory);
         try {
             int sp = common.ReadRegister("RSP");
             if (sp <= common.MAX_MEMORY - 1024) {
@@ -103,20 +125,21 @@ public class Functions {
             }
             int value = common.ReadRegister(reg1);
             sp--;
-            common.WriteMemory(memory, sp, value);
+            adapter.write(sp, value);
             common.WriteRegister("RSP", sp);
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: push");
         }
     }
 
-    public static void pop(int[] memory, String reg1, instructions instrs) {
+    public static void pop(MemoryMappedManager memory, String reg1, instructions instrs) {
+        MemoryAdapter adapter = new MemoryAdapter(memory);
         try {
             int sp = common.ReadRegister("RSP");
             if (sp >= common.MAX_MEMORY) {
                 throw new MASMException("Stack underflow", instrs.currentLine, instrs.currentlineContents, "Error in instruction: pop");
             }
-            int value = common.ReadMemory(memory, sp);
+            int value = adapter.read(sp);
             sp++;
             common.WriteRegister("RSP", sp);
             common.WriteRegister(reg1, value);
@@ -125,74 +148,8 @@ public class Functions {
         }
     }
 
-    public static void include(String filename, instructions instrs) {
-        String resourcePath =
-            filename.replace("\"", "").replace(".", "/") + ".masm";
-
-        try {
-            ClassLoader classLoader = Functions.class.getClassLoader();
-            InputStream inputStream = classLoader.getResourceAsStream(
-                resourcePath
-            );
-            if (inputStream == null) {
-                common.dbgprint(
-                    "Resource not found in classpath, trying local directory"
-                );
-                File localFile = new File(resourcePath);
-                if (!localFile.exists()) {
-                    // Also try current working directory
-                    localFile = new File(
-                        System.getProperty("user.dir"),
-                        resourcePath
-                    );
-                }
-                if (localFile.exists()) {
-                    inputStream = new FileInputStream(localFile);
-                } else {
-                    throw new MASMException(
-                        "Resource not found: " + resourcePath,
-                        instrs.currentLine,
-                        instrs.currentlineContents,
-                        "Error including file"
-                    );
-                }
-            }
-
-            try (
-                BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(inputStream)
-                )
-            ) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    line = line.trim();
-                    if (!line.isEmpty() && !line.startsWith(";")) {
-                        if (line.startsWith("LBL ")) {
-                            String labelName = line.substring(4).trim();
-                            instrs.labelMap.put(labelName, instrs.length);
-                            continue;
-                        }
-                        interp.instruction instr = new interp.instruction();
-                        String[] parts = line.split("\\s+");
-                        instr.name = parts[0];
-                        if (parts.length > 1) instr.sop1 = parts[1];
-                        if (parts.length > 2) instr.sop2 = parts[2];
-                        instrs.instructions[instrs.length] = instr;
-                        instrs.Memory[instrs.length] = instrs.length;
-                        instrs.length++;
-                    }
-                }
-            }
-        } catch (IOException e) {
-            printerr(
-                "Error including file %s: %s\n",
-                resourcePath,
-                e.getMessage()
-            );
-        }
-    }
-
-    public void add(int[] memory, String reg1, String reg2, instructions instrs) {
+    public void add(MemoryMappedManager memory, String reg1, String reg2, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             if (!Parsing.INSTANCE.isValidRegister(reg1) || !Parsing.INSTANCE.isValidRegister(reg2)) {
                 throw new MASMException("Invalid register name", instrs.currentLine, instrs.currentlineContents, "Error in instruction: add");
@@ -206,7 +163,8 @@ public class Functions {
         }
     }
 
-    public void sub(int[] memory, String reg1, String reg2, instructions instrs) {
+    public void sub(MemoryMappedManager memory, String reg1, String reg2, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             if (!Parsing.INSTANCE.isValidRegister(reg1) || !Parsing.INSTANCE.isValidRegister(reg2)) {
                 throw new MASMException("Invalid register name", instrs.currentLine, instrs.currentlineContents, "Error in instruction: sub");
@@ -220,7 +178,8 @@ public class Functions {
         }
     }
 
-    public void mul(int[] memory, String reg1, String reg2, instructions instrs) {
+    public void mul(MemoryMappedManager memory, String reg1, String reg2, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             if (!Parsing.INSTANCE.isValidRegister(reg1) || !Parsing.INSTANCE.isValidRegister(reg2)) {
                 throw new MASMException("Invalid register name", instrs.currentLine, instrs.currentlineContents, "Error in instruction: mul");
@@ -234,7 +193,8 @@ public class Functions {
         }
     }
 
-    public void div(int[] memory, String reg1, String reg2, instructions instrs) {
+    public void div(MemoryMappedManager memory, String reg1, String reg2, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             int value1 = common.ReadRegister(reg1);
             int value2 = common.ReadRegister(reg2);
@@ -247,12 +207,13 @@ public class Functions {
         }
     }
 
-    
 
-    public void out(int[] memory, String fd, String source, instructions instrs) {
+
+    public void out(MemoryMappedManager memory, String fd, String source, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             common.dbgprint("Writing to file descriptor %s: %s\n", fd, source);
-            
+
             String value = "";
             int fileDescriptor;
             if (source == null) {
@@ -275,16 +236,16 @@ public class Functions {
                     StringBuilder sb = new StringBuilder();
                     int i = 0;
                     while (
-                        address + i < memory.length && memory[address + i] != 0
+                        address + i < memory.getMemorySize() && adapter.read(address + i) != 0
                     ) {
-                        sb.append((char) memory[address + i]);
+                        sb.append((char) adapter.read(address + i));
                         i++;
                     }
                     value = Parsing.INSTANCE.processEscapeSequences(sb.toString());
 
                     // If empty, try as number
                     if (value.isEmpty()) {
-                        value = Integer.toString(memory[address]);
+                        value = Integer.toString(adapter.read(address));
                     }
                 } catch (Exception e) {
                     // Handle register containing address
@@ -292,16 +253,16 @@ public class Functions {
                     StringBuilder sb = new StringBuilder();
                     int i = 0;
                     while (
-                        regAddr + i < memory.length && memory[regAddr + i] != 0
+                        regAddr + i < memory.getMemorySize() && adapter.read(regAddr + i) != 0
                     ) {
-                        sb.append((char) memory[regAddr + i]);
+                        sb.append((char) adapter.read(regAddr + i));
                         i++;
                     }
                     value = Parsing.INSTANCE.processEscapeSequences(sb.toString());
 
                     // If empty, try as number
                     if (value.isEmpty()) {
-                        value = Integer.toString(memory[regAddr]);
+                        value = Integer.toString(adapter.read(regAddr));
                     }
                 }
             } else {
@@ -340,7 +301,8 @@ public class Functions {
     //HOw to use
     // in memory
     //
-    public void in(int[] memory, String fd, String dest, instructions instrs) {
+    public void in(MemoryMappedManager memory, String fd, String dest, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             // Validate inputs first
             if (fd == null || dest == null) {
@@ -385,9 +347,9 @@ public class Functions {
                 // Write the input to memory
                 int address = Integer.parseInt(dest.substring(1));
                 for (int i = 0; i < input.length(); i++) {
-                    memory[address + i] = input.charAt(i);
+                    adapter.write(address + i, input.charAt(i));
                 }
-                memory[address + input.length()] = 0; // Null terminator
+                adapter.write(address + input.length(), 0); // Null terminator
             } catch (IllegalArgumentException e) {
                 throw e;
             } catch (Exception e) {
@@ -398,7 +360,8 @@ public class Functions {
         }
     }
 
-    public void db(int[] memory, instructions instrs, String... argz) {
+    public void db(MemoryMappedManager memory, instructions instrs, String... argz) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             if (argz == null || argz.length == 0) {
                 throw new MASMException("DB instruction requires arguments", 
@@ -434,7 +397,7 @@ public class Functions {
             int memoryAddress;
             try {
                 memoryAddress = Integer.parseInt(addressPart.substring(1));
-                if (memoryAddress < 0 || memoryAddress >= memory.length) {
+                if (memoryAddress < 0 || memoryAddress >= memory.getMemorySize()) {
                     throw new MASMException("Memory address out of bounds: " + memoryAddress, 
                         instrs.currentLine, instrs.currentlineContents, 
                         "Error in instruction: db");
@@ -451,38 +414,38 @@ public class Functions {
                 String strContent = dataPart.substring(1, dataPart.length() - 1);
                 strContent = Parsing.INSTANCE.processEscapeSequences(strContent);
                 byte[] bytes = strContent.getBytes();
-                
-                if (memoryAddress + bytes.length >= memory.length) {
+
+                if (memoryAddress + bytes.length >= memory.getMemorySize()) {
                     throw new MASMException("String data exceeds memory bounds", 
                         instrs.currentLine, instrs.currentlineContents, 
                         "Error in instruction: db");
                 }
-                
+
                 for (int i = 0; i < bytes.length; i++) {
-                    memory[memoryAddress + i] = bytes[i] & 0xFF;
+                    adapter.write(memoryAddress + i, bytes[i] & 0xFF);
                 }
-                memory[memoryAddress + bytes.length] = 0; // Null terminator
-                
+                adapter.write(memoryAddress + bytes.length, 0); // Null terminator
+
                 common.dbgprint("DB stored string of length {} at address {}", bytes.length, memoryAddress);
             } else {
                 // Numeric data
                 String[] values = dataPart.split(",");
-                if (memoryAddress + values.length >= memory.length) {
+                if (memoryAddress + values.length >= memory.getMemorySize()) {
                     throw new MASMException("Numeric data exceeds memory bounds", 
                         instrs.currentLine, instrs.currentlineContents, 
                         "Error in instruction: db");
                 }
-                
+
                 for (int i = 0; i < values.length; i++) {
                     try {
-                        memory[memoryAddress + i] = Integer.parseInt(values[i].trim());
+                        adapter.write(memoryAddress + i, Integer.parseInt(values[i].trim()));
                     } catch (NumberFormatException e) {
                         throw new MASMException("Invalid numeric value: " + values[i], 
                             instrs.currentLine, instrs.currentlineContents, 
                             "Error in instruction: db");
                     }
                 }
-                
+
                 common.dbgprint("DB stored {} numeric values at address {}", values.length, memoryAddress);
             }
         } catch (Exception e) {
@@ -497,7 +460,8 @@ public class Functions {
 
 
 
-    public void mov(int[] memory, String dest, String source, instructions instrs) {
+    public void mov(MemoryMappedManager memory, String dest, String source, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             if (dest == null || source == null) {
                 throw new MASMException("MOV requires two operands", instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
@@ -512,21 +476,21 @@ public class Functions {
                 String memAddr = source.substring(1);
                 try {
                     int address = Integer.parseInt(memAddr);
-                    if (address < 0 || address >= memory.length) {
+                    if (address < 0 || address >= memory.getMemorySize()) {
                         throw new MASMException("Memory address out of bounds: " + address, 
                             instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                     }
-                    value = memory[address];
+                    value = adapter.read(address);
                 } catch (NumberFormatException e) {
                     // Could be a register-based memory access
                     if (!common.registersMap.containsKey(memAddr.toUpperCase())) {
-                        throw new MASMException("Invalid memory address or register: " + memAddr,
+                        throw new MASMException("Invalid memory address: " + memAddr,
                             instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                     }
-                    value = memory[common.registersMap.get(memAddr.toUpperCase())];
+                    value = common.ReadRegister(memAddr);
                 }
             } else if (source.startsWith("R")) {
-                // Register access
+                // Register source
                 if (!common.registersMap.containsKey(source.toUpperCase())) {
                     throw new MASMException("Invalid register: " + source,
                         instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
@@ -548,11 +512,11 @@ public class Functions {
                 String memAddr = dest.substring(1);
                 try {
                     int address = Integer.parseInt(memAddr);
-                    if (address < 0 || address >= memory.length) {
+                    if (address < 0 || address >= memory.getMemorySize()) {
                         throw new MASMException("Memory address out of bounds: " + address,
                             instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                     }
-                    memory[address] = value;
+                    adapter.write(address, value);
                 } catch (NumberFormatException e) {
                     throw new MASMException("Invalid memory address: " + memAddr,
                         instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
@@ -602,9 +566,10 @@ public class Functions {
         }
     }
 
-    
 
-    public void cmp(int[] memory, String reg1, String reg2, instructions instrs) {
+
+    public void cmp(MemoryMappedManager memory, String reg1, String reg2, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             int value1;
             int value2;
@@ -613,7 +578,7 @@ public class Functions {
             if (reg1.startsWith("$")) {
                 try {
                     int address = Integer.parseInt(reg1.substring(1));
-                    value1 = memory[address];
+                    value1 = adapter.read(address);
                 } catch (NumberFormatException e) {
                     throw new MASMException("Invalid memory address: " + reg1, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
                 }
@@ -631,7 +596,7 @@ public class Functions {
                 if (reg2.startsWith("$")) {
                     try {
                         int address = Integer.parseInt(reg2.substring(1));
-                        value2 = memory[address];
+                        value2 = adapter.read(address);
                     } catch (NumberFormatException ex) {
                         throw new MASMException("Invalid memory address: " + reg2, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
                     }
@@ -649,7 +614,8 @@ public class Functions {
         }
     }
 
-    public void cout(int[] memory, String fd, String reg, instructions instrs) {
+    public void cout(MemoryMappedManager memory, String fd, String reg, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             // read the register hashmap
             int value = common.ReadRegister(reg);
@@ -668,7 +634,8 @@ public class Functions {
         }
     }
 
-    public static void inc(int[] memory, String reg, instructions instrs) {
+    public static void inc(MemoryMappedManager memory, String reg, instructions instrs) {
+        MemoryAdapter adapter = new MemoryAdapter(memory);
         try {
             // read the register hashmap
             int value = common.ReadRegister(reg);
@@ -681,7 +648,8 @@ public class Functions {
         }
     }
 
-    public static void dec(int[] memory, String reg, instructions instrs) {
+    public static void dec(MemoryMappedManager memory, String reg, instructions instrs) {
+        MemoryAdapter adapter = new MemoryAdapter(memory);
         try {
             // read the register hashmap
             int value = common.ReadRegister(reg);
@@ -694,7 +662,8 @@ public class Functions {
         }
     }
 
-    public static void shl(int[] memory, String reg1, String reg2, instructions instrs) {
+    public static void shl(MemoryMappedManager memory, String reg1, String reg2, instructions instrs) {
+        MemoryAdapter adapter = new MemoryAdapter(memory);
         try {
             // read the register hashmap
             int value1 = common.ReadRegister(reg1);
@@ -708,7 +677,8 @@ public class Functions {
         }
     }
 
-    public static void shr(int[] memory, String reg1, String reg2, instructions instrs) {
+    public static void shr(MemoryMappedManager memory, String reg1, String reg2, instructions instrs) {
+        MemoryAdapter adapter = new MemoryAdapter(memory);
         try {
             // read the register hashmap
             int value1 = common.ReadRegister(reg1);
@@ -722,7 +692,8 @@ public class Functions {
         }
     }
 
-    public static void and(int[] memory, String reg1, String reg2, instructions instrs) {
+    public static void and(MemoryMappedManager memory, String reg1, String reg2, instructions instrs) {
+        MemoryAdapter adapter = new MemoryAdapter(memory);
         try {
             // read the register hashmap
             int value1 = common.ReadRegister(reg1);
@@ -736,7 +707,8 @@ public class Functions {
         }
     }
 
-    public static void or(int[] memory, String reg1, String reg2, instructions instrs) {
+    public static void or(MemoryMappedManager memory, String reg1, String reg2, instructions instrs) {
+        MemoryAdapter adapter = new MemoryAdapter(memory);
         try {
             // read the register hashmap
             int value1 = common.ReadRegister(reg1);
@@ -750,7 +722,8 @@ public class Functions {
         }
     }
 
-    public static void xor(int[] memory, String reg1, String reg2, instructions instrs) {
+    public static void xor(MemoryMappedManager memory, String reg1, String reg2, instructions instrs) {
+        MemoryAdapter adapter = new MemoryAdapter(memory);
         try {
             // read the register hashmap
             int value1 = common.ReadRegister(reg1);
@@ -764,7 +737,8 @@ public class Functions {
         }
     }
 
-    public static void not(int[] memory, String reg, instructions instrs) {
+    public static void not(MemoryMappedManager memory, String reg, instructions instrs) {
+        MemoryAdapter adapter = new MemoryAdapter(memory);
         try {
             // read the register hashmap
             int value = common.ReadRegister(reg);
@@ -777,7 +751,8 @@ public class Functions {
         }
     }
 
-    public static void neg(int[] memory, String reg, instructions instrs) {
+    public static void neg(MemoryMappedManager memory, String reg, instructions instrs) {
+        MemoryAdapter adapter = new MemoryAdapter(memory);
         try {
             // read the register hashmap
             int value = common.ReadRegister(reg);
@@ -790,7 +765,8 @@ public class Functions {
         }
     }
 
-    public void call(int[] memory, String target, instructions instrs) {
+    public void call(MemoryMappedManager memory, String target, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             common.dbgprint("CALL to target: {}", target);
             if (target == null || instrs == null) {
@@ -799,21 +775,21 @@ public class Functions {
 
             // Save current instruction pointer
             int currentRIP = common.ReadRegister("RIP");
-            
+
             // Handle labels
             if (target.startsWith("#")) {
                 String labelName = target.substring(1);
                 Integer labelAddress = instrs.labelMap.get(labelName);
-                
+
                 common.dbgprint("Looking up label '{}' -> address: {}", labelName, labelAddress);
-                
+
                 if (labelAddress == null) {
                     throw new MASMException("Unknown label: " + labelName, instrs.currentLine, instrs.currentlineContents, "Error in instruction: call");
                 }
-                
+
                 // Push return address (next instruction) onto stack
                 push(memory, "RIP", instrs);
-                
+
                 // Jump to label
                 common.WriteRegister("RIP", labelAddress - 1);
                 common.dbgprint("Jumped to address {} for label {}", labelAddress - 1, labelName);
@@ -825,7 +801,8 @@ public class Functions {
         }
     }
 
-    public void jeq(int[] memory, String target, instructions instrs) {
+    public void jeq(MemoryMappedManager memory, String target, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             // read the register hashmap
             int value = common.ReadRegister("RFLAGS");
@@ -860,7 +837,8 @@ public class Functions {
         }
     }
     // call but only if rflags is 1
-    public void calle(int[] memory, String target, instructions instrs) {
+    public void calle(MemoryMappedManager memory, String target, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         // if rflags is 1, jump to the target
         if (common.ReadRegister("RFLAGS") == 1) {
             call(memory, target, instrs);
@@ -868,17 +846,19 @@ public class Functions {
 
     }
 
-    public void callne(int[] memory, String target, instructions instrs) {
+    public void callne(MemoryMappedManager memory, String target, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         // if rflags is 0, jump to the target
         if (common.ReadRegister("RFLAGS") == 0) {
             call(memory, target, instrs);
         }
     }
 
-    public void jne(int[] memory, String target, instructions instrs) {
+    public void jne(MemoryMappedManager memory, String target, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             common.dbgprint("JNE instruction with target: {}", target);
-            
+
             if (target == null || instrs == null) {
                 throw new MASMException("Target or instructions cannot be null", instrs.currentLine, instrs.currentlineContents, "Error in instruction: jne");
             }
@@ -895,7 +875,7 @@ public class Functions {
 
             String labelName = target.substring(1);
             Integer targetAddress = instrs.labelMap.get(labelName);
-            
+
             if (targetAddress == null) {
                 common.box("Error", "Unknown label: " + labelName, "error");
                 return;
@@ -915,7 +895,8 @@ public class Functions {
         }
     }
 
-    public void jmp(int[] memory, String target, instructions instrs) {
+    public void jmp(MemoryMappedManager memory, String target, instructions instrs) {
+        MemoryAdapter adapter = getAdapter(memory);
         try {
             common.dbgprint("JMP to target: {}", target);
             int value;
@@ -965,5 +946,5 @@ public class Functions {
     }
 
 
-    
+
 }
