@@ -42,6 +42,13 @@ public class ArgumentParserTest {
             commander.parse("-v");
             assertTrue(args.version);
         }
+
+        @Test
+        @DisplayName("Test Compile Flag")
+        void testCompileFlag() {
+            commander.parse("-c");
+            assertTrue(args.compile);
+        }
     }
 
     @Nested

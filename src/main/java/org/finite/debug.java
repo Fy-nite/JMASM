@@ -1,119 +1,214 @@
 package org.finite;
 
-import org.finite.Common.common;
+import org.jline.reader.*;
+import org.jline.terminal.*;
+
+import static org.finite.common.*;
 
 import java.util.Arrays;
-import java.util.Scanner;
 
-import static org.finite.Common.common.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class debug {
+    private static final Logger logger = LoggerFactory.getLogger(debug.class);
+    private static interp.instructions currentProgram = null;
+    private static Terminal terminal;
+    private static LineReader reader;
+    private static int windowSize = 10;
+    
+    private static void initializeTerminal() throws Exception {
+        terminal = TerminalBuilder.builder()
+            .system(true)
+            .jansi(true)
+            .build();
+        
+        reader = LineReaderBuilder.builder()
+            .terminal(terminal)
+            .appName("MASM Debugger")
+      
+            .build();
+    }
 
-    public static void DebugRepl() {
-        try (Scanner scanner = new Scanner(System.in)) {
-            interp.instructions di = new interp.instructions();
-            while (true) {
-                print("> ");
-                String input = scanner.nextLine();
-                String[] tokens = input.split(" ");
-                String command = tokens[0];
-                String[] args = Arrays.copyOfRange(tokens, 1, tokens.length);
-                try {
-                    // Clear the instruction state first
-                    di.instructions = new interp.instruction[1];
-                    di.instructions[0] = new interp.instruction();
-                    di.length = 0;
-
-                    // Only set up instruction if it's not a built-in command
-                    if (!Arrays.asList("dumpmemory", "dumpregisters", "readmemory", 
-                            "writememory", "readregister", "writeregister", "exit", "help")
-                            .contains(command.toLowerCase())) {
-                        di.instructions[0].name = command;
-                        di.instructions[0].opcode = 0;
-                        if (args.length >= 1) {
-                            di.instructions[0].sop1 = args[0];
-                        }
-                        if (args.length >= 2) {
-                            di.instructions[0].sop2 = args[1];
-                        }
-                        di.length = command.length();
-                    }
-                } catch (Exception e) {
-                    printerr("Error: " + e.getMessage());
+    private static void printDisplay() {
+        if (currentProgram == null) {
+            print("\nNo program loaded.\n");
+            return;
+        }
+        
+        try {
+            // Clear screen
+            print("\033[H\033[2J");
+            print("\033[0m"); // Reset all attributes
+            
+            // Header
+            print("=== MASM Debugger ===\n\n");
+            
+            // Registers
+            int rip = common.ReadRegister("RIP");
+            print("Registers:\n");
+            print("RIP: %04d  RAX: %04d  RBX: %04d  RCX: %04d  RDX: %04d\n\n",
+                rip,
+                common.ReadRegister("RAX"),
+                common.ReadRegister("RBX"),
+                common.ReadRegister("RCX"),
+                common.ReadRegister("RDX"));
+            
+            // Memory at current position
+            print("Memory:\n");
+            if (rip >= 0 && rip < currentProgram.Memory.length) {
+                print("$%04d: %04d %04d %04d %04d\n\n", 
+                    rip,
+                    currentProgram.Memory[rip],
+                    rip + 1 < currentProgram.Memory.length ? currentProgram.Memory[rip + 1] : 0,
+                    rip + 2 < currentProgram.Memory.length ? currentProgram.Memory[rip + 2] : 0,
+                    rip + 3 < currentProgram.Memory.length ? currentProgram.Memory[rip + 3] : 0);
+            }
+            
+            // Code section
+            print("Code:\n");
+            int start = Math.max(0, rip - windowSize/2);
+            int end = Math.min(currentProgram.length, start + windowSize);
+            
+            for (int i = start; i < end; i++) {
+                if (i >= currentProgram.length || currentProgram.instructions[i] == null) continue;
+                
+                interp.instruction instr = currentProgram.instructions[i];
+                String marker = (i == rip) ? ">" : " ";
+                
+                // Highlight current instruction
+                if (i == rip) {
+                    print("\033[33m"); // Yellow text
                 }
-
-                switch (command) {
-                    case "dumpmemory":
-                        dumpMemory(common.memory);
-                        break;
-                    case "dumpregisters":
-                        dumpRegisters();
-                        break;
-                    case "readmemory":
-                        try {
-                            print("%d", ReadMemory(common.memory, Integer.parseInt(args[0])));
-                        } catch (Exception e) {
-                            printerr("Error: " + e.getMessage());
-                        }
-                        break;
-                    case "#include":
-                        try {
-                            Includemanager.include(args[0], input);
-                        } catch (Exception e) {
-                            printerr("Error: " + e.getMessage());
-                        }
-                        break;
-                    case "writememory":
-                        try {
-                            WriteMemory(common.memory, Integer.parseInt(args[0]), Integer.parseInt(args[1]));
-                        } catch (Exception e) {
-                            printerr("Error: " + e.getMessage());
-                        }
-                        break;
-                    case "readregister":
-                        try {
-                            print("%d", ReadRegister(args[0]));
-                        } catch (Exception e) {
-                            printerr("Error: " + e.getMessage());
-                        }
-                        break;
-                    case "writeregister":
-                        try {
-                            WriteRegister(args[0], Integer.parseInt(args[1]));
-                        } catch (Exception e) {
-                            printerr("Error: " + e.getMessage());
-                        }
-                        break;
-                    case "exit":
-                        System.exit(0);
-                        return;
-                        case "help":
-                        if (di.instructions[0].sop1 != null) {
-                            Help.help(di.instructions[0].sop1);
-                        } else {
-                            Help.help();
-                        }
-                        break;
-
-                    default:
-                        // check if the instruction is valid
-                        String upperCommand = command.toUpperCase();
-                        if (!Arrays.asList(common.instructions).contains(upperCommand)) {
-                            printerr("Error: Unknown instruction: " + command);
-                            break;
-                        }
-                        // execute the instruction
-                        try {
-                            interp terp = new   interp();
-                            int out = terp.ExecuteSingleInstruction(di.instructions[0], di.Memory, di);
-                            print("Output: %d\n", out);
-                        } catch (Exception e) {
-                            printerr("Error: " + e.getMessage());
-                        }
-
-                        break;
+                
+                print("%s [%04d] %-8s %-15s %s\n",
+                    marker,
+                    instr.lineNumber,
+                    instr.name != null ? instr.name : "",
+                    instr.sop1 != null ? instr.sop1 : "",
+                    instr.sop2 != null ? instr.sop2 : "");
+                
+                if (i == rip) {
+                    print("\033[0m"); // Reset color
                 }
             }
+            
+            // Footer
+            print("\nCommands: (s)tep, (r)un, (q)uit, (h)elp\n");
+            print("debug> ");
+            
+        } catch (Exception e) {
+            logger.error("Display error: ", e);
         }
+    }
+
+    public static void DebugRepl() {
+        try {
+            initializeTerminal();
+            
+            while (true) {
+                printDisplay();
+                String input = reader.readLine().trim();
+                
+                try {
+                    String[] tokens = input.split(" ");
+                    String command = tokens[0].toLowerCase();
+                    String[] args = Arrays.copyOfRange(tokens, 1, tokens.length);
+
+                    switch (command) {
+                        case "l":
+                        case "load":
+                            if (args.length < 1) {
+                                print("Usage: load <filename>\n");
+                                break;
+                            }
+                            loadProgram(args[0]);
+                            break;
+                            
+                        case "r":
+                        case "run":
+                            if (currentProgram != null) {
+                                interp.ExecuteAllInstructions(currentProgram);
+                            }
+                            break;
+
+                        case "s":
+                        case "step":
+                            if (currentProgram != null) {
+                                stepInstruction();
+                            }
+                            break;
+
+                        case "q":
+                        case "quit":
+                            terminal.close();
+                            return;
+
+                        case "h":
+                        case "help":
+                        default:
+                            printHelp();
+                            break;
+                    }
+                } catch (Exception e) {
+                    print("Error: %s\n", e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void loadProgram(String filename) {
+        try {
+            // Initialize new program state
+            common.WriteRegister("RIP", 0);
+            common.WriteRegister("RSP", common.MAX_MEMORY - 1);
+            common.isRunning = true;
+            
+            // Create and initialize program
+            currentProgram = new interp.instructions();
+            currentProgram.Memory = new int[common.MAX_MEMORY];
+            currentProgram.instructions = new interp.instruction[1000];
+            
+            // Read and parse file
+            java.nio.file.Path path = java.nio.file.Paths.get(filename);
+            String[] lines = java.nio.file.Files.readAllLines(path).toArray(new String[0]);
+            currentProgram = interp.parseInstructions(lines);
+            
+            common.dbgprint("Loaded program with {} instructions", currentProgram.length);
+            printDisplay();
+        } catch (Exception e) {
+            logger.error("Error loading program: ", e);
+            terminal.writer().println("Error loading file: " + e.getMessage());
+            currentProgram = null;
+        }
+    }
+
+    private static void stepInstruction() {
+        if (currentProgram == null) return;
+        
+        int rip = common.ReadRegister("RIP");
+        if (rip < currentProgram.length) {
+            interp terp = new interp();
+            terp.ExecuteSingleInstruction(
+                currentProgram.instructions[rip],
+                currentProgram.Memory,
+                currentProgram
+            );
+            if (common.ReadRegister("RIP") == rip) {
+                common.WriteRegister("RIP", rip + 1);
+            }
+            printDisplay();
+        }
+    }
+
+    private static void printHelp() {
+        print("Available commands:\n");
+        print("  l, load <file>  - Load a MASM file\n");
+        print("  r, run          - Run program from current position\n");
+        print("  s, step         - Execute single instruction\n");
+        print("  h, help         - Show this help\n");
+        print("  q, quit         - Exit debugger\n");
     }
 }

@@ -1,6 +1,6 @@
 package org.finite;
 
-import static org.finite.Common.common.*;
+import static org.finite.common.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,11 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
-import org.finite.Common.common;
 import org.finite.ModuleManager.MNIMethodObject;
 import org.finite.ModuleManager.MNIHandler;
 import org.finite.Exceptions.MASMException;  // Add this import
-
+import org.finite.Exceptions.MNIException;
+import org.finite.ArgumentParser;
 public class interp {
 
     public static boolean testmode = true;
@@ -63,7 +63,7 @@ public class interp {
         }
         
         if (currentPass >= maxPasses) {
-            throw new RuntimeException("Maximum include depth exceeded. Possible circular inclusion detected.");
+            throw new MASMException("Too many include passes", 0, "", "Error in instruction: #include");
         }
         
         return result;
@@ -73,7 +73,7 @@ public class interp {
         // Preprocess includes first
         String preprocessed = preprocess(ops);
         String[] processedOps = preprocessed.split("\n");
-        System.out.println(preprocessed);
+   
         interp.instructions instrs = new interp.instructions();
         instrs.instructions = new interp.instruction[100]; // reasonable default size
         instrs.Memory = new int[1000]; // reasonable default memory size
@@ -149,13 +149,13 @@ public class interp {
             }
         }
 
-        if (arguments.debug) {
+        if (ArgumentParser.Args.debug) {
             print(
                 "Read %d instructions and %d labels\n",
                 instrs.length,
                 instrs.labelMap.size()
             );
-            printinstructions(instrs);
+           
         }
 
         return instrs;
@@ -218,7 +218,7 @@ public class interp {
         common.isRunning = true;  // Reset running state
         while (rip < instrs.length && common.isRunning) {
             instruction instr = instrs.instructions[rip];
-            if (arguments.debug) {
+            if (ArgumentParser.Args.debug) {
                 common.box(
                     "Debug",
                     "Executing instruction: " + instr.name,
@@ -271,9 +271,11 @@ public class interp {
                 lines.add(scanner.nextLine());
             }
             scanner.close();
-
+     
+            
             // Preprocess and parse
             String preprocessed = preprocess(lines.toArray(new String[0]));
+       
 
             String[] processedLines = preprocessed.split("\n");
 
@@ -367,10 +369,15 @@ public class interp {
         instructions instrs
     ) {
         try {
-            if (arguments.debug) {
+            if (ArgumentParser.Args.debug) {
                 common.box("Debug", "Executing instruction: " + instr.name, "info");
+                //read common.registersMap
+                for (String key : common.registersMap.keySet()) {
+                    print("%s: %d\n", key, common.ReadRegister(key));
+                    print("en");
+                }
             }
-
+            
             switch (instr.name.toLowerCase()) {
                 case "mov":
                     functions.mov(memory, instr.sop1, instr.sop2,instrs);
@@ -398,6 +405,16 @@ public class interp {
                     break;
                 case "hlt":
                     functions.hlt();
+                    break;
+                case "nop":
+                    // skip
+                    break;
+                case "calle":
+                // memory,  target  , instrs
+                    functions.calle(memory, instr.sop1, instrs);
+                    break;
+                case "callne":
+                    functions.callne(memory, instr.sop1, instrs);
                     break;
                 case "out":
                     // out wants a fd or "place to output to"
@@ -467,13 +484,23 @@ public class interp {
                 case "mni":
                     // MNI format: MNI module.function reg1 reg2
                     if (instr.sop1 == null) {
-                        throw new RuntimeException("Invalid MNI call format. Expected: MNI module.function reg1 reg2");
+                        throw new MASMException(
+                            "Missing MNI function name",
+                            instr.lineNumber,
+                            instr.originalLine,
+                            "Error in instruction: MNI"
+                        );
                     }
 
                     String[] mniParts = instr.sop1.split("\\.");
              
                     if (mniParts.length != 2) {
-                        throw new RuntimeException("Invalid MNI function format. Expected: module.function");
+                        throw new MASMException(
+                            "Invalid MNI function name",
+                            instr.lineNumber,
+                            instr.originalLine,
+                            "Error in instruction: MNI"
+                        );
                     }
 
                     String moduleName = mniParts[0];
@@ -481,16 +508,24 @@ public class interp {
 
                     // Parse the register arguments
                     if (instr.sop2 == null) {
-                        throw new RuntimeException("Missing register arguments for MNI call");
+                        throw new MASMException(
+                            "Missing MNI register arguments",
+                            instr.lineNumber,
+                            instr.originalLine,
+                            "Error in instruction: MNI"
+                        );
                     }
 
                     String[] registerArgs = instr.sop2.trim().split("\\s+");
+                   // do not care about min and max args
                     if (registerArgs.length < 2) {
-                        throw new RuntimeException("MNI call requires two register arguments");
+                        throw new MASMException(
+                            "MNI requires at least two register arguments",
+                            instr.lineNumber,
+                            instr.originalLine,
+                            "Error in instruction: MNI"
+                        );
                     }
-                    
-
-
                     // Create MNI object with register names
                     MNIMethodObject methodObj = new MNIMethodObject(memory, registerArgs[0], registerArgs[1]);
                     methodObj.argregs = registerArgs;
@@ -508,7 +543,15 @@ public class interp {
             return 0;
         } catch (Exception e) {
             if (e instanceof MASMException) {
-                throw e;
+               // throw e;
+            }
+            else if (e instanceof MNIException) {
+                throw new MASMException(
+                    e.getMessage(),
+                    instr.lineNumber,
+                    instr.originalLine,
+                    "Error in instruction: " + instr.name
+                );
             }
             throw new MASMException(
                 e.getMessage(),
@@ -536,7 +579,12 @@ public class interp {
             try {
                 return Integer.parseInt(arg);
             } catch (NumberFormatException e) {
-                throw new RuntimeException("Invalid number format: " + arg);
+                throw new MASMException(
+                    "Invalid number format: " + arg,
+                    0,
+                    "",
+                    "Error in instruction"
+                );
             }
         }
     }

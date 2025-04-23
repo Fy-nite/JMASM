@@ -73,7 +73,7 @@ public class Includemanager {
         for (File path : searchPaths) {
             errorMsg.append("- ").append(path.getAbsolutePath()).append("\n");
         }
-        throw new IOException(errorMsg.toString());
+        throw new IncludeException(resourcePath, 0, filename, errorMsg.toString());
     }
 
     private static List<File> getSearchPaths(String filename) {
@@ -123,6 +123,6 @@ public class Includemanager {
             }
         }
         
-        return processed.toString();
+        return processed.toString() + '\n';
     }
 }

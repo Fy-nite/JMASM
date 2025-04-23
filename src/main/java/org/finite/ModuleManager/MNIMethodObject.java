@@ -1,6 +1,7 @@
 package org.finite.ModuleManager;
 
-import org.finite.Common.common;
+import org.finite.common;
+import org.finite.Exceptions.MASMException;
 
 public class MNIMethodObject {
     // Register constants
@@ -10,61 +11,101 @@ public class MNIMethodObject {
         "RIP", "RSP", "RBP","RFLAGS"
     };
 
+    // Restore original public variables for compatibility
     public int arg1;
     public int arg2;
-    public String reg1;  // Register name for first argument
-    public String reg2;  // Register name for second argument
-    public int args[]; // Arguments
-    public String[] argregs;
+    public String reg1;
+    public String reg2;
+    public int[] args;         // Keep this for existing code
+    public String[] argregs;   // Keep this for existing code
+
     private final int[] memory;
+    private final int[] arguments;
+    private final String[] argumentRegisters;
 
     // System state
     private int lastCompareResult;
     private boolean zeroFlag;
     private boolean carryFlag;
 
-    public MNIMethodObject(int[] memory, String reg1, String reg2) {
+    public MNIMethodObject(int[] memory, String... args) {
         this.memory = memory;
-        this.reg1 = reg1;
-        this.reg2 = reg2;
-
-        // Handle first argument
-        if (reg1.startsWith("$")) {
-            try {
-                int address = Integer.parseInt(reg1.substring(1));
-                this.arg1 = memory[address];
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid memory address: " + reg1);
+        this.arguments = new int[args.length];
+        this.argumentRegisters = args;
+        
+        // Set up legacy fields
+        this.args = new int[args.length];
+        this.argregs = args;
+        if (args.length > 0) {
+            this.reg1 = args[0];
+            if (args.length > 1) {
+                this.reg2 = args[1];
             }
-        } else if (reg1.startsWith("0x")) {
-            this.arg1 = Integer.parseInt(reg1.substring(2), 16);
-        } 
-        // register can be a number
-        else if (reg1.matches("-?\\d+")) {
-            this.arg1 = Integer.parseInt(reg1);
-        } 
-        else {
-            this.arg1 = common.ReadRegister(reg1);
         }
 
-        // Handle second argument
-        if (reg2.startsWith("$")) {
-            try {
-                int address = Integer.parseInt(reg2.substring(1));
-                this.arg2 = memory[address];
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid memory address: " + reg2);
+        // Process each argument
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            int value;
+            
+            if (arg.startsWith("$")) {
+                try {
+                    int address = Integer.parseInt(arg.substring(1));
+                    value = memory[address];
+                } catch (NumberFormatException e) {
+                    throw new MASMException("Invalid memory address: " + arg, 0, arg, "Invalid memory address");
+                }
+            } else if (arg.startsWith("0x")) {
+                value = Integer.parseInt(arg.substring(2), 16);
+            } else if (arg.matches("-?\\d+")) {
+                value = Integer.parseInt(arg);
+            } else {
+                value = common.ReadRegister(arg);
             }
-        } else if (reg2.startsWith("0x")) {
-            this.arg2 = Integer.parseInt(reg2.substring(2), 16);
+            
+            this.arguments[i] = value;
+            this.args[i] = value;  // Set legacy array
+            
+            // Set legacy arg1/arg2
+            if (i == 0) this.arg1 = value;
+            if (i == 1) this.arg2 = value;
         }
-        // register can be a number
-        else if (reg2.matches("-?\\d+")) {
-            this.arg2 = Integer.parseInt(reg2);
-        } 
-        else {
-            this.arg2 = common.ReadRegister(reg2);
+    }
+
+    // New methods to access arguments
+    public int getArgument(int index) {
+        if (index >= 0 && index < arguments.length) {
+            return arguments[index];
         }
+        throw new IndexOutOfBoundsException("Argument index out of range: " + index);
+    }
+
+    public String getArgumentRegister(int index) {
+        if (index >= 0 && index < argumentRegisters.length) {
+            return argumentRegisters[index];
+        }
+        throw new IndexOutOfBoundsException("Argument register index out of range: " + index);
+    }
+
+    public int getArgumentCount() {
+        return arguments.length;
+    }
+
+    // For backward compatibility
+    public int getArg1() {
+        return getArgument(0);
+    }
+
+    public int getArg2() {
+        return getArgument(1);
+    }
+
+    public String getReg1() {
+        return getArgumentRegister(0);
+    }
+
+    public String getReg2() {
+        return getArgumentRegister(1);
     }
 
     // Memory operations
