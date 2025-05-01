@@ -1,4 +1,3 @@
-
 package org.finite;
 
 import static org.finite.common.print;
@@ -10,114 +9,110 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.*;
 
 import org.finite.Exceptions.MASMException;
 import org.finite.interp.instructions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.finite.Parsing;
+
 
 public class Functions {
 
     private static final Logger logger = LoggerFactory.getLogger(
-        Functions.class
+            Functions.class
     );
 
-    // pass [<reg|immediate> +|-|* <reg|immediate>] and it will return the value of the calculation
-    ///
-    /// @param expression the expression to calculate
-    /// @param instrs the instructions object
-    /// @return the value of the expression
-    /// @throws MASMException if the expression is invalid
-    /// @throws NumberFormatException if the expression is not a number
     public static int calculate_box_value(String expression, instructions instrs) {
-        // Remove brackets and extra whitespace
-        expression = expression.replace("[", "").replace("]", "").trim();
-        
-        // Split into tokens while preserving operators
-        String[] tokens = expression.split("(?<=[-+*/])|(?=[-+*/])");
-        
-        // Clean up tokens
-        List<String> cleanTokens = new ArrayList<>();
-        for (String token : tokens) {
-            token = token.trim();
-            if (!token.isEmpty()) {
-                cleanTokens.add(token);
-            }
+
+        // is the first thing a $
+        boolean isDollar = expression.startsWith("$");
+        common.dbgprint("Expression starts with $: {}", isDollar);
+        // Remove leading $ if present
+        if (isDollar) {
+            expression = expression.substring(1); // we will use this later
+            common.dbgprint("Expression starts with $, treating as memory address");
+            common.dbgprint("Expression: {}", expression);
         }
-        
-        if (cleanTokens.size() < 3 || cleanTokens.size() % 2 == 0) {
-            throw new MASMException(
-                "Invalid expression format: " + expression,
-                instrs.currentLine,
-                instrs.currentlineContents,
-                "Error in instruction: calculate_box_value"
-            );
+        // Remove brackets and trim
+        expression = expression.replace("[", "").replace("]", "").trim();
+        common.dbgprint("Calculating expression: {}", expression);
+
+        // Split by spaces and handle multiple operands
+        String[] parts = expression.split("\\s+");
+
+        if (parts.length < 1) {
+            throw new MASMException("Empty expression", instrs.currentLine,
+                    instrs.currentlineContents, "Error in array offset calculation");
         }
 
-        // Convert first operand
-        int result = parseOperand(cleanTokens.get(0), instrs);
-        
-        // Process remaining operator-operand pairs
-        for (int i = 1; i < cleanTokens.size(); i += 2) {
-            String operator = cleanTokens.get(i);
-            String operand = cleanTokens.get(i + 1);
-            
-            int value = parseOperand(operand, instrs);
-            
+        // Initialize result with first operand
+        int result = getOperandValue(parts[0], instrs);
+
+        // Process remaining operands and operators
+        for (int i = 1; i < parts.length; i += 2) {
+            if (i + 1 >= parts.length) {
+                throw new MASMException("Missing operand after operator", instrs.currentLine,
+                        instrs.currentlineContents, "Error in array offset calculation");
+            }
+
+            String operator = parts[i];
+            int nextValue = getOperandValue(parts[i + 1], instrs);
+
             switch (operator) {
                 case "+":
-                    result += value;
+                    result += nextValue;
                     break;
                 case "-":
-                    result -= value;
+                    result -= nextValue;
                     break;
                 case "*":
-                    result *= value;
+                    result *= nextValue;
                     break;
                 case "/":
-                    if (value == 0) {
-                        throw new ArithmeticException("Division by zero");
+                    if (nextValue == 0) {
+                        throw new MASMException("Division by zero", instrs.currentLine,
+                                instrs.currentlineContents, "Error in array offset calculation");
                     }
-                    result /= value;
+                    result /= nextValue;
                     break;
                 default:
-                    throw new MASMException(
-                        "Invalid operator: " + operator,
-                        instrs.currentLine,
-                        instrs.currentlineContents,
-                        "Error in instruction: calculate_box_value"
-                    );
+                    throw new MASMException("Invalid operator: " + operator, instrs.currentLine,
+                            instrs.currentlineContents, "Error in array offset calculation");
             }
         }
-        
-        return result;
+
+        common.dbgprint("Calculated result: {}", result);
+
+        // we should check if the operation wants to use the dollar sign
+        if (isDollar)
+        {
+            return common.ReadMemory(instrs.Memory, result);
+        }
+        else
+        {
+            return result;
+        }
     }
 
-    private static int parseOperand(String operand, instructions instrs) {
+    private static int getOperandValue(String operand, instructions instrs) {
+        if (operand == null || operand.trim().isEmpty()) {
+            throw new MASMException("Empty operand", instrs.currentLine,
+                    instrs.currentlineContents, "Error in array offset calculation");
+        }
+
         operand = operand.trim();
-        if (operand.startsWith("R")) {
-            if (!Parsing.INSTANCE.isValidRegister(operand)) {
-                throw new MASMException(
-                    "Invalid register: " + operand,
-                    instrs.currentLine,
-                    instrs.currentlineContents,
-                    "Error in instruction: calculate_box_value"
-                );
-            }
+
+        // Check if it's a register
+        if (Parsing.INSTANCE.isValidRegister(operand)) {
             return common.ReadRegister(operand);
-        } else {
-            try {
-                return Integer.parseInt(operand);
-            } catch (NumberFormatException e) {
-                throw new MASMException(
-                    "Invalid immediate value: " + operand,
-                    instrs.currentLine,
-                    instrs.currentlineContents,
-                    "Error in instruction: calculate_box_value"
-                );
-            }
+        }
+
+        // Check if it's a number
+        try {
+            return Integer.parseInt(operand);
+        } catch (NumberFormatException e) {
+            throw new MASMException("Invalid operand: " + operand, instrs.currentLine,
+                    instrs.currentlineContents, "Error in array offset calculation");
         }
     }
 
@@ -125,33 +120,33 @@ public class Functions {
         common.dbgprint("Including file: {}", filename);
         // Convert the dot notation to path
         String resourcePath =
-            filename.replace("\"", "").replace(".", "/") + ".masm";
+                filename.replace("\"", "").replace(".", "/") + ".masm";
         try {
             // Get resource as stream from classpath
             ClassLoader classLoader = Functions.class.getClassLoader();
             InputStream inputStream = classLoader.getResourceAsStream(
-                resourcePath
+                    resourcePath
             );
             if (inputStream == null) {
                 common.dbgprint(
-                    "Resource not found in classpath, trying local directory"
+                        "Resource not found in classpath, trying local directory"
                 );
                 File localFile = new File(resourcePath);
                 if (!localFile.exists()) {
                     // Also try current working directory
                     localFile = new File(
-                        System.getProperty("user.dir"),
-                        resourcePath
+                            System.getProperty("user.dir"),
+                            resourcePath
                     );
                 }
                 if (localFile.exists()) {
                     inputStream = new FileInputStream(localFile);
                 } else {
                     throw new MASMException(
-                        "Resource not found: " + resourcePath,
-                        0,
-                        "",
-                        "Error including file"
+                            "Resource not found: " + resourcePath,
+                            0,
+                            "",
+                            "Error including file"
                     );
                 }
             }
@@ -159,9 +154,9 @@ public class Functions {
             // Read the file
             StringBuilder content = new StringBuilder();
             try (
-                BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(inputStream)
-                )
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(inputStream)
+                    )
             ) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -171,17 +166,17 @@ public class Functions {
 
             // Replace the include statement with the file contents
             String includeStatement =
-                "#include \"" + filename.replace("\"", "") + "\"";
+                    "#include \"" + filename.replace("\"", "") + "\"";
             return CurrentFileContents.replace(
-                includeStatement,
-                content.toString()
+                    includeStatement,
+                    content.toString()
             );
         } catch (IOException e) {
             logger.error("Failed to include file: {}", resourcePath, e);
             printerr(
-                "Error including file %s: %s\n",
-                resourcePath,
-                e.getMessage()
+                    "Error including file %s: %s\n",
+                    resourcePath,
+                    e.getMessage()
             );
             return CurrentFileContents;
         }
@@ -226,41 +221,41 @@ public class Functions {
 
     public static void include(String filename, instructions instrs) {
         String resourcePath =
-            filename.replace("\"", "").replace(".", "/") + ".masm";
+                filename.replace("\"", "").replace(".", "/") + ".masm";
 
         try {
             ClassLoader classLoader = Functions.class.getClassLoader();
             InputStream inputStream = classLoader.getResourceAsStream(
-                resourcePath
+                    resourcePath
             );
             if (inputStream == null) {
                 common.dbgprint(
-                    "Resource not found in classpath, trying local directory"
+                        "Resource not found in classpath, trying local directory"
                 );
                 File localFile = new File(resourcePath);
                 if (!localFile.exists()) {
                     // Also try current working directory
                     localFile = new File(
-                        System.getProperty("user.dir"),
-                        resourcePath
+                            System.getProperty("user.dir"),
+                            resourcePath
                     );
                 }
                 if (localFile.exists()) {
                     inputStream = new FileInputStream(localFile);
                 } else {
                     throw new MASMException(
-                        "Resource not found: " + resourcePath,
-                        instrs.currentLine,
-                        instrs.currentlineContents,
-                        "Error including file"
+                            "Resource not found: " + resourcePath,
+                            instrs.currentLine,
+                            instrs.currentlineContents,
+                            "Error including file"
                     );
                 }
             }
 
             try (
-                BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(inputStream)
-                )
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(inputStream)
+                    )
             ) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -284,9 +279,9 @@ public class Functions {
             }
         } catch (IOException e) {
             printerr(
-                "Error including file %s: %s\n",
-                resourcePath,
-                e.getMessage()
+                    "Error including file %s: %s\n",
+                    resourcePath,
+                    e.getMessage()
             );
         }
     }
@@ -348,7 +343,6 @@ public class Functions {
 
 
 
-
     public void out(int[] memory, String fd, String source, instructions instrs) {
         try {
             common.dbgprint("Writing to file descriptor %s: %s\n", fd, source);
@@ -365,12 +359,20 @@ public class Functions {
                 fileDescriptor = common.ReadRegister(fd);
             }
 
-            // Handle $[<expression>] - calculate and read from memory
+            // Handle memory address starting with $[
             if (source.startsWith("$[") && source.endsWith("]")) {
+                // Remove $[ and ] to get the expression
                 String expression = source.substring(2, source.length() - 1);
+                // Calculate the memory address using the expression
                 int memoryAddress = calculate_box_value(expression, instrs);
-                
-                // Read from calculated memory address
+
+                // Read from the calculated memory address
+                if (memoryAddress < 0 || memoryAddress >= memory.length) {
+                    throw new MASMException("Memory address out of bounds: " + memoryAddress,
+                            instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
+                }
+
+                // Try to read as null-terminated string first
                 StringBuilder sb = new StringBuilder();
                 int i = 0;
                 while (memoryAddress + i < memory.length && memory[memoryAddress + i] != 0) {
@@ -378,26 +380,25 @@ public class Functions {
                     i++;
                 }
                 value = Parsing.INSTANCE.processEscapeSequences(sb.toString());
-                // If empty, try as number
+
+                // If empty, use numeric value
                 if (value.isEmpty()) {
                     value = Integer.toString(memory[memoryAddress]);
                 }
             }
-            // Handle [<expression>] - just calculate the expression
-            else if (source.startsWith("[") && source.endsWith("]")) {
-                String expression = source.substring(1, source.length() - 1);
-                int result = calculate_box_value(expression, instrs);
-                value = Integer.toString(result);
-            }
-            // Handle memory address starting with $
+            // Handle old $address format
             else if (source.startsWith("$")) {
+                // Rest of existing $ handling code...
                 String addr = source.substring(1);
                 try {
                     // Check if it's a direct memory address
                     int address = Integer.parseInt(addr);
+                    // Always try to read as null-terminated string first
                     StringBuilder sb = new StringBuilder();
                     int i = 0;
-                    while (address + i < memory.length && memory[address + i] != 0) {
+                    while (
+                            address + i < memory.length && memory[address + i] != 0
+                    ) {
                         sb.append((char) memory[address + i]);
                         i++;
                     }
@@ -412,7 +413,9 @@ public class Functions {
                     int regAddr = common.ReadRegister(addr);
                     StringBuilder sb = new StringBuilder();
                     int i = 0;
-                    while (regAddr + i < memory.length && memory[regAddr + i] != 0) {
+                    while (
+                            regAddr + i < memory.length && memory[regAddr + i] != 0
+                    ) {
                         sb.append((char) memory[regAddr + i]);
                         i++;
                     }
@@ -423,24 +426,30 @@ public class Functions {
                         value = Integer.toString(memory[regAddr]);
                     }
                 }
-            } else if (source.startsWith("R")) {
-                // Register access
+            }
+
+            else if (source.startsWith("[") && source.endsWith("]")) {
+                String expression = source.substring(1, source.length() - 1);
+                value = Integer.toString(calculate_box_value(expression, instrs));
+
+
+
+            }
+            else if (source.startsWith("R")) {
                 if (!Parsing.INSTANCE.isValidRegister(source)) {
-                    throw new MASMException("Invalid register: " + source, instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
+                    throw new MASMException("Invalid register: " + source,
+                            instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
                 }
                 value = Integer.toString(common.ReadRegister(source));
-            } else {
-                // Direct register or literal value
+            }
+            else {
                 try {
-                    // Try parsing as number first
                     int numValue = Integer.parseInt(source);
                     value = Integer.toString(numValue);
                 } catch (NumberFormatException e) {
                     try {
-                        // Try reading from register
                         value = Integer.toString(common.ReadRegister(source));
                     } catch (Exception ex) {
-                        // If all else fails, treat as string literal with escape sequences
                         value = Parsing.INSTANCE.processEscapeSequences(source);
                     }
                 }
@@ -452,15 +461,18 @@ public class Functions {
                 printerr("%s", value);
             } else {
                 common.box(
-                    "Error",
-                    "Invalid file descriptor: " + fileDescriptor,
-                    "error"
+                        "Error",
+                        "Invalid file descriptor: " + fileDescriptor,
+                        "error"
                 );
             }
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
         }
     }
+
+    //HOw to use
+    // in memory
     //
     public void in(int[] memory, String fd, String dest, instructions instrs) {
         try {
@@ -524,8 +536,8 @@ public class Functions {
         try {
             if (argz == null || argz.length == 0) {
                 throw new MASMException("DB instruction requires arguments",
-                    instrs.currentLine, instrs.currentlineContents,
-                    "Error in instruction: db");
+                        instrs.currentLine, instrs.currentlineContents,
+                        "Error in instruction: db");
             }
 
             // Join arguments and handle quotes properly
@@ -535,8 +547,8 @@ public class Functions {
             // Validate minimum format
             if (!fullArg.contains(" ")) {
                 throw new MASMException("DB instruction requires address and data separated by space",
-                    instrs.currentLine, instrs.currentlineContents,
-                    "Error in instruction: db");
+                        instrs.currentLine, instrs.currentlineContents,
+                        "Error in instruction: db");
             }
 
             // Extract address and data parts safely
@@ -549,8 +561,8 @@ public class Functions {
             // Validate and parse memory address
             if (!addressPart.startsWith("$")) {
                 throw new MASMException("DB address must start with $",
-                    instrs.currentLine, instrs.currentlineContents,
-                    "Error in instruction: db");
+                        instrs.currentLine, instrs.currentlineContents,
+                        "Error in instruction: db");
             }
 
             int memoryAddress;
@@ -558,13 +570,13 @@ public class Functions {
                 memoryAddress = Integer.parseInt(addressPart.substring(1));
                 if (memoryAddress < 0 || memoryAddress >= memory.length) {
                     throw new MASMException("Memory address out of bounds: " + memoryAddress,
-                        instrs.currentLine, instrs.currentlineContents,
-                        "Error in instruction: db");
+                            instrs.currentLine, instrs.currentlineContents,
+                            "Error in instruction: db");
                 }
             } catch (NumberFormatException e) {
                 throw new MASMException("Invalid memory address format: " + addressPart,
-                    instrs.currentLine, instrs.currentlineContents,
-                    "Error in instruction: db");
+                        instrs.currentLine, instrs.currentlineContents,
+                        "Error in instruction: db");
             }
 
             // Handle the data part
@@ -576,8 +588,8 @@ public class Functions {
 
                 if (memoryAddress + bytes.length >= memory.length) {
                     throw new MASMException("String data exceeds memory bounds",
-                        instrs.currentLine, instrs.currentlineContents,
-                        "Error in instruction: db");
+                            instrs.currentLine, instrs.currentlineContents,
+                            "Error in instruction: db");
                 }
 
                 for (int i = 0; i < bytes.length; i++) {
@@ -591,8 +603,8 @@ public class Functions {
                 String[] values = dataPart.split(",");
                 if (memoryAddress + values.length >= memory.length) {
                     throw new MASMException("Numeric data exceeds memory bounds",
-                        instrs.currentLine, instrs.currentlineContents,
-                        "Error in instruction: db");
+                            instrs.currentLine, instrs.currentlineContents,
+                            "Error in instruction: db");
                 }
 
                 for (int i = 0; i < values.length; i++) {
@@ -600,8 +612,8 @@ public class Functions {
                         memory[memoryAddress + i] = Integer.parseInt(values[i].trim());
                     } catch (NumberFormatException e) {
                         throw new MASMException("Invalid numeric value: " + values[i],
-                            instrs.currentLine, instrs.currentlineContents,
-                            "Error in instruction: db");
+                                instrs.currentLine, instrs.currentlineContents,
+                                "Error in instruction: db");
                     }
                 }
 
@@ -612,8 +624,8 @@ public class Functions {
                 throw e;
             }
             throw new MASMException(e.getMessage(),
-                instrs.currentLine, instrs.currentlineContents,
-                "Error in instruction: db");
+                    instrs.currentLine, instrs.currentlineContents,
+                    "Error in instruction: db");
         }
     }
 
@@ -636,14 +648,14 @@ public class Functions {
                     int address = Integer.parseInt(memAddr);
                     if (address < 0 || address >= memory.length) {
                         throw new MASMException("Memory address out of bounds: " + address,
-                            instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                                instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                     }
                     value = memory[address];
                 } catch (NumberFormatException e) {
                     // Could be a register-based memory access
                     if (!common.registersMap.containsKey(memAddr.toUpperCase())) {
                         throw new MASMException("Invalid memory address or register: " + memAddr,
-                            instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                                instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                     }
                     value = memory[common.registersMap.get(memAddr.toUpperCase())];
                 }
@@ -651,7 +663,7 @@ public class Functions {
                 // Register access
                 if (!common.registersMap.containsKey(source.toUpperCase())) {
                     throw new MASMException("Invalid register: " + source,
-                        instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                            instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                 }
                 value = common.ReadRegister(source);
             } else {
@@ -660,7 +672,7 @@ public class Functions {
                     value = Integer.parseInt(source);
                 } catch (NumberFormatException e) {
                     throw new MASMException("Invalid immediate value: " + source,
-                        instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                            instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                 }
             }
 
@@ -672,23 +684,23 @@ public class Functions {
                     int address = Integer.parseInt(memAddr);
                     if (address < 0 || address >= memory.length) {
                         throw new MASMException("Memory address out of bounds: " + address,
-                            instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                                instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                     }
                     memory[address] = value;
                 } catch (NumberFormatException e) {
                     throw new MASMException("Invalid memory address: " + memAddr,
-                        instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                            instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                 }
             } else if (dest.startsWith("R")) {
                 // Register destination
                 if (!common.registersMap.containsKey(dest.toUpperCase())) {
                     throw new MASMException("Invalid register: " + dest,
-                        instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                            instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
                 }
                 common.WriteRegister(dest, value);
             } else {
                 throw new MASMException("Invalid destination: " + dest,
-                    instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                        instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
             }
 
             common.dbgprint("MOV completed: {} <- {}", dest, value);
@@ -698,7 +710,7 @@ public class Functions {
                 throw e;
             }
             throw new MASMException(e.getMessage(),
-                instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                    instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
         }
     }
 
@@ -966,9 +978,9 @@ public class Functions {
 
             for (String key : instrs.labelMap.keySet()) {
                 common.dbgprint(
-                    "Label: {} Address: {}",
-                    key,
-                    instrs.labelMap.get(key)
+                        "Label: {} Address: {}",
+                        key,
+                        instrs.labelMap.get(key)
                 );
             }
 
@@ -1049,13 +1061,13 @@ public class Functions {
             try
             {
 
-            value = Parsing.INSTANCE.parseTarget(target, instrs);
-            if (value == -1) {
-                //print("DEBUG: Jump failed - invalid target: %s\n", target);
-                common.box("Error", "Unknown address or label: " + target, "error");
-                return;
-            }
-            common.WriteRegister("RIP", value - 1);
+                value = Parsing.INSTANCE.parseTarget(target, instrs);
+                if (value == -1) {
+                    //print("DEBUG: Jump failed - invalid target: %s\n", target);
+                    common.box("Error", "Unknown address or label: " + target, "error");
+                    return;
+                }
+                common.WriteRegister("RIP", value - 1);
             } catch (Exception e) {
                 // try as label
                 value = instrs.labelMap.get(target.substring(1));
@@ -1089,4 +1101,3 @@ public class Functions {
 
 
 }
-
