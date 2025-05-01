@@ -10,6 +10,9 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.finite.Memory.MemoryMappedManager;
+import org.finite.Memory.MemoryAdapter;
+
 public class debug {
     private static final Logger logger = LoggerFactory.getLogger(debug.class);
     private static interp.instructions currentProgram = null;
@@ -46,6 +49,7 @@ public class debug {
             
             // Registers
             int rip = common.ReadRegister("RIP");
+
             print("Registers:\n");
             print("RIP: %04d  RAX: %04d  RBX: %04d  RCX: %04d  RDX: %04d\n\n",
                 rip,
@@ -56,13 +60,13 @@ public class debug {
             
             // Memory at current position
             print("Memory:\n");
-            if (rip >= 0 && rip < currentProgram.Memory.length) {
+            if (rip >= 0 && rip < currentProgram.memoryManager.getMemorySize()) {
                 print("$%04d: %04d %04d %04d %04d\n\n", 
                     rip,
-                    currentProgram.Memory[rip],
-                    rip + 1 < currentProgram.Memory.length ? currentProgram.Memory[rip + 1] : 0,
-                    rip + 2 < currentProgram.Memory.length ? currentProgram.Memory[rip + 2] : 0,
-                    rip + 3 < currentProgram.Memory.length ? currentProgram.Memory[rip + 3] : 0);
+                    currentProgram.memoryManager.read(rip),
+                    rip + 1 < currentProgram.memoryManager.getMemorySize() ? currentProgram.memoryManager.read(rip + 1) : 0,
+                    rip + 2 < currentProgram.memoryManager.getMemorySize() ? currentProgram.memoryManager.read(rip + 2) : 0,
+                    rip + 3 < currentProgram.memoryManager.getMemorySize() ? currentProgram.memoryManager.read(rip + 3) : 0);
             }
             
             // Code section
@@ -168,7 +172,7 @@ public class debug {
             
             // Create and initialize program
             currentProgram = new interp.instructions();
-            currentProgram.Memory = new int[common.MAX_MEMORY];
+            currentProgram.memoryManager = MemoryMappedManager.getInstance();
             currentProgram.instructions = new interp.instruction[1000];
             
             // Read and parse file
@@ -192,8 +196,8 @@ public class debug {
         if (rip < currentProgram.length) {
             interp terp = new interp();
             terp.ExecuteSingleInstruction(
-                currentProgram.instructions[rip],
-                currentProgram.Memory,
+                currentProgram.readInstruction(rip),
+                currentProgram.memoryManager,
                 currentProgram
             );
             if (common.ReadRegister("RIP") == rip) {
