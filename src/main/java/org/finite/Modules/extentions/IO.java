@@ -5,7 +5,7 @@ import org.finite.ModuleManager.MNIMethodObject;
 import org.finite.ModuleManager.annotations.MNIClass;
 import org.finite.ModuleManager.annotations.MNIFunction;
 import org.finite.*;
-import org.finite.Parsing;
+//import org.finite.Parsing;
 @MNIClass("IO")
 public class IO {
     @MNIFunction(name = "write", module = "IO")

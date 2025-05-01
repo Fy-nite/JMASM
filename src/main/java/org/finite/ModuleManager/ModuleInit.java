@@ -13,7 +13,7 @@ import org.finite.common;
 import org.finite.ModuleManager.annotations.MNIClass;
 import org.finite.ModuleManager.annotations.MNIFunction;
 import org.finite.ModuleManager.examples.MathModule;
-import org.finite.Interpreterops;  // Changed from interpreterops to Interpreterops
+
 import org.finite.Modules.extentions.IO;
 import org.finite.Modules.extentions.StringOperations;
 
@@ -45,7 +45,7 @@ public class ModuleInit {
             ModuleInit.registerBuiltInModule(MathModule.class);
             ModuleInit.registerBuiltInModule(StringOperations.class);
             ModuleInit.registerBuiltInModule(IO.class);
-            ModuleInit.registerBuiltInModule(Interpreterops.class);  // Changed from interpreterops to Interpreterops
+
          
     }
     private static String getModuleDirectory() {
@@ -130,7 +130,7 @@ public class ModuleInit {
 
     public static void registerBuiltInModule(Class<?> moduleClass) {
         try {
-            logger.info("Registering built-in module: {}", moduleClass.getName());
+            common.dbgprint("Registering built-in module: {}", moduleClass.getName());
             registerClassMethods("built-in", moduleClass);
         } catch (Exception e) {
             logger.error("Failed to register built-in module: {}", moduleClass.getName(), e);

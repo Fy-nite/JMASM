@@ -24,10 +24,10 @@ public class Main {
             
             if (ArgumentParser.Args.debug) {
                 logger.info("Starting MASM interpreter");
-            }
             System.out.print("\033[H\033[2J");
             System.out.flush();
-            
+            }
+
             ModuleInit.initallmodules();  // Initialize modules
 
             if (arguments.help) {
@@ -54,7 +54,7 @@ public class Main {
             }
             else {
             // get the argument regardless, could be a file or a command
-                String arg = arguments.getEffectiveFile();
+                String arg = ArgumentParser.Args.getEffectiveFile();
                 if (arg != null) {
                     logger.info("Running file: {}", arg);
                     common.box("java MASM interpreter", "2025 (C) finite\nrunning file: " + arg + "\n", "info");

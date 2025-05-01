@@ -1,4 +1,6 @@
 lbl main
-mov RAX 1
-
-out 1 [0 / 0]
+mov RAX 5
+mov RBX 50
+mov $250 65
+out 1 [RAX * RBX]
+out 1 $[RAX * RBX]

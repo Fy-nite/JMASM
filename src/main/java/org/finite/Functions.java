@@ -14,7 +14,7 @@ import org.finite.Exceptions.MASMException;
 import org.finite.interp.instructions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.finite.Parsing;
+
 
 public class Functions {
 
@@ -22,119 +22,98 @@ public class Functions {
         Functions.class
     );
 
-    // pass [<reg|immediate> +|-|* <reg|immediate>] and it will return the value of the calculation
-    ///
-    /// @param expression the expression to calculate
-    /// @param instrs the instructions object
-    /// @return the value of the expression
-    /// @throws MASMException if the expression is invalid
-    /// @throws NumberFormatException if the expression is not a number
-    /// @throws ArithmeticException if the expression is invalid
-    public static int calculate_box_value(
-        String expression,
-        instructions instrs
-    ) {
-        // calculate things like [RAX + RDX] or [2 - 5] (or [2 * 5])
+    public static int calculate_box_value(String expression, instructions instrs) {
 
-        // remove the brackets
-        expression = expression.replace("[", "").replace("]", "");
-        // split the expression by spaces
-        String[] parts = expression.split(" ");
-        // check if the expression is valid
-        if (parts.length != 3) {
-            throw new MASMException(
-                "Invalid expression: " + expression,
-                instrs.currentLine,
-                instrs.currentlineContents,
-                "Error in instruction: calculate_box_value"
-            );
+        // is the first thing a $
+        boolean isDollar = expression.startsWith("$");
+        common.dbgprint("Expression starts with $: {}", isDollar);
+        // Remove leading $ if present
+        if (isDollar) {
+            expression = expression.substring(1); // we will use this later
+            common.dbgprint("Expression starts with $, treating as memory address");
+            common.dbgprint("Expression: {}", expression);
+        }
+        // Remove brackets and trim
+        expression = expression.replace("[", "").replace("]", "").trim();
+        common.dbgprint("Calculating expression: {}", expression);
+
+        // Split by spaces and handle multiple operands
+        String[] parts = expression.split("\\s+");
+        
+        if (parts.length < 1) {
+            throw new MASMException("Empty expression", instrs.currentLine, 
+                instrs.currentlineContents, "Error in array offset calculation");
         }
 
-        // get the first part
-        String firstPart = parts[0].trim();
-        // get the second part
-        String operator = parts[1].trim();
-        // get the third part
-        String secondPart = parts[2].trim();
-        // check if the first part is a register or immediate
-        int firstValue;
-        int secondValue;
-        int result = 0;
-        if (firstPart.startsWith("R")) {
-            // check if the register is valid
-            if (!Parsing.INSTANCE.isValidRegister(firstPart)) {
-                throw new MASMException(
-                    "Invalid register: " + firstPart,
-                    instrs.currentLine,
-                    instrs.currentlineContents,
-                    "Error in instruction: calculate_box_value"
-                );
-            }
-            // get the value of the register
-            firstValue = common.ReadRegister(firstPart);
-        } else {
-            // check if the immediate is valid
-            try {
-                firstValue = Integer.parseInt(firstPart);
-            } catch (NumberFormatException e) {
-                throw new MASMException(
-                    "Invalid immediate: " + firstPart,
-                    instrs.currentLine,
-                    instrs.currentlineContents,
-                    "Error in instruction: calculate_box_value"
-                );
-            }
-        }
+        // Initialize result with first operand
+        int result = getOperandValue(parts[0], instrs);
 
-        // check if the second part is a register or immediate
-        if (secondPart.startsWith("R")) {
-            // check if the register is valid
-            if (!Parsing.INSTANCE.isValidRegister(secondPart)) {
-                throw new MASMException(
-                    "Invalid register: " + secondPart,
-                    instrs.currentLine,
-                    instrs.currentlineContents,
-                    "Error in instruction: calculate_box_value"
-                );
+        // Process remaining operands and operators
+        for (int i = 1; i < parts.length; i += 2) {
+            if (i + 1 >= parts.length) {
+                throw new MASMException("Missing operand after operator", instrs.currentLine,
+                    instrs.currentlineContents, "Error in array offset calculation");
             }
-            // get the value of the register
-            secondValue = common.ReadRegister(secondPart);
-        } else {
-            // check if the immediate is valid
-            try {
-                secondValue = Integer.parseInt(secondPart);
-            } catch (NumberFormatException e) {
-                throw new MASMException(
-                    "Invalid immediate: " + secondPart,
-                    instrs.currentLine,
-                    instrs.currentlineContents,
-                    "Error in instruction: calculate_box_value"
-                );
+            
+            String operator = parts[i];
+            int nextValue = getOperandValue(parts[i + 1], instrs);
+            
+            switch (operator) {
+                case "+":
+                    result += nextValue;
+                    break;
+                case "-":
+                    result -= nextValue;
+                    break;
+                case "*":
+                    result *= nextValue;
+                    break;
+                case "/":
+                    if (nextValue == 0) {
+                        throw new MASMException("Division by zero", instrs.currentLine,
+                            instrs.currentlineContents, "Error in array offset calculation");
+                    }
+                    result /= nextValue;
+                    break;
+                default:
+                    throw new MASMException("Invalid operator: " + operator, instrs.currentLine,
+                        instrs.currentlineContents, "Error in array offset calculation");
             }
         }
-        // check if the operator is valid
-        if (operator.equals("+")) {
-            result = firstValue + secondValue;
-        } else if (operator.equals("-")) {
-            result = firstValue - secondValue;
-        } else if (operator.equals("*")) {
-            result = firstValue * secondValue;
-        } else if (operator.equals("/")) {
-            // check for division by zero
-            if (secondValue == 0) {
-                throw new ArithmeticException("fuck you buddy. no maths for you");
-            }
-            result = firstValue / secondValue;
-        } else {
-            throw new MASMException(
-                "Invalid operator: " + operator,
-                instrs.currentLine,
-                instrs.currentlineContents,
-                "Error in instruction: calculate_box_value"
-            );
+        
+        common.dbgprint("Calculated result: {}", result);
+
+        // we should check if the operation wants to use the dollar sign
+        if (isDollar)
+        {
+            return common.ReadMemory(instrs.Memory, result);
         }
-        // return the result
-        return result;
+        else
+        {
+            return result;
+        }
+    }
+
+    private static int getOperandValue(String operand, instructions instrs) {
+        if (operand == null || operand.trim().isEmpty()) {
+            throw new MASMException("Empty operand", instrs.currentLine,
+                instrs.currentlineContents, "Error in array offset calculation");
+        }
+        
+        operand = operand.trim();
+        
+        // Check if it's a register
+        if (Parsing.INSTANCE.isValidRegister(operand)) {
+            return common.ReadRegister(operand);
+        }
+        
+        // Check if it's a number
+        try {
+            return Integer.parseInt(operand);
+        } catch (NumberFormatException e) {
+            throw new MASMException("Invalid operand: " + operand, instrs.currentLine,
+                instrs.currentlineContents, "Error in array offset calculation");
+        }
     }
 
     public static String include(String filename, String CurrentFileContents) {
@@ -380,8 +359,36 @@ public class Functions {
                 fileDescriptor = common.ReadRegister(fd);
             }
 
-            // Handle memory address starting with $
-            if (source.startsWith("$")) {
+            // Handle memory address starting with $[
+            if (source.startsWith("$[") && source.endsWith("]")) {
+                // Remove $[ and ] to get the expression
+                String expression = source.substring(2, source.length() - 1);
+                // Calculate the memory address using the expression
+                int memoryAddress = calculate_box_value(expression, instrs);
+                
+                // Read from the calculated memory address
+                if (memoryAddress < 0 || memoryAddress >= memory.length) {
+                    throw new MASMException("Memory address out of bounds: " + memoryAddress,
+                        instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
+                }
+                
+                // Try to read as null-terminated string first
+                StringBuilder sb = new StringBuilder();
+                int i = 0;
+                while (memoryAddress + i < memory.length && memory[memoryAddress + i] != 0) {
+                    sb.append((char) memory[memoryAddress + i]);
+                    i++;
+                }
+                value = Parsing.INSTANCE.processEscapeSequences(sb.toString());
+
+                // If empty, use numeric value
+                if (value.isEmpty()) {
+                    value = Integer.toString(memory[memoryAddress]);
+                }
+            }
+            // Handle old $address format
+            else if (source.startsWith("$")) {
+                // Rest of existing $ handling code...
                 String addr = source.substring(1);
                 try {
                     // Check if it's a direct memory address
@@ -420,37 +427,34 @@ public class Functions {
                     }
                 }
             }
-            // handle [<reg|immediate> +|-|*]
-
-            else if (source.startsWith("[")) {
-                // Handle arithmetic expressions
+         
+            else if (source.startsWith("[") && source.endsWith("]")) {
                 String expression = source.substring(1, source.length() - 1);
-                int result = calculate_box_value(expression, instrs);
-                value = Integer.toString(result);
-            } else if (source.startsWith("R")) {
-                // Register access
+                value = Integer.toString(calculate_box_value(expression, instrs));
+
+                
+
+            }
+            else if (source.startsWith("R")) {
                 if (!Parsing.INSTANCE.isValidRegister(source)) {
-                    throw new MASMException("Invalid register: " + source, instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
+                    throw new MASMException("Invalid register: " + source, 
+                        instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
                 }
                 value = Integer.toString(common.ReadRegister(source));
             }
             else {
-                // Direct register or literal value
                 try {
-                    // Try parsing as number first
                     int numValue = Integer.parseInt(source);
                     value = Integer.toString(numValue);
                 } catch (NumberFormatException e) {
                     try {
-                        // Try reading from register
                         value = Integer.toString(common.ReadRegister(source));
                     } catch (Exception ex) {
-                        // If all else fails, treat as string literal with escape sequences
                         value = Parsing.INSTANCE.processEscapeSequences(source);
                     }
                 }
             }
-            //print("DEBUG: Writing to file descriptor %d: %s\n", fileDescriptor, value);
+
             if (fileDescriptor == 1) {
                 print("%s", value);
             } else if (fileDescriptor == 2) {

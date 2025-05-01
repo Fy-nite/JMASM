@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.*;
 import java.io.*;
 
-import static org.finite.interp.arguments;
 
 public class common {
     public static boolean isRunning = true;
@@ -50,11 +49,11 @@ public class common {
     
     public static String[] information = {
         "max Memory: " + memory.length,
-        "Number of Registers: " + Integer.toString(registers.length),
+        "Number of Registers: " + registers.length,
         "Registers: " + joined(registers,","),
-        "Number of instructions: " +  Integer.toString(instructions.length),
+        "Number of instructions: " + instructions.length,
         "Instructions: " + joined(instructions,","),
-        "Version: " + Float.toString(version)
+        "Version: " + version
     };
 
     public static Map<String, Integer> registersMap = new HashMap<String, Integer>() {{
@@ -91,7 +90,7 @@ public class common {
     /**
      * Dumps the contents of the memory array to the console.
      */
-    public static void dumpMemory(int memory[]) {
+    public static void dumpMemory(int[] memory) {
         // Check if the memory array has been initialized
         if (memory == null || memory.length != MAX_MEMORY) {
             System.err.println("Error: Memory array not initialized or incorrect size.");
@@ -204,7 +203,7 @@ public class common {
     }
     public static void dumpRegisters() {
         for (int i = 0; i < 16; i++) {
-            print("%s: %d", registers[i], memory[i]);
+            //print("%s: %d", registers[i], memory[i]);
         }
     }
 
@@ -227,9 +226,9 @@ public class common {
             printerr("Error: Invalid register name: " + register + "\n");
             return -1;
         }
-        if (ArgumentParser.Args.debug) {
-            print("Reading %d from %s\n", memory[registersMap.get(register)], register);
-        }
+//        if (ArgumentParser.Args.debug) {
+//            print("Reading %d from %s\n", memory[registersMap.get(register)], register);
+//        }
         return memory[registersMap.get(register)];
     }
 
@@ -263,22 +262,21 @@ public class common {
 
     public static void box(String title, String message, String type) {
         String color;
-        boolean iserror = false;
-        switch (type.toLowerCase()) {
-            case "error":
-                iserror = true;
-                color = "\u001B[31m"; // Red
-                break;
-            case "info":
-                color = "\u001B[32m"; // Green
-                break;
-            case "warning":
-                color = "\u001B[33m"; // Yellow
-                break;
-            default:
-                color = "\u001B[34m"; // Blue
-                break;
+        if (!ArgumentParser.Args.debug) {
+            // If not in debug mode, return early to avoid printing
+            return;
         }
+
+        boolean iserror = false;
+        color = switch (type.toLowerCase()) {
+            case "error" -> {
+                iserror = true;
+                yield "\u001B[31m";
+            }
+            case "info" -> "\u001B[32m"; // Green
+            case "warning" -> "\u001B[33m"; // Yellow
+            default -> "\u001B[34m"; // Blue
+        };
 
         String reset = "\u001B[0m";
         String[] lines = message.split("\n");
@@ -355,7 +353,7 @@ public class common {
      * @param value   The value to write to memory.
      */
 
-    public static void WriteMemory(int memory[], int address, int value) {
+    public static void WriteMemory(int[] memory, int address, int value) {
         memory[address] = value;
     }
 
@@ -370,7 +368,7 @@ public class common {
      * @param address The memory address of the value to read.
      * @return The value stored at the specified memory address.
      */
-    public static int ReadMemory(int memory[], int address) {
+    public static int ReadMemory(int[] memory, int address) {
         // Directly access the element at the given index from the 'memory' array
         if (address < 0 || address >= MAX_MEMORY) {
             System.err.println("Error: Invalid memory address.");

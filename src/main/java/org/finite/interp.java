@@ -372,10 +372,10 @@ public class interp {
             if (ArgumentParser.Args.debug) {
                 common.box("Debug", "Executing instruction: " + instr.name, "info");
                 //read common.registersMap
-                for (String key : common.registersMap.keySet()) {
-                    print("%s: %d\n", key, common.ReadRegister(key));
-                    print("en");
-                }
+//                for (String key : common.registersMap.keySet()) {
+//                    print("%s: %d\n", key, common.ReadRegister(key));
+//                    print("en");
+//                }
             }
             
             switch (instr.name.toLowerCase()) {
