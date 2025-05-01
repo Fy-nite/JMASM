@@ -1,8 +1,4 @@
-#include "stdio.io"
-
 lbl main
-    mov RAX 1
-    mov RBX 100
-    db $100 "Hello, World!\n"
-    out RAX $RBX
-    hlt
+mov RAX 1
+
+out 1 [0 / 0]

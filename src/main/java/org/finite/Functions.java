@@ -22,6 +22,121 @@ public class Functions {
         Functions.class
     );
 
+    // pass [<reg|immediate> +|-|* <reg|immediate>] and it will return the value of the calculation
+    ///
+    /// @param expression the expression to calculate
+    /// @param instrs the instructions object
+    /// @return the value of the expression
+    /// @throws MASMException if the expression is invalid
+    /// @throws NumberFormatException if the expression is not a number
+    /// @throws ArithmeticException if the expression is invalid
+    public static int calculate_box_value(
+        String expression,
+        instructions instrs
+    ) {
+        // calculate things like [RAX + RDX] or [2 - 5] (or [2 * 5])
+
+        // remove the brackets
+        expression = expression.replace("[", "").replace("]", "");
+        // split the expression by spaces
+        String[] parts = expression.split(" ");
+        // check if the expression is valid
+        if (parts.length != 3) {
+            throw new MASMException(
+                "Invalid expression: " + expression,
+                instrs.currentLine,
+                instrs.currentlineContents,
+                "Error in instruction: calculate_box_value"
+            );
+        }
+
+        // get the first part
+        String firstPart = parts[0].trim();
+        // get the second part
+        String operator = parts[1].trim();
+        // get the third part
+        String secondPart = parts[2].trim();
+        // check if the first part is a register or immediate
+        int firstValue;
+        int secondValue;
+        int result = 0;
+        if (firstPart.startsWith("R")) {
+            // check if the register is valid
+            if (!Parsing.INSTANCE.isValidRegister(firstPart)) {
+                throw new MASMException(
+                    "Invalid register: " + firstPart,
+                    instrs.currentLine,
+                    instrs.currentlineContents,
+                    "Error in instruction: calculate_box_value"
+                );
+            }
+            // get the value of the register
+            firstValue = common.ReadRegister(firstPart);
+        } else {
+            // check if the immediate is valid
+            try {
+                firstValue = Integer.parseInt(firstPart);
+            } catch (NumberFormatException e) {
+                throw new MASMException(
+                    "Invalid immediate: " + firstPart,
+                    instrs.currentLine,
+                    instrs.currentlineContents,
+                    "Error in instruction: calculate_box_value"
+                );
+            }
+        }
+
+        // check if the second part is a register or immediate
+        if (secondPart.startsWith("R")) {
+            // check if the register is valid
+            if (!Parsing.INSTANCE.isValidRegister(secondPart)) {
+                throw new MASMException(
+                    "Invalid register: " + secondPart,
+                    instrs.currentLine,
+                    instrs.currentlineContents,
+                    "Error in instruction: calculate_box_value"
+                );
+            }
+            // get the value of the register
+            secondValue = common.ReadRegister(secondPart);
+        } else {
+            // check if the immediate is valid
+            try {
+                secondValue = Integer.parseInt(secondPart);
+            } catch (NumberFormatException e) {
+                throw new MASMException(
+                    "Invalid immediate: " + secondPart,
+                    instrs.currentLine,
+                    instrs.currentlineContents,
+                    "Error in instruction: calculate_box_value"
+                );
+            }
+        }
+        // check if the operator is valid
+        if (operator.equals("+")) {
+            result = firstValue + secondValue;
+        } else if (operator.equals("-")) {
+            result = firstValue - secondValue;
+        } else if (operator.equals("*")) {
+            result = firstValue * secondValue;
+        } else if (operator.equals("/")) {
+            // check for division by zero
+            if (secondValue == 0) {
+                throw new ArithmeticException("fuck you buddy. no maths for you");
+            }
+            result = firstValue / secondValue;
+        } else {
+            throw new MASMException(
+                "Invalid operator: " + operator,
+                instrs.currentLine,
+                instrs.currentlineContents,
+                "Error in instruction: calculate_box_value"
+            );
+        }
+        // return the result
+        return result;
+    }
+
     public static String include(String filename, String CurrentFileContents) {
         common.dbgprint("Including file: {}", filename);
         // Convert the dot notation to path
@@ -304,7 +419,22 @@ public class Functions {
                         value = Integer.toString(memory[regAddr]);
                     }
                 }
-            } else {
+            }
+            // handle [<reg|immediate> +|-|*]
+
+            else if (source.startsWith("[")) {
+                // Handle arithmetic expressions
+                String expression = source.substring(1, source.length() - 1);
+                int result = calculate_box_value(expression, instrs);
+                value = Integer.toString(result);
+            } else if (source.startsWith("R")) {
+                // Register access
+                if (!Parsing.INSTANCE.isValidRegister(source)) {
+                    throw new MASMException("Invalid register: " + source, instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
+                }
+                value = Integer.toString(common.ReadRegister(source));
+            }
+            else {
                 // Direct register or literal value
                 try {
                     // Try parsing as number first
