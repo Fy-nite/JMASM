@@ -1,3 +1,4 @@
+
 package org.finite;
 
 import static org.finite.common.print;
@@ -1101,3 +1102,4 @@ public class Functions {
 
     
 }
+

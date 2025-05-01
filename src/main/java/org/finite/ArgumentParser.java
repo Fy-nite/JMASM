@@ -1,3 +1,4 @@
+
 package org.finite;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -20,7 +21,7 @@ public class ArgumentParser {
         @Parameter(names = {"--file", "-f"}, description = "Path to the MASM file to run")
         public static String file = null;
 
-        @Parameter(names = {"--info","-info"}, description = "display's information about the current runtime environment")
+        @Parameter(names = {"--info","-info"}, description = "display's infomation about the current runtime enviroment")
         public static Boolean info = false;
 
         // Get the effective file path from either main parameter or --file option
@@ -52,3 +53,4 @@ public class ArgumentParser {
         public static boolean outputDebug = false;
     }
 }
+

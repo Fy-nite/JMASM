@@ -13,6 +13,9 @@ import org.finite.ModuleManager.MNIHandler;
 import org.finite.Exceptions.MASMException;  // Add this import
 import org.finite.Exceptions.MNIException;
 import org.finite.ArgumentParser;
+import org.finite.Memory.MemoryMappedManager;
+import org.finite.Memory.MemoryAdapter;
+
 public class interp {
 
     public static boolean testmode = true;
@@ -75,10 +78,9 @@ public class interp {
         String[] processedOps = preprocessed.split("\n");
    
         interp.instructions instrs = new interp.instructions();
-        instrs.instructions = new interp.instruction[100]; // reasonable default size
-        instrs.Memory = new int[1000]; // reasonable default memory size
+        instrs.memoryManager = MemoryMappedManager.getInstance();
+        instrs.memory_size = instrs.memoryManager.getMemorySize();
         instrs.length = 0;
-        instrs.memory_size = 1000;
         // calculate the total size
         int totalSize = Arrays.stream(ops).mapToInt(String::length).sum();
         instrs.max_labels = totalSize / 10;
@@ -143,8 +145,7 @@ public class interp {
                     }
                 }
 
-                instrs.instructions[instrs.length] = instr;
-                instrs.Memory[instrs.length] = instrs.length; // Add this line to populate memory
+                instrs.writeInstruction(instrs.length, instr);
                 instrs.length++;
             }
         }
@@ -162,15 +163,14 @@ public class interp {
     }
 
     public static class instruction {
-
-        String name;
-        int opcode;
-        int iop1;
-        int iop2;
-        String sop1;
-        String sop2;
-        int lineNumber;  // Add line number tracking
-        String originalLine;  // Add original line tracking
+        public String name;
+        public int opcode;
+        public int iop1;
+        public int iop2;
+        public String sop1;
+        public String sop2;
+        public int lineNumber;
+        public String originalLine;
     }
 
     public static Functions functions = new Functions();
@@ -179,24 +179,37 @@ public class interp {
     // instructions class
     public static class instructions {
 
-        // holds all the instructions
-        public instruction[] instructions;
-        // holds the length of the instructions array
-        public int length;
-        // holds the memory size we requested
+        public MemoryMappedManager memoryManager;
         public int memory_size;
         public int max_labels;
         public int max_instructions;
-        public int Memory[];
         public int labels[];
         public Functions functions;
         public HashMap<String, Integer> labelMap; 
         public int currentLine;  // Add current line tracking
         public String currentlineContents;  // Add current line contents tracking
-         
+        public int length;
 
         public instructions() {
+            memoryManager = MemoryMappedManager.getInstance();
+            memory_size = memoryManager.getMemorySize();
             labelMap = new HashMap<>();
+        }
+
+        public void writeInstruction(int index, instruction instr) {
+            memoryManager.write(index * 4, instr.opcode);
+            memoryManager.write(index * 4 + 1, instr.iop1);
+            memoryManager.write(index * 4 + 2, instr.iop2);
+            // Store additional fields as needed
+        }
+
+        public instruction readInstruction(int index) {
+            instruction instr = new instruction();
+            instr.opcode = memoryManager.read(index * 4);
+            instr.iop1 = memoryManager.read(index * 4 + 1);
+            instr.iop2 = memoryManager.read(index * 4 + 2);
+            // Read additional fields as needed
+            return instr;
         }
     }
 
@@ -207,8 +220,7 @@ public class interp {
 
         // Only enforce main label in non-test mode
         if (!testMode && mainAddress == null) {
-           throw new MASMException("No 'main' label found in instructions", instrs.currentLine, instrs.currentlineContents, "Error in instruction: main");
-          
+            throw new MASMException("No 'main' label found in instructions", instrs.currentLine, instrs.currentlineContents, "Error in instruction: main");
         }
 
         // In test mode, start from instruction 0 if no main
@@ -216,8 +228,9 @@ public class interp {
         String instrString = "";
         int rip = common.ReadRegister("RIP");
         common.isRunning = true;  // Reset running state
-        while (rip < instrs.length && common.isRunning) {
-            instruction instr = instrs.instructions[rip];
+        MemoryAdapter adapter = new MemoryAdapter(instrs.memoryManager); // Use MemoryAdapter
+        while (common.isRunning) {
+            instruction instr = instrs.readInstruction(rip);
             if (ArgumentParser.Args.debug) {
                 common.box(
                     "Debug",
@@ -230,7 +243,7 @@ public class interp {
             // Track current line contents
             instrString = instr.name + " " + (instr.sop1 != null ? instr.sop1 : "") + " " + (instr.sop2 != null ? instr.sop2 : "");
             instrs.currentlineContents = instrString;
-            terp.ExecuteSingleInstruction(instr, instrs.Memory, instrs);
+            terp.ExecuteSingleInstruction(instr, adapter, instrs); // Pass adapter instead of memoryManager
             if (!common.isRunning) break;  // Exit if HLT was called
             rip = common.ReadRegister("RIP") + 1;
             common.WriteRegister("RIP", rip);
@@ -242,18 +255,16 @@ public class interp {
             print(
                 "Instruction %d: %s %s %s\n",
                 i,
-                instrs.instructions[i].name,
-                instrs.instructions[i].sop1,
-                instrs.instructions[i].sop2
+                instrs.readInstruction(i).name,
+                instrs.readInstruction(i).sop1,
+                instrs.readInstruction(i).sop2
             );
         }
     }
 
     public static void runFile(String filename) {
         instructions instrs = new instructions();
-        instrs.instructions = new instruction[21463]; // reasonable default size
-        instrs.Memory = new int[common.MAX_MEMORY]; // reasonable default memory size
-        instrs.length = 0;
+        instrs.memoryManager = MemoryMappedManager.getInstance();
         instrs.memory_size = common.MAX_MEMORY;
         instrs.max_labels = 21463;
         instrs.max_instructions = 21463;
@@ -333,8 +344,7 @@ public class interp {
                         }
                     }
 
-                    instrs.instructions[instrs.length] = instr;
-                    instrs.Memory[instrs.length] = instrs.length;
+                    instrs.writeInstruction(instrs.length, instr);
                     instrs.length++;
                 }
             }
@@ -356,16 +366,16 @@ public class interp {
             print(
                 "Instruction %d: %s %s %s\n",
                 i,
-                instrs.instructions[i].name,
-                instrs.instructions[i].sop1,
-                instrs.instructions[i].sop2
+                instrs.readInstruction(i).name,
+                instrs.readInstruction(i).sop1,
+                instrs.readInstruction(i).sop2
             );
         }
     }
 
     public int ExecuteSingleInstruction(
         instruction instr,
-        int[] memory,
+        MemoryMappedManager memory,
         instructions instrs
     ) {
         try {
@@ -380,25 +390,25 @@ public class interp {
             
             switch (instr.name.toLowerCase()) {
                 case "mov":
-                    functions.mov(memory, instr.sop1, instr.sop2,instrs);
+                    functions.mov(memory, instr.sop1, instr.sop2, instrs);
                     break;
                 case "dumpinstr":
                     dumpinstr(instrs);
                     break;
                 case "add":
-                    functions.add(memory, instr.sop1, instr.sop2,instrs);
+                    functions.add(memory, instr.sop1, instr.sop2, instrs);
                     break;
                 case "sub":
-                    functions.sub(memory, instr.sop1, instr.sop2,instrs);
+                    functions.sub(memory, instr.sop1, instr.sop2, instrs);
                     break;
                 case "mul":
-                    functions.mul(memory, instr.sop1, instr.sop2,instrs);
+                    functions.mul(memory, instr.sop1, instr.sop2, instrs);
                     break;
                 case "div":
-                    functions.div(memory, instr.sop1, instr.sop2,instrs);
+                    functions.div(memory, instr.sop1, instr.sop2, instrs);
                     break;
                 case "cmp":
-                    functions.cmp(memory, instr.sop1, instr.sop2,instrs);
+                    functions.cmp(memory, instr.sop1, instr.sop2, instrs);
                     break;
                 case "ret":
                     functions.ret(instrs);
@@ -566,11 +576,13 @@ public class interp {
     }
 
     // Helper method to parse values (either direct numbers or register references)
-    private int parseValue(String arg, int[] memory) {
+    private int parseValue(String arg, MemoryMappedManager memory) {
+        MemoryAdapter adapter = new MemoryAdapter(memory);
+        // Update implementation to use adapter instead of direct array access
         if (arg.startsWith("$")) {
             // Memory reference
             int addr = Integer.parseInt(arg.substring(1));
-            return memory[addr];
+            return adapter.read(addr);
         } else if (arg.startsWith("R")) {
             // Register reference
             return common.ReadRegister(arg);
