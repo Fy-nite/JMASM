@@ -1,5 +1,5 @@
 ## MASM Stdlib documentation
 
-in these files, you will learn about the standard lib for micro assembly.
+Welcome to the official Standard lib documentation for MicroAssembly!
 
-currently as this is a work in progress, the documentation is not complete and will contain errors and or missing information.  
+this file and the many others inside this folder allow not just you but our tallented developers to build the program's you love 

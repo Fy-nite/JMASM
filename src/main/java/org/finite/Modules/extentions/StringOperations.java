@@ -32,11 +32,23 @@ public class StringOperations {
 
 
     }
-    @MNIFunction(name = "length", module = "StringOperations")
+    @MNIFunction(name = "len", module = "StringOperations")
     public static void length(MNIMethodObject obj)
     {
-        String st1 = obj.readString(obj.arg1);
+        int reg;
+        String st1;
+        // check if the first argument is a register
+        if (obj.reg1.startsWith("R"))
+        {
+            reg = obj.getRegister(obj.reg1);
+            st1 = Integer.toString(reg);
+        }
+        else
+        {
+            st1 = obj.readString(obj.arg1);
+        }
         obj.setRegister(obj.reg2, st1.length());
+            
 
     }
     //     MNI StringOperations.split R0 R1 $5000 ; Split result into array at $5000

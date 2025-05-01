@@ -1,6 +1,5 @@
-package org.finite.Common;
+package org.finite;
 
-import org.finite.ReadResourceFile;
 import org.finite.Exceptions.MASMException;
 
 import java.util.HashMap;
@@ -36,6 +35,28 @@ public class common {
     public static String[] registers = {"RAX", "RBX", "RCX", "RDX", "RBP", "RSP", "RIP", "RDI", "RSI", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "RFLAGS"};
     public static String[] instructions = {"MOV", "ADD", "SUB", "MUL", "DIV", "AND", "OR", "XOR", "NOT", "SHL", "SHR", "CMP", "JMP", "JE", "JNE", "JG", "JGE", "JL", "JLE", "CALL", "RET", "PUSH", "POP", "HLT", "NOP","OUT"};
     public static int[] memory = new int[MAX_MEMORY];
+    public static float version = 1;
+    
+    public static String joined(String[] items, String separator) {
+        String output = "";
+        for (int i = 0; i < items.length; i++) {
+            output += items[i];
+            if (i < items.length - 1) {
+                output += separator;
+            }
+        }
+        return output;
+    }
+    
+    public static String[] information = {
+        "max Memory: " + memory.length,
+        "Number of Registers: " + Integer.toString(registers.length),
+        "Registers: " + joined(registers,","),
+        "Number of instructions: " +  Integer.toString(instructions.length),
+        "Instructions: " + joined(instructions,","),
+        "Version: " + Float.toString(version)
+    };
+
     public static Map<String, Integer> registersMap = new HashMap<String, Integer>() {{
         put("RAX", 0);
         put("RBX", 1);
@@ -99,6 +120,33 @@ public class common {
             e.printStackTrace();
         }
 
+    }
+
+    public static void WriteToFile(String filename, String contents)
+    {
+        try {
+            FileWriter writer = new FileWriter(filename);
+            writer.write(contents);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void dbgprint(Object...  message)
+    {
+        if (ArgumentParser.Args.debug)
+        {
+            print(message + "\n");
+        }
+    }
+
+    public static void dbgprinterr(String... message)
+    {
+        if (ArgumentParser.Args.debug)
+        {
+            printerr(message + "\n");
+        }
     }
 
     public static String ReadFromFile(String filename)
@@ -166,7 +214,7 @@ public class common {
             printerr("Error: Invalid register name: " + Register + "\n");
             return;
         }
-        if (arguments.debug)
+        if (ArgumentParser.Args.debug)
         {
 
             print("Writing %d to %s\n", value, Register);
@@ -175,14 +223,11 @@ public class common {
     }
 
     public static int ReadRegister(String register) {
-        // use the hashmap to get the register
         if (!registersMap.containsKey(register)) {
             printerr("Error: Invalid register name: " + register + "\n");
             return -1;
         }
-        //print("Reading %s\n",register);
-       // print("Reading %d from %s\n", memory[registersMap.get(register)], register);
-        if (arguments.debug) {
+        if (ArgumentParser.Args.debug) {
             print("Reading %d from %s\n", memory[registersMap.get(register)], register);
         }
         return memory[registersMap.get(register)];
@@ -190,6 +235,7 @@ public class common {
 
     private static Scanner scanner = null;
     //TODO: remove this function at somepoint because wtf?
+    @Deprecated(forRemoval = true, since = "1.0")
     public static String inbox(String prompt) {
         try {
             if (scanner == null) {
@@ -224,6 +270,11 @@ public class common {
                 color = "\u001B[31m"; // Red
                 break;
             case "info":
+                color = "\u001B[32m"; // Green
+                break;
+            case "warning":
+                color = "\u001B[33m"; // Yellow
+                break;
             default:
                 color = "\u001B[34m"; // Blue
                 break;

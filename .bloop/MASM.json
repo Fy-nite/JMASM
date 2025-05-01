@@ -1,0 +1,645 @@
+{
+    "version": "1.4.0",
+    "project": {
+        "name": "MASM",
+        "directory": "/Users/charlie/Documents/git/jmasm",
+        "workspaceDir": "/Users/charlie/Documents/git/jmasm",
+        "sources": [
+            "/Users/charlie/Documents/git/jmasm/src/main/java",
+            "/Users/charlie/Documents/git/jmasm/src/main/scala"
+        ],
+        "dependencies": [
+            
+        ],
+        "classpath": [
+            "/Users/charlie/Documents/git/jmasm/target/classes",
+            "/Users/charlie/.m2/repository/org/apache/commons/commons-lang3/3.14.0/commons-lang3-3.14.0.jar",
+            "/Users/charlie/.m2/repository/org/slf4j/slf4j-api/2.0.12/slf4j-api-2.0.12.jar",
+            "/Users/charlie/.m2/repository/ch/qos/logback/logback-classic/1.4.14/logback-classic-1.4.14.jar",
+            "/Users/charlie/.m2/repository/ch/qos/logback/logback-core/1.4.14/logback-core-1.4.14.jar",
+            "/Users/charlie/.m2/repository/org/tomlj/tomlj/1.1.1/tomlj-1.1.1.jar",
+            "/Users/charlie/.m2/repository/org/jcommander/jcommander/2.0/jcommander-2.0.jar",
+            "/Users/charlie/.m2/repository/com/beust/jcommander/1.81/jcommander-1.81.jar",
+            "/Users/charlie/.m2/repository/org/jetbrains/annotations/26.0.2/annotations-26.0.2.jar",
+            "/Users/charlie/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/2.1.10/kotlin-stdlib-jdk8-2.1.10.jar",
+            "/Users/charlie/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/2.1.10/kotlin-stdlib-2.1.10.jar",
+            "/Users/charlie/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/2.1.10/kotlin-stdlib-jdk7-2.1.10.jar",
+            "/Users/charlie/.m2/repository/org/jline/jline/3.5.0/jline-3.5.0.jar",
+            "/Users/charlie/.m2/repository/org/python/jython-standalone/2.7.3/jython-standalone-2.7.3.jar",
+            "/Users/charlie/.m2/repository/org/scala-lang/scala-library/2.13.12/scala-library-2.13.12.jar",
+            "/Users/charlie/.m2/repository/org/scala-lang/scala-library/2.13.12/scala-library-2.13.12.jar"
+        ],
+        "out": "/Users/charlie/Documents/git/jmasm/target",
+        "classesDir": "/Users/charlie/Documents/git/jmasm/target/classes",
+        "resources": [
+            "/Users/charlie/Documents/git/jmasm/src/main/resources"
+        ],
+        "scala": {
+            "organization": "org.scala-lang",
+            "name": "scala-compiler",
+            "version": "2.13.12",
+            "options": [
+                "-release",
+                "20"
+            ],
+            "jars": [
+                "/Users/charlie/.m2/repository/org/scala-lang/scala-compiler/2.13.12/scala-compiler-2.13.12.jar",
+                "/Users/charlie/.m2/repository/org/scala-lang/scala-library/2.13.12/scala-library-2.13.12.jar",
+                "/Users/charlie/.m2/repository/io/github/java-diff-utils/java-diff-utils/4.12/java-diff-utils-4.12.jar",
+                "/Users/charlie/.m2/repository/org/jline/jline/3.22.0/jline-3.22.0.jar",
+                "/Users/charlie/.m2/repository/net/java/dev/jna/jna/5.13.0/jna-5.13.0.jar",
+                "/Users/charlie/.m2/repository/org/scala-lang/scala-reflect/2.13.12/scala-reflect-2.13.12.jar"
+            ],
+            "setup": {
+                "order": "mixed",
+                "addLibraryToBootClasspath": true,
+                "addCompilerToClasspath": false,
+                "addExtraJarsToClasspath": false,
+                "manageBootClasspath": true,
+                "filterLibraryFromClasspath": true
+            }
+        },
+        "java": {
+            "options": [
+                "-g",
+                "-target",
+                "20",
+                "-source",
+                "20",
+                "-encoding",
+                "UTF-8"
+            ]
+        },
+        "test": {
+            "frameworks": [
+                {
+                    "names": [
+                        "com.novocode.junit.JUnitFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "org.scalatest.tools.Framework",
+                        "org.scalatest.tools.ScalaTestFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "org.scalacheck.ScalaCheckFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "org.specs.runner.SpecsFramework",
+                        "org.specs2.runner.Specs2Framework",
+                        "org.specs2.runner.SpecsFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "utest.runner.Framework"
+                    ]
+                },
+                {
+                    "names": [
+                        "munit.Framework"
+                    ]
+                }
+            ],
+            "options": {
+                "excludes": [
+                    
+                ],
+                "arguments": [
+                    {
+                        "args": [
+                            "-v",
+                            "-a"
+                        ],
+                        "framework": {
+                            "names": [
+                                "com.novocode.junit.JUnitFramework"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "platform": {
+            "name": "jvm",
+            "config": {
+                "home": "/Library/Java/JavaVirtualMachines/jdk-23.jdk/Contents/Home",
+                "options": [
+                    
+                ]
+            },
+            "mainClass": [
+                
+            ]
+        },
+        "resolution": {
+            "modules": [
+                {
+                    "organization": "org.junit.jupiter",
+                    "name": "junit-jupiter-engine",
+                    "version": "5.12.0",
+                    "artifacts": [
+                        {
+                            "name": "junit-jupiter-engine",
+                            "path": "/Users/charlie/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.12.0/junit-jupiter-engine-5.12.0.jar"
+                        },
+                        {
+                            "name": "junit-jupiter-engine",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.12.0/junit-jupiter-engine-5.12.0-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.mockito",
+                    "name": "mockito-core",
+                    "version": "5.10.0",
+                    "artifacts": [
+                        {
+                            "name": "mockito-core",
+                            "path": "/Users/charlie/.m2/repository/org/mockito/mockito-core/5.10.0/mockito-core-5.10.0.jar"
+                        },
+                        {
+                            "name": "mockito-core",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/mockito/mockito-core/5.10.0/mockito-core-5.10.0-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.jetbrains.kotlin",
+                    "name": "kotlin-stdlib",
+                    "version": "2.1.10",
+                    "artifacts": [
+                        {
+                            "name": "kotlin-stdlib",
+                            "path": "/Users/charlie/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/2.1.10/kotlin-stdlib-2.1.10.jar"
+                        },
+                        {
+                            "name": "kotlin-stdlib",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/2.1.10/kotlin-stdlib-2.1.10-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.tomlj",
+                    "name": "tomlj",
+                    "version": "1.1.1",
+                    "artifacts": [
+                        {
+                            "name": "tomlj",
+                            "path": "/Users/charlie/.m2/repository/org/tomlj/tomlj/1.1.1/tomlj-1.1.1.jar"
+                        },
+                        {
+                            "name": "tomlj",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/tomlj/tomlj/1.1.1/tomlj-1.1.1-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.junit.platform",
+                    "name": "junit-platform-commons",
+                    "version": "1.12.0",
+                    "artifacts": [
+                        {
+                            "name": "junit-platform-commons",
+                            "path": "/Users/charlie/.m2/repository/org/junit/platform/junit-platform-commons/1.12.0/junit-platform-commons-1.12.0.jar"
+                        },
+                        {
+                            "name": "junit-platform-commons",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/junit/platform/junit-platform-commons/1.12.0/junit-platform-commons-1.12.0-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.junit.platform",
+                    "name": "junit-platform-engine",
+                    "version": "1.12.0",
+                    "artifacts": [
+                        {
+                            "name": "junit-platform-engine",
+                            "path": "/Users/charlie/.m2/repository/org/junit/platform/junit-platform-engine/1.12.0/junit-platform-engine-1.12.0.jar"
+                        },
+                        {
+                            "name": "junit-platform-engine",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/junit/platform/junit-platform-engine/1.12.0/junit-platform-engine-1.12.0-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "junit",
+                    "name": "junit",
+                    "version": "RELEASE",
+                    "artifacts": [
+                        {
+                            "name": "junit",
+                            "path": "/Users/charlie/.m2/repository/junit/junit/4.13.2/junit-4.13.2.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.junit.jupiter",
+                    "name": "junit-jupiter-params",
+                    "version": "5.12.0",
+                    "artifacts": [
+                        {
+                            "name": "junit-jupiter-params",
+                            "path": "/Users/charlie/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.12.0/junit-jupiter-params-5.12.0.jar"
+                        },
+                        {
+                            "name": "junit-jupiter-params",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.12.0/junit-jupiter-params-5.12.0-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.junit.jupiter",
+                    "name": "junit-jupiter-api",
+                    "version": "5.12.0",
+                    "artifacts": [
+                        {
+                            "name": "junit-jupiter-api",
+                            "path": "/Users/charlie/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.12.0/junit-jupiter-api-5.12.0.jar"
+                        },
+                        {
+                            "name": "junit-jupiter-api",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.12.0/junit-jupiter-api-5.12.0-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.junit.jupiter",
+                    "name": "junit-jupiter",
+                    "version": "RELEASE",
+                    "artifacts": [
+                        {
+                            "name": "junit-jupiter",
+                            "path": "/Users/charlie/.m2/repository/org/junit/jupiter/junit-jupiter/5.12.0/junit-jupiter-5.12.0.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.hamcrest",
+                    "name": "hamcrest-core",
+                    "version": "1.3",
+                    "artifacts": [
+                        {
+                            "name": "hamcrest-core",
+                            "path": "/Users/charlie/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar"
+                        },
+                        {
+                            "name": "hamcrest-core",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.jetbrains.kotlin",
+                    "name": "kotlin-stdlib-jdk7",
+                    "version": "2.1.10",
+                    "artifacts": [
+                        {
+                            "name": "kotlin-stdlib-jdk7",
+                            "path": "/Users/charlie/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/2.1.10/kotlin-stdlib-jdk7-2.1.10.jar"
+                        },
+                        {
+                            "name": "kotlin-stdlib-jdk7",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/2.1.10/kotlin-stdlib-jdk7-2.1.10-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "com.beust",
+                    "name": "jcommander",
+                    "version": "1.81",
+                    "artifacts": [
+                        {
+                            "name": "jcommander",
+                            "path": "/Users/charlie/.m2/repository/com/beust/jcommander/1.81/jcommander-1.81.jar"
+                        },
+                        {
+                            "name": "jcommander",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/com/beust/jcommander/1.81/jcommander-1.81-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.antlr",
+                    "name": "antlr4-runtime",
+                    "version": "4.11.1",
+                    "artifacts": [
+                        {
+                            "name": "antlr4-runtime",
+                            "path": "/Users/charlie/.m2/repository/org/antlr/antlr4-runtime/4.11.1/antlr4-runtime-4.11.1.jar"
+                        },
+                        {
+                            "name": "antlr4-runtime",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/antlr/antlr4-runtime/4.11.1/antlr4-runtime-4.11.1-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "net.bytebuddy",
+                    "name": "byte-buddy-agent",
+                    "version": "1.14.11",
+                    "artifacts": [
+                        {
+                            "name": "byte-buddy-agent",
+                            "path": "/Users/charlie/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.11/byte-buddy-agent-1.14.11.jar"
+                        },
+                        {
+                            "name": "byte-buddy-agent",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.11/byte-buddy-agent-1.14.11-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "ch.qos.logback",
+                    "name": "logback-classic",
+                    "version": "1.4.14",
+                    "artifacts": [
+                        {
+                            "name": "logback-classic",
+                            "path": "/Users/charlie/.m2/repository/ch/qos/logback/logback-classic/1.4.14/logback-classic-1.4.14.jar"
+                        },
+                        {
+                            "name": "logback-classic",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/ch/qos/logback/logback-classic/1.4.14/logback-classic-1.4.14-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.scala-lang",
+                    "name": "scala-library",
+                    "version": "2.13.12",
+                    "artifacts": [
+                        {
+                            "name": "scala-library",
+                            "path": "/Users/charlie/.m2/repository/org/scala-lang/scala-library/2.13.12/scala-library-2.13.12.jar"
+                        },
+                        {
+                            "name": "scala-library",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/scala-lang/scala-library/2.13.12/scala-library-2.13.12-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.jcommander",
+                    "name": "jcommander",
+                    "version": "2.0",
+                    "artifacts": [
+                        {
+                            "name": "jcommander",
+                            "path": "/Users/charlie/.m2/repository/org/jcommander/jcommander/2.0/jcommander-2.0.jar"
+                        },
+                        {
+                            "name": "jcommander",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/jcommander/jcommander/2.0/jcommander-2.0-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.jetbrains.kotlin",
+                    "name": "kotlin-stdlib-jdk8",
+                    "version": "2.1.10",
+                    "artifacts": [
+                        {
+                            "name": "kotlin-stdlib-jdk8",
+                            "path": "/Users/charlie/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/2.1.10/kotlin-stdlib-jdk8-2.1.10.jar"
+                        },
+                        {
+                            "name": "kotlin-stdlib-jdk8",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/2.1.10/kotlin-stdlib-jdk8-2.1.10-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.jline",
+                    "name": "jline",
+                    "version": "3.5.0",
+                    "artifacts": [
+                        {
+                            "name": "jline",
+                            "path": "/Users/charlie/.m2/repository/org/jline/jline/3.5.0/jline-3.5.0.jar"
+                        },
+                        {
+                            "name": "jline",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/jline/jline/3.5.0/jline-3.5.0-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.assertj",
+                    "name": "assertj-core",
+                    "version": "3.25.3",
+                    "artifacts": [
+                        {
+                            "name": "assertj-core",
+                            "path": "/Users/charlie/.m2/repository/org/assertj/assertj-core/3.25.3/assertj-core-3.25.3.jar"
+                        },
+                        {
+                            "name": "assertj-core",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/assertj/assertj-core/3.25.3/assertj-core-3.25.3-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "ch.qos.logback",
+                    "name": "logback-core",
+                    "version": "1.4.14",
+                    "artifacts": [
+                        {
+                            "name": "logback-core",
+                            "path": "/Users/charlie/.m2/repository/ch/qos/logback/logback-core/1.4.14/logback-core-1.4.14.jar"
+                        },
+                        {
+                            "name": "logback-core",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/ch/qos/logback/logback-core/1.4.14/logback-core-1.4.14-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.python",
+                    "name": "jython-standalone",
+                    "version": "2.7.3",
+                    "artifacts": [
+                        {
+                            "name": "jython-standalone",
+                            "path": "/Users/charlie/.m2/repository/org/python/jython-standalone/2.7.3/jython-standalone-2.7.3.jar"
+                        },
+                        {
+                            "name": "jython-standalone",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/python/jython-standalone/2.7.3/jython-standalone-2.7.3-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.jetbrains",
+                    "name": "annotations",
+                    "version": "RELEASE",
+                    "artifacts": [
+                        {
+                            "name": "annotations",
+                            "path": "/Users/charlie/.m2/repository/org/jetbrains/annotations/26.0.2/annotations-26.0.2.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.apache.commons",
+                    "name": "commons-lang3",
+                    "version": "3.14.0",
+                    "artifacts": [
+                        {
+                            "name": "commons-lang3",
+                            "path": "/Users/charlie/.m2/repository/org/apache/commons/commons-lang3/3.14.0/commons-lang3-3.14.0.jar"
+                        },
+                        {
+                            "name": "commons-lang3",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/apache/commons/commons-lang3/3.14.0/commons-lang3-3.14.0-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.checkerframework",
+                    "name": "checker-qual",
+                    "version": "3.21.2",
+                    "artifacts": [
+                        {
+                            "name": "checker-qual",
+                            "path": "/Users/charlie/.m2/repository/org/checkerframework/checker-qual/3.21.2/checker-qual-3.21.2.jar"
+                        },
+                        {
+                            "name": "checker-qual",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/checkerframework/checker-qual/3.21.2/checker-qual-3.21.2-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.slf4j",
+                    "name": "slf4j-api",
+                    "version": "2.0.12",
+                    "artifacts": [
+                        {
+                            "name": "slf4j-api",
+                            "path": "/Users/charlie/.m2/repository/org/slf4j/slf4j-api/2.0.12/slf4j-api-2.0.12.jar"
+                        },
+                        {
+                            "name": "slf4j-api",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/slf4j/slf4j-api/2.0.12/slf4j-api-2.0.12-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "net.bytebuddy",
+                    "name": "byte-buddy",
+                    "version": "1.14.11",
+                    "artifacts": [
+                        {
+                            "name": "byte-buddy",
+                            "path": "/Users/charlie/.m2/repository/net/bytebuddy/byte-buddy/1.14.11/byte-buddy-1.14.11.jar"
+                        },
+                        {
+                            "name": "byte-buddy",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/net/bytebuddy/byte-buddy/1.14.11/byte-buddy-1.14.11-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.objenesis",
+                    "name": "objenesis",
+                    "version": "3.3",
+                    "artifacts": [
+                        {
+                            "name": "objenesis",
+                            "path": "/Users/charlie/.m2/repository/org/objenesis/objenesis/3.3/objenesis-3.3.jar"
+                        },
+                        {
+                            "name": "objenesis",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/objenesis/objenesis/3.3/objenesis-3.3-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.apiguardian",
+                    "name": "apiguardian-api",
+                    "version": "1.1.2",
+                    "artifacts": [
+                        {
+                            "name": "apiguardian-api",
+                            "path": "/Users/charlie/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar"
+                        },
+                        {
+                            "name": "apiguardian-api",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.jetbrains.kotlin",
+                    "name": "kotlin-test",
+                    "version": "2.1.10",
+                    "artifacts": [
+                        {
+                            "name": "kotlin-test",
+                            "path": "/Users/charlie/.m2/repository/org/jetbrains/kotlin/kotlin-test/2.1.10/kotlin-test-2.1.10.jar"
+                        },
+                        {
+                            "name": "kotlin-test",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/jetbrains/kotlin/kotlin-test/2.1.10/kotlin-test-2.1.10-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.opentest4j",
+                    "name": "opentest4j",
+                    "version": "1.3.0",
+                    "artifacts": [
+                        {
+                            "name": "opentest4j",
+                            "path": "/Users/charlie/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar"
+                        },
+                        {
+                            "name": "opentest4j",
+                            "classifier": "sources",
+                            "path": "/Users/charlie/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0-sources.jar"
+                        }
+                    ]
+                }
+            ]
+        },
+        "tags": [
+            "library"
+        ]
+    }
+}

@@ -2,10 +2,31 @@
 
 This document details all instructions available in the MicroASM language.
 
-all instructions are case-insensitive, so `MOV` is the same as `mov`
-arguments however are case-sensitive, so `MOV R1 r2` is not the same as `MOV R1 R2`
+## Comments
+
+Comments are denoted by ether single ';' or double ';;' semicolons. Comments can be placed on their own line or at the end of a line.
+
+```asm
+;; This is a comment
+MOV R1 R2 ; This is also a comment
+```
+
+## Extra info
+
+- All instructions are case-insensitive, 'mov' == 'MOV'
+- All registers are 32-bit, and all values are 64-bit. this will change later
+- All values are signed integers which means you can do negative numbers, but be careful with the overflow
+- Micro-Assembly does not do `mov RAX, RBX`. this comes later in the language development
+- Be aware of the register state before and after operations to avoid unintended behavior.
+- The stack is not automatically managed, so you must push and pop values as needed.
+- The stack grows downwards, so pushing values will decrement the stack pointer and popping values will increment it.
+- The stack is not automatically cleared, so you must manage the stack pointer yourself.
+
+
+for more infomation about MNI (Micro-Assembly native interface and memory management) see [MNI](mni.md)
 
 ## Registers
+
 - RAX
 - RBX
 - RCX
@@ -17,12 +38,11 @@ arguments however are case-sensitive, so `MOV R1 r2` is not the same as `MOV R1 
 - RIP (Instruction Pointer, though you shouldn't use this besides reading it and maybe comparing it? or using it as a jump destination)
 - R0 -> 15 (General Purpose Registers, use as you wish, but be careful with RSP and RBP. allways push and pop in pairs, and allways pop in the reverse order you pushed) don't be like me and forget to pop the registers you pushed, or you'll have a bad time
 
-
 ## Basic Instructions
 
 ### MOV (Move)
 
-```
+```asm
 MOV dest, src
 ```
 
@@ -31,7 +51,7 @@ Example: `MOV R1 R2` - Copies value from R2 to R1
 
 ### ADD (Addition)
 
-```
+```asm
 ADD dest src
 ```
 
@@ -40,7 +60,7 @@ Example: `ADD R1 R2` - R1 = R1 + R2
 
 ### SUB (Subtraction)
 
-```
+```asm
 SUB dest src
 ```
 
@@ -49,16 +69,15 @@ Example: `SUB R1 R2` - R1 = R1 - R2
 
 ### MUL (Multiplication)
 
-```
+```asm
 MUL dest src
 ```
-
 Multiplies the destination register by the source value and stores the result in the destination.
 Example: `MUL R1 R2` - R1 = R1 * R2
 
 ### DIV (Division)
 
-```
+```asm
 DIV dest src
 ```
 
@@ -67,27 +86,65 @@ Example: `DIV R1 R2` - R1 = R1 / R2
 
 ### INC (Increment)
 
-```
+```asm
 INC dest
 ```
 
 Increments the value in the destination register by 1.
 Example: `INC R1` - R1 = R1 + 1
 
-## Flow Control
+### DEC (Decrement)
 
-### JMP (Jump)
-
-```
-JMP label
+```asm
+DEC dest
 ```
 
-Unconditionally jumps to the specified label.
-Example: `JMP #loop` - Jumps to label 'loop'
+Decrements the value in the destination register by 1.
+Example: `DEC R1` - R1 = R1 - 1
+
+## logic instructions
+
+### AND (Logical AND)
+
+```asm
+AND dest src
+```
+
+Performs a logical AND operation between the two source values and stores the result in the destination.
+Example: `AND R1 R2` - R1 = R1 & R2
+
+### OR (Logical OR)
+
+```asm
+OR dest src
+```
+
+Performs a logical OR operation between the two source values and stores the result in the destination.
+Example: `OR R1 R2` - R1 = R1 | R2  
+
+### XOR (Logical XOR)
+
+```asm
+XOR dest src
+```
+
+Performs a logical XOR operation between the two source values and stores the result in the destination.
+Example: `XOR R1 R2` - R1 = R1 ^ R2
+
+### NOT (Logical NOT)
+
+```asm
+NOT dest
+```
+
+Performs a logical NOT operation on the destination register.
+Example: `NOT R1` - R1 = ~R1
+
+## Comparison Instructions
 
 ### CMP (Compare)
 
-```
+```asm
 CMP dest, src
 ```
 
@@ -96,7 +153,7 @@ Example: `CMP R1 R2` - Compares R1 with R2
 
 ### JE (Jump if Equal)
 
-```
+```asm
 JE label_true label_false
 ```
 
@@ -105,7 +162,7 @@ Example: `JE #equal #not_equal`
 
 ### JL (Jump if Less)
 
-```
+```asm
 JL label
 ```
 
@@ -114,7 +171,7 @@ Example: `JL #less`
 
 ### CALL (Call Function)
 
-```
+```asm
 CALL label
 ```
 
@@ -129,7 +186,7 @@ Note: Unlike JMP, CALL saves the current instruction pointer (RIP) on the stack 
 
 ### PUSH
 
-```
+```asm
 PUSH src
 ```
 
@@ -138,7 +195,7 @@ Example: `PUSH R1`
 
 ### POP
 
-```
+```asm
 POP dest
 ```
 
@@ -149,7 +206,7 @@ Example: `POP R1`
 
 ### OUT
 
-```
+```asm
 OUT port value
 ```
 
@@ -158,7 +215,7 @@ Example: `OUT 2 R1` or `OUT 1 $500`
 
 ### COUT
 
-```
+```asm
 COUT port value
 ```
 
@@ -169,7 +226,7 @@ Example: `COUT 1 R1` or `COUT 2 $65`
 
 ### HLT (Halt)
 
-```
+```asm
 HLT
 ```
 
@@ -177,7 +234,7 @@ Stops program execution and returns to the operating system.
 
 ### EXIT
 
-```
+```asm
 EXIT code
 ```
 
@@ -188,7 +245,7 @@ Example: `EXIT R1`
 
 ### ARGC
 
-```
+```asm
 ARGC dest
 ```
 
@@ -197,7 +254,7 @@ Example: `ARGC R1`
 
 ### GETARG
 
-```
+```asm
 GETARG dest index
 ```
 
@@ -210,7 +267,7 @@ in jmasm, the index is 0-based and comes after the launched program name, unlike
 
 ### DB (Define Bytes)
 
-```
+```asm
 DB address "string"
 ```
 
@@ -221,7 +278,7 @@ Example: `DB $1 "Hello, World!"` (using $ prefix)
 
 ### LBL (Label)
 
-```
+```asm
 LBL name
 ```
 

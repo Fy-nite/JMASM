@@ -123,6 +123,6 @@ public class Includemanager {
             }
         }
         
-        return processed.toString();
+        return processed.toString() + '\n';
     }
 }
