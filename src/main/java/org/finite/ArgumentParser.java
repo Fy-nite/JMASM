@@ -1,3 +1,4 @@
+
 package org.finite;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -52,3 +53,4 @@ public class ArgumentParser {
         public static boolean outputDebug = false;
     }
 }
+
