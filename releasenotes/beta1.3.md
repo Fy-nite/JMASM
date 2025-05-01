@@ -3,7 +3,8 @@ i've got great news and even better news if you use MNI in your projects!
 
 This release comprises multiple weeks worth of programming efforts by me and my fellow developers into one giant release for today!
 
-this release includes Scala and Kotlin now being supported and used inside the codebase, as well as a new module called IO.
+this release includes Scala and kotlin now being supported and used inside the codebase, aswell as a new module called IO.
+
 IO currently has 2 functions plus a helper method for any of you j/s/k coders out there.
 
 ```nasm
