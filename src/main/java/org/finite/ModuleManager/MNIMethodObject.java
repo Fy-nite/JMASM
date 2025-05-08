@@ -14,6 +14,9 @@ public class MNIMethodObject {
     // Restore original public variables for compatibility
     public int arg1;
     public int arg2;
+    public int arg3;
+    public int arg4;
+    public int arg5;
     public String reg1;
     public String reg2;
     public int[] args;         // Keep this for existing code
@@ -27,7 +30,7 @@ public class MNIMethodObject {
     private int lastCompareResult;
     private boolean zeroFlag;
     private boolean carryFlag;
-
+    
     public MNIMethodObject(int[] memory, String... args) {
         this.memory = memory;
         this.arguments = new int[args.length];

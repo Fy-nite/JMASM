@@ -349,6 +349,17 @@ public class interp {
         int rip = common.ReadRegister("RIP");
         common.isRunning = true;  // Reset running state
         while (rip < instrs.length && common.isRunning) {
+            
+            // use arguments.cpu speed to control execution speed
+            // Higher values = faster execution (less sleep time)
+            if (ArgumentParser.Args.cpuSpeed > 0) {
+                try {
+                    Thread.sleep(1000 / ArgumentParser.Args.cpuSpeed); 
+                } catch (InterruptedException e) {
+                    // Handle exception
+                }
+            }
+
             instruction instr = instrs.instructions[rip];
             if (ArgumentParser.Args.debug) {
                 common.box(

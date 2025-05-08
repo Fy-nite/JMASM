@@ -1,7 +1,13 @@
 package org.finite.Modules.extentions;
 
+import org.finite.*;
 import org.finite.ModuleManager.*;
 import org.finite.ModuleManager.annotations.*;
+import org.finite.Common.*;
+import org.jetbrains.annotations.ApiStatus.Experimental;
+
+import kotlin.ExperimentalStdlibApi;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
@@ -13,14 +19,29 @@ public class SwingOperations {
     private static final Map<Integer, JComponent> components = new HashMap<>();
     private static int nextId = 1;
 
+    private static void setcallbackid(String callbackId) {
+        // This method should be implemented to handle the callback ID
+        // For now, it just prints the callback ID
+        System.out.println("Callback ID: " + callbackId);
+    }
+
     @MNIFunction(name = "createFrame", module = "SwingOperations")
     public static void createFrame(MNIMethodObject obj) {
         int id = nextId++;
         String title = obj.readString(obj.arg1);
         // register for outputing the frame
-
         JFrame frame = new JFrame(title);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        // don't close the window when the close button is pressed
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        // register a custom close operation
+        frame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                System.out.println("Window closed: " + title);
+                Functions.hlt();
+
+            }
+        });
         frames.put(id, frame);
         System.out.println("Frame created with ID: " + id);
         obj.setRegister(obj.reg2, id);
@@ -36,7 +57,7 @@ public class SwingOperations {
         }
     }
 
-    @MNIFunction(name = "setFrameSize", module = "SwingOperations") 
+    @MNIFunction(name = "setFrameSize", module = "SwingOperations")
     public static void setFrameSize(MNIMethodObject obj) {
         int frameId = obj.getRegister(obj.reg1);
         int width = obj.getRegister(obj.reg2);
@@ -47,10 +68,8 @@ public class SwingOperations {
             frame.setPreferredSize(new Dimension(width, height));
             frame.setMinimumSize(new Dimension(width, height));
             System.out.println("Frame size set to: " + width + "x" + height);
-        }
-        else 
-        {
-            System.out.println("Warning: Frame not found");
+        } else {
+            System.out.println("Warning: Frame not found for ID: " + frameId);
         }
     }
 
@@ -73,6 +92,55 @@ public class SwingOperations {
         components.put(id, label);
         // set the component to the register
         obj.setRegister(obj.reg1, id);
+    }
+
+    @MNIFunction(name = "setPosition", module = "SwingOperations")
+    public static void setPosition(MNIMethodObject obj) {
+        int componentId = obj.args[0];
+        int x = obj.args[1];
+        int y = obj.args[2];
+        JComponent component = components.get(componentId);
+        if (component != null) {
+            component.setBounds(x, y, component.getWidth(), component.getHeight());
+        }
+    }
+
+    @MNIFunction(name = "addClickListener", module = "SwingOperations")
+    public static void addClickListener(MNIMethodObject obj) {
+        int buttonId = obj.args[0]; // Button ID
+        String callbackId = obj.argregs[1]; // Assembly callback function laben thingin
+        JButton button = (JButton) components.get(buttonId);
+        if (button != null) {
+            button.addActionListener(e -> setcallbackid(callbackId));
+        }
+    }
+
+    @MNIFunction(name = "setEnabled", module = "SwingOperations")
+    public static void setEnabled(MNIMethodObject obj) {
+        int componentId = obj.getRegister(obj.reg1);
+        boolean enabled = obj.getRegister(obj.reg2) == 1;
+        JComponent component = components.get(componentId);
+        if (component != null) {
+            component.setEnabled(enabled);
+        }
+    }
+
+    @MNIFunction(name = "removeComponent", module = "SwingOperations")
+    public static void removeComponent(MNIMethodObject obj) {
+        int frameId = obj.getRegister(obj.reg1);
+        int componentId = obj.getRegister(obj.reg2);
+        JFrame frame = frames.get(frameId);
+        JComponent component = components.get(componentId);
+        if (frame != null && component != null) {
+            frame.remove(component);
+            components.remove(componentId);
+        }
+    }
+
+    @MNIFunction(name = "showMessageDialog", module = "SwingOperations")
+    public static void showMessageDialog(MNIMethodObject obj) {
+        String message = obj.readString(obj.arg1);
+        JOptionPane.showMessageDialog(null, message);
     }
 
     @MNIFunction(name = "createTextField", module = "SwingOperations")
@@ -132,4 +200,41 @@ public class SwingOperations {
             frames.remove(frameId);
         }
     }
+
+    @MNIFunction(name = "setLayout", module = "SwingOperations")
+    public static void setLayout(MNIMethodObject obj) {
+        int frameId = obj.getRegister(obj.reg1);
+        int layoutType = obj.getRegister(obj.reg2);
+        JFrame frame = frames.get(frameId);
+        if (frame != null) {
+            switch (layoutType) {
+                case 0:
+                    frame.setLayout(new FlowLayout());
+                    break;
+                case 1:
+                    frame.setLayout(new BorderLayout());
+                    break;
+                case 2:
+                    frame.setLayout(new GridLayout());
+                    break;
+                default:
+                    System.out.println("Invalid layout type: " + layoutType);
+            }
+        } else {
+            System.out.println("Frame not found for ID: " + frameId);
+        }
+    }
+
+    @MNIFunction(name = "setVisible", module = "SwingOperations")
+    public static void setVisible(MNIMethodObject obj) {
+        int frameId = obj.getRegister(obj.reg1);
+        boolean visible = obj.getRegister(obj.reg2) == 1;
+        JFrame frame = frames.get(frameId);
+        if (frame != null) {
+            frame.setVisible(visible);
+        } else {
+            System.out.println("Frame not found for ID: " + frameId);
+        }
+    }
+
 }

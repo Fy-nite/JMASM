@@ -792,17 +792,38 @@ public class Functions {
 
     public void cout(int[] memory, String fd, String reg, instructions instrs) {
         try {
-            // read the register hashmap
-            int value = common.ReadRegister(reg);
-            // print the value
-            if (fd.equals("1")) {
-                // convert to character
-                char c = (char) value;
-                print("%c", c);
-            } else if (fd.equals("2")) {
-                // convert to character
-                char c = (char) value;
-                printerr("%c", c);
+            common.dbgprint("Writing to file descriptor %s: %s\n", fd, reg);
+
+            int fileDescriptor;
+            try {
+                fileDescriptor = Integer.parseInt(fd);
+            } catch (Exception e) {
+                // If fd is a register, get its value
+                fileDescriptor = common.ReadRegister(fd);
+            }
+
+            if (fileDescriptor == 1) {
+                ///either the character is a number in a register, or the raw value
+                if (reg.startsWith("R"))
+                {
+                    if (!Parsing.INSTANCE.isValidRegister(reg)) {
+                        throw new MASMException("Invalid register: " + reg, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cout");
+                    }
+                    int value = common.ReadRegister(reg);
+                    print("%c", value);
+                } else {
+                    // Handle raw value
+                    int value = Integer.parseInt(reg);
+                    print("%c", value);
+                }
+            } else if (fileDescriptor == 2) {
+                printerr("%c", reg);
+            } else {
+                common.box(
+                        "Error",
+                        "Invalid file descriptor: " + fileDescriptor,
+                        "error"
+                );
             }
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: cout");

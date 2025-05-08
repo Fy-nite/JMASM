@@ -23,6 +23,10 @@ public class ArgumentParser {
         @Parameter(names = {"--info","-info"}, description = "display's infomation about the current runtime enviroment")
         public static Boolean info = false;
 
+        // cpu speed
+        @Parameter(names = {"--cpuspeed", "-cs"}, description = "Set the CPU speed in Hz")
+        public static int cpuSpeed = 1000000; // Default to 1 MHz
+
         // Get the effective file path from either main parameter or --file option
         public static String getEffectiveFile() {
             if (file != null && !file.isEmpty()) {

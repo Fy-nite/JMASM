@@ -2,24 +2,47 @@
 
     
 lbl main
-    db $100 "meow"
+    db $100 "Masm Window Test"
+    db $200 "Hello, World!"
     ; frameid
     mov R1 100
     ; width
     mov R2 700
     ; mem string
-    mov R3 100
+    mov R3 200
+    ;; title
+    mov R4 100
+    mov R5 400
     ; Create and configure window
-    MNI SwingOperations.createFrame R2 R1
+    MNI SwingOperations.createFrame R4 R1
+    ;; Set the title of the window
     MNI SwingOperations.setFrameSize R1 R2
     MNI SwingOperations.showFrame R1 R2
     MNI SwingOperations.createLabel R4 R1
     MNI SwingOperations.setText R4 R3
     MNI SwingOperations.addToFrame R1 R4
+    ;; set the layout
+    mov R11 2
+    MNI SwingOperations.setLayout R1 R11
+    MNI SwingOperations.createButton R4 R1
+    MNI SwingOperations.addToFrame R1 R4
 
-    lbl while
-;;jmp #while
-    ; Keep window open for 5 seconds
-    ; Clean up
-    MNI SwingOperations.disposeFrame R1 R1
-    HLT
+lbl while
+    ;; setup loop to increase the label text
+    mov $400 65          ; Initialize with 'A' (ASCII 65)
+    mov $401 0           ; Null terminator for the string
+
+lbl loop_start
+    cmp R10 127          ; Check if R10 has reached the ASCII value of 127
+    je #end              ; Exit the loop if it has
+    inc R10              ; Increment R10
+    mov $400 R10         ; Store the incremented value at $400
+    mov $401 0           ; Ensure the string is null-terminated
+    ;;cout 1 R10           ; Output the character to the console (optional)
+    ;; Set the text of the label
+    ;;MNI SwingOperations.setText R4 $400
+    jmp #loop_start      ; Repeat the loop
+
+lbl end
+    mov R10 0            ; Reset R10
+    jmp #loop_start      ; Restart the loop
