@@ -18,16 +18,84 @@ public class interp {
     public static boolean testmode = true;
     public static boolean testMode = Boolean.getBoolean("testMode"); // This line changes
 
+    // Add a Macro class to represent macros
+    public static class Macro {
+        String name;
+        List<String> parameters;
+        List<String> body;
+
+        public Macro(String name, List<String> parameters, List<String> body) {
+            this.name = name;
+            this.parameters = parameters;
+            this.body = body;
+        }
+    }
+
     private static boolean hasIncludes(String content) {
         return content.toLowerCase().contains("#include");
     }
 
+    // Extend preprocess method to handle macros
     private static String preprocess(String[] lines) {
         StringBuilder processed = new StringBuilder();
+        HashMap<String, Macro> macros = new HashMap<>(); // Store macros
+        boolean inMacro = false;
+        Macro currentMacro = null;
+
         for (String line : lines) {
+            line = line.trim();
+
+            if (line.toUpperCase().startsWith("MACRO")) {
+                inMacro = true;
+                String[] parts = line.split(" ", 2);
+                String macroHeader = parts[1].trim();
+                String[] headerParts = macroHeader.split(" ", 2);
+                String macroName = headerParts[0];
+                List<String> parameters = headerParts.length > 1 ? Arrays.asList(headerParts[1].split(",")) : new ArrayList<>();
+                currentMacro = new Macro(macroName, parameters, new ArrayList<>());
+                continue;
+            }
+
+            if (line.toUpperCase().equals("ENDMACRO")) {
+                inMacro = false;
+                macros.put(currentMacro.name, currentMacro);
+                currentMacro = null;
+                continue;
+            }
+
+            if (inMacro) {
+                currentMacro.body.add(line);
+                continue;
+            }
+
+            // Expand macros
+            String[] parts = line.split(" ", 2);
+            String instruction = parts[0];
+            if (macros.containsKey(instruction)) {
+                Macro macro = macros.get(instruction);
+                List<String> arguments = parts.length > 1 ? Arrays.asList(parts[1].split(",")) : new ArrayList<>();
+                if (arguments.size() != macro.parameters.size()) {
+                    throw new MASMException("Macro argument mismatch for: " + instruction, 0, line, "Error in macro expansion");
+                }
+
+                HashMap<String, String> paramMap = new HashMap<>();
+                for (int i = 0; i < macro.parameters.size(); i++) {
+                    paramMap.put(macro.parameters.get(i).trim(), arguments.get(i).trim());
+                }
+
+                for (String macroLine : macro.body) {
+                    String expandedLine = macroLine;
+                    for (String param : paramMap.keySet()) {
+                        expandedLine = expandedLine.replace(param, paramMap.get(param));
+                    }
+                    processed.append(expandedLine).append("\n");
+                }
+                continue;
+            }
+
             processed.append(line).append("\n");
         }
-        
+
         String result = processed.toString();
         int maxPasses = 10; // Prevent infinite recursion
         int currentPass = 0;

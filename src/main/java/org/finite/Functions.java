@@ -188,11 +188,12 @@ public class Functions {
             System.exit(0);
         }
     }
+
     // Stack operations using last 1024 bytes of memory
     public static void push(int[] memory, String reg1, instructions instrs) {
         try {
             int sp = common.ReadRegister("RSP");
-            if (sp <= common.MAX_MEMORY - 1024) {
+            if (sp <= common.MAX_MEMORY - common.STACK_SIZE) {
                 throw new MASMException("Stack overflow", instrs.currentLine, instrs.currentlineContents, "Error in instruction: push");
             }
             int value = common.ReadRegister(reg1);

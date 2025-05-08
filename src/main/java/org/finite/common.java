@@ -19,6 +19,7 @@ public class common {
     String[] modules = ReadResourceFile.readDir(modulesPath);
     // THIS IS FINAL~~!!?!??!?!??!?!?!??!?!?!?!??!?!?
     public static final int MAX_MEMORY = 32767; // are you angry?
+    public static final int STACK_SIZE = 1024; // stack size
     public static String[] commands = new String[]{
             "dumpMemory",
             "dumpRegisters",

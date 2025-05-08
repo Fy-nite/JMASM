@@ -23,7 +23,12 @@
         <scala.compat.version>2.13</scala.compat.version>
     </properties>
 
-
+    <repositories>
+        <repository>
+            <id>graalvm</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+    </repositories>
 
         <!-- Kotlin Compilation (First) -->
 <build>
@@ -247,6 +252,32 @@
                                 <goals>
                                     <goal>check</goal>
                                 </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>native-image-linux</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.nativeimage</groupId>
+                        <artifactId>native-image-maven-plugin</artifactId>
+                        <version>21.2.0</version>
+                        <executions>
+                            <execution>
+                                <id>build-native-image</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>native-image</goal>
+                                </goals>
+                                <configuration>
+                                    <mainClass>org.finite.MASM.Main</mainClass>
+                                    <outputDirectory>${project.build.directory}/native</outputDirectory>
+                                    <imageName>masm-native</imageName>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

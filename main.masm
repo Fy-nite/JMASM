@@ -1,5 +1,6 @@
-#include "stdio.io"
-
 lbl main
-    mov $10 101
-    out 1 $10
+    db $100 "\n"
+    inc RAX
+    out 1 RAX
+    out 1 $100
+    jmp #main

@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.finite.ModuleManager.ModuleInit;
 import org.finite.ModuleManager.examples.MathModule;
-import org.finite.debug;
+
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -23,7 +23,7 @@ public class Main {
             arguments.configureLogging();  // Configure logging based on debug flag
             
             if (ArgumentParser.Args.debug) {
-                logger.info("Starting MASM interpreter");
+                logger.info("Starting MASM interpreter with debug mode enabled");
             }
             System.out.print("\033[H\033[2J");
             System.out.flush();
@@ -60,12 +60,12 @@ public class Main {
                     common.box("java MASM interpreter", "2025 (C) finite\nrunning file: " + arg + "\n", "info");
                     interp.runFile(arg);
                 }
-                else 
-                {
-                    common.box("java MASM interpreter", "2025 (C) finite\nType 'help' for a list of commands\n", "info");
-                    common.dbgprint("Starting debug REPL");
-                    debug.DebugRepl();
-                }
+                // else 
+                // {
+                //     common.box("java MASM interpreter", "2025 (C) finite\nType 'help' for a list of commands\n", "info");
+                //     common.dbgprint("Starting debug REPL");
+                //     debug.main();
+                // }
              
             }
         } catch (MASMException e) {
