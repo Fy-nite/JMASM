@@ -517,15 +517,7 @@ public class interp {
                     }
 
                     String[] registerArgs = instr.sop2.trim().split("\\s+");
-                   // do not care about min and max args
-                    if (registerArgs.length < 2) {
-                        throw new MASMException(
-                            "MNI requires at least two register arguments",
-                            instr.lineNumber,
-                            instr.originalLine,
-                            "Error in instruction: MNI"
-                        );
-                    }
+                   // do not care about min and max arg
                     // Create MNI object with register names
                     MNIMethodObject methodObj = new MNIMethodObject(memory, registerArgs[0], registerArgs[1]);
                     methodObj.argregs = registerArgs;

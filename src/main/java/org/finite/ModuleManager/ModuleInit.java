@@ -16,7 +16,10 @@ import org.finite.ModuleManager.examples.MathModule;
 import org.finite.Interpreterops;  // Changed from interpreterops to Interpreterops
 import org.finite.Modules.extentions.IO;
 import org.finite.Modules.extentions.StringOperations;
-
+import org.finite.Modules.extentions.SwingOperations;
+import org.python.antlr.ast.Module;
+import org.finite.ModuleManager.*;
+import org.finite.Modules.extentions.*;
 /*
     * Module init is a class that is responsible for initializing the modules that are loaded into the interpreter.
     * init handles things like starting the actual ModuleInstaner and calling it for things such as loading from a directory,
@@ -46,7 +49,8 @@ public class ModuleInit {
             ModuleInit.registerBuiltInModule(StringOperations.class);
             ModuleInit.registerBuiltInModule(IO.class);
             ModuleInit.registerBuiltInModule(Interpreterops.class);  // Changed from interpreterops to Interpreterops
-         
+            ModuleInit.registerBuiltInModule(SwingOperations.class);
+            ModuleInit.registerBuiltInModule(MNISystem.class);
     }
     private static String getModuleDirectory() {
         // TODO: Read from TOML config

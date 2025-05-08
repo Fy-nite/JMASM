@@ -134,7 +134,7 @@ public class Instructions {
         return 0;
     }
 
-    // ... implement other execute methods similarly ...
+
 
     private static int executeMemory(InstructionDefinition def, String op1, String op2, int[] memory, interp.instructions instrs) {
         // Implementation for memory instructions
