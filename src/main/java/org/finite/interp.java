@@ -31,8 +31,67 @@ public class interp {
         }
     }
 
+    public static class StateVariable {
+        String name;
+        String type;
+        int address;
+        int size;
+
+        public StateVariable(String name, String type, int address, int size) {
+            this.name = name;
+            this.type = type;
+            this.address = address;
+            this.size = size;
+        }
+    }
+
+    public static HashMap<String, StateVariable> stateVariables = new HashMap<>();
+    private static int memoryPointer = 0; // Tracks the next available memory address
+
     private static boolean hasIncludes(String content) {
         return content.toLowerCase().contains("#include");
+    }
+
+    private static void handleStateDeclaration(String line) {
+        String[] parts = line.split("\\s+");
+        if (parts.length < 3) {
+            throw new MASMException("Invalid STATE declaration", 0, line, "Error in instruction: STATE");
+        }
+
+        String name = parts[1];
+        String type = parts[2].toUpperCase();
+        int size = switch (type) {
+            case "<BYTE>" -> 1;
+            case "<WORD>" -> 2;
+            case "<DWORD>" -> 4;
+            case "<QWORD>", "<PTR>" -> 8;
+            case "<FLOAT>" -> 4;
+            case "<DOUBLE>" -> 8;
+            default -> throw new MASMException("Unknown type in STATE declaration: " + type, 0, line, "Error in instruction: STATE");
+        };
+
+        int initialValue = 0;
+        if (parts.length > 3) {
+            try {
+                initialValue = Integer.parseInt(parts[3]);
+            } catch (NumberFormatException e) {
+                throw new MASMException("Invalid initial value in STATE declaration", 0, line, "Error in instruction: STATE");
+            }
+        }
+
+        if (stateVariables.containsKey(name)) {
+            throw new MASMException("Duplicate STATE variable: " + name, 0, line, "Error in instruction: STATE");
+        }
+
+        StateVariable stateVar = new StateVariable(name, type, memoryPointer, size);
+        stateVariables.put(name, stateVar);
+
+        // Initialize memory with the initial value
+        // for (int i = 0; i < size; i++) {
+        //     common.WriteMemory(memoryPointer + i, (initialValue >> (i * 8)) & 0xFF);
+        // }
+
+        memoryPointer += size;
     }
 
     // Extend preprocess method to handle macros
@@ -65,6 +124,11 @@ public class interp {
 
             if (inMacro) {
                 currentMacro.body.add(line);
+                continue;
+            }
+
+            if (line.toUpperCase().startsWith("STATE ")) {
+                handleStateDeclaration(line);
                 continue;
             }
 
@@ -448,7 +512,22 @@ public class interp {
             
             switch (instr.name.toLowerCase()) {
                 case "mov":
-                    functions.mov(memory, instr.sop1, instr.sop2,instrs);
+                    if (stateVariables.containsKey(instr.sop1)) {
+                        StateVariable stateVar = stateVariables.get(instr.sop1);
+                        int value = parseValue(instr.sop2, memory);
+                        for (int i = 0; i < stateVar.size; i++) {
+                            common.WriteMemory(memory, stateVar.address + i, (value >> (i * 8)) & 0xFF); // Fix: Add 'memory' as the first argument
+                        }
+                    } else if (stateVariables.containsKey(instr.sop2)) {
+                        StateVariable stateVar = stateVariables.get(instr.sop2);
+                        int value = 0;
+                        for (int i = 0; i < stateVar.size; i++) {
+                            value |= (common.ReadMemory(memory, stateVar.address + i) & 0xFF) << (i * 8); // Fix: Add 'memory' as the first argument
+                        }
+                        common.WriteRegister(instr.sop1, value);
+                    } else {
+                        functions.mov(memory, instr.sop1, instr.sop2, instrs);
+                    }
                     break;
                 case "dumpinstr":
                     dumpinstr(instrs);
@@ -561,7 +640,6 @@ public class interp {
                     }
 
                     String[] mniParts = instr.sop1.split("\\.");
-             
                     if (mniParts.length != 2) {
                         throw new MASMException(
                             "Invalid MNI function name",
@@ -585,18 +663,33 @@ public class interp {
                     }
 
                     String[] registerArgs = instr.sop2.trim().split("\\s+");
-                   // do not care about min and max args
                     if (registerArgs.length < 2) {
                         throw new MASMException(
-                            "MNI requires at least two register arguments",
+                            "MNI requires at least two arguments",
                             instr.lineNumber,
                             instr.originalLine,
                             "Error in instruction: MNI"
                         );
                     }
-                    // Create MNI object with register names
-                    MNIMethodObject methodObj = new MNIMethodObject(memory, registerArgs[0], registerArgs[1]);
+
+                    // Handle state variables in arguments
+                    int[] resolvedArgs = new int[registerArgs.length];
+                    for (int i = 0; i < registerArgs.length; i++) {
+                        String arg = registerArgs[i];
+                        if (stateVariables.containsKey(arg)) {
+                            resolvedArgs[i] = getStateVariableValue(arg, memory);
+                        } else if (arg.startsWith("$")) {
+                            resolvedArgs[i] = memory[Integer.parseInt(arg.substring(1))];
+                        } else {
+                            resolvedArgs[i] = common.ReadRegister(arg);
+                        }
+                    }
+
+                    // Create MNI object with resolved arguments
+                    MNIMethodObject methodObj = new MNIMethodObject(memory, registerArgs);
+                    methodObj.args = resolvedArgs; // Set resolved arguments
                     methodObj.argregs = registerArgs;
+
                     MNIHandler.handleMNICall(moduleName, functionName, methodObj);
                     break;
                 default:
@@ -654,6 +747,38 @@ public class interp {
                     "Error in instruction"
                 );
             }
+        }
+    }
+
+    // Helper function to get the type of a state variable
+    public static String getStateVariableType(String name) {
+        if (!stateVariables.containsKey(name)) {
+            throw new MASMException("State variable not found: " + name, 0, "", "Error in state variable access");
+        }
+        return stateVariables.get(name).type;
+    }
+
+    // Helper function to get the value of a state variable
+    public static int getStateVariableValue(String name, int[] memory) {
+        if (!stateVariables.containsKey(name)) {
+            throw new MASMException("State variable not found: " + name, 0, "", "Error in state variable access");
+        }
+        StateVariable stateVar = stateVariables.get(name);
+        int value = 0;
+        for (int i = 0; i < stateVar.size; i++) {
+            value |= (common.ReadMemory(memory, stateVar.address + i) & 0xFF) << (i * 8);
+        }
+        return value;
+    }
+
+    // Helper function to set the value of a state variable
+    public static void setStateVariableValue(String name, int value, int[] memory) {
+        if (!stateVariables.containsKey(name)) {
+            throw new MASMException("State variable not found: " + name, 0, "", "Error in state variable access");
+        }
+        StateVariable stateVar = stateVariables.get(name);
+        for (int i = 0; i < stateVar.size; i++) {
+            common.WriteMemory(memory, stateVar.address + i, (value >> (i * 8)) & 0xFF);
         }
     }
 }

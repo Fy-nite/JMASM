@@ -1,0 +1,25 @@
+; Simple Swing window test
+
+    
+lbl main
+    db $100 "meow"
+    ; frameid
+    mov R1 100
+    ; width
+    mov R2 700
+    ; mem string
+    mov R3 100
+    ; Create and configure window
+    MNI SwingOperations.createFrame R2 R1
+    MNI SwingOperations.setFrameSize R1 R2
+    MNI SwingOperations.showFrame R1 R2
+    MNI SwingOperations.createLabel R4 R1
+    MNI SwingOperations.setText R4 R3
+    MNI SwingOperations.addToFrame R1 R4
+
+    lbl while
+;;jmp #while
+    ; Keep window open for 5 seconds
+    ; Clean up
+    MNI SwingOperations.disposeFrame R1 R1
+    HLT

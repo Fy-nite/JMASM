@@ -443,6 +443,11 @@ public class Functions {
                 }
                 value = Integer.toString(common.ReadRegister(source));
             }
+
+            // Check if the source is a state variable
+            else if (interp.stateVariables.containsKey(source)) {
+                value = Integer.toString(interp.getStateVariableValue(source, memory));
+            }
             else {
                 try {
                     int numValue = Integer.parseInt(source);
@@ -452,6 +457,7 @@ public class Functions {
                         value = Integer.toString(common.ReadRegister(source));
                     } catch (Exception ex) {
                         value = Parsing.INSTANCE.processEscapeSequences(source);
+
                     }
                 }
             }

@@ -1,6 +1,5 @@
 lbl main
-    db $100 "\n"
-    inc RAX
-    out 1 RAX
-    out 1 $100
-    jmp #main
+    STATE meow <DWORD>
+    mov meow 503
+    out 1 meow
+    hlt

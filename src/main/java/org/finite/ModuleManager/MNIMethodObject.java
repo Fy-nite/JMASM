@@ -2,7 +2,7 @@ package org.finite.ModuleManager;
 
 import org.finite.common;
 import org.finite.Exceptions.MASMException;
-
+import org.finite.*;
 public class MNIMethodObject {
     // Register constants
     public static final String[] REGISTERS = {
@@ -141,6 +141,11 @@ public class MNIMethodObject {
 
     // Register operations
     public int getRegister(String reg) {
+        // Check if the name corresponds to a state variable
+        if (interp.stateVariables.containsKey(reg)) {
+            return interp.getStateVariableValue(reg, memory);
+        }
+        // Otherwise, treat it as a regular register
         return common.ReadRegister(reg);
     }
 
@@ -178,7 +183,7 @@ public class MNIMethodObject {
     public boolean getCarryFlag() {
         return this.carryFlag;
     }
-
+    
     // Stack operations
     public void push(int value) {
         int sp = getSP();
