@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.finite.ModuleManager.ModuleInit;
 import org.finite.ModuleManager.examples.MathModule;
+import org.finite.Comp.*;
 
 
 public class Main {
@@ -24,6 +25,12 @@ public class Main {
             
             if (ArgumentParser.Args.debug) {
                 logger.info("Starting MASM interpreter with debug mode enabled");
+            }
+            if (ArgumentParser.Args.test) {
+                logger.info("Running LLVM test");
+                // Call the test function here
+                LLMASM.start();
+                
             }
             System.out.print("\033[H\033[2J");
             System.out.flush();

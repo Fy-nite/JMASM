@@ -129,12 +129,43 @@
         </excludes>
     </configuration>
 </plugin>
+
+    <!-- Maven Dependency Plugin for Native Libraries -->
+    <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.5.0</version>
+        <!-- <executions>
+            <execution>
+                <id>unpack-native-libs</id>
+                <phase>process-resources</phase>
+                <goals>
+                    <goal>unpack</goal>
+                </goals>
+                <configuration>
+                    <artifactItems>
+                        <artifactItem>
+                            <groupId>org.bytedeco</groupId>
+                            <artifactId>llvm</artifactId>
+                            <version>19.1.3-1.5.11</version>
+                            <classifier>${os.classifier}</classifier>
+                            <type>jar</type>
+                            <outputDirectory>${project.build.directory}/native-libs</outputDirectory>
+                        </artifactItem>
+                    </artifactItems>
+                </configuration>
+            </execution>
+        </executions> -->
+    </plugin>
  
     </plugins>
 </build>
     <profiles>
         <profile>
             <id>windows</id>
+            <properties>
+                <os.classifier>windows-x86_64</os.classifier>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -184,6 +215,9 @@
 
         <profile>
             <id>linux</id>
+            <properties>
+                <os.classifier>linux-x86_64</os.classifier>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -284,10 +318,33 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>macos</id>
+            <properties>
+                <os.classifier>macosx-x86_64</os.classifier>
+            </properties>
+        </profile>
     </profiles>
 
     <dependencies>
-            <!-- TeaVM Core Dependency -->
+        <!-- Replace the platform-independent LLVM dependency with platform-specific ones -->
+        <!-- These will be controlled by profiles -->
+        
+        <!-- Remove this dependency as it pulls in all platform variants -->
+        <!-- <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>llvm-platform</artifactId>
+            <version>19.1.3-1.5.11</version>
+        </dependency> -->
+        
+        <!-- Use a single consistent version for LLVM -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>llvm</artifactId>
+            <version>19.1.3-1.5.11</version>
+        </dependency>
+        
+        <!-- TeaVM Core Dependency -->
         <dependency>
             <groupId>org.teavm</groupId>
             <artifactId>teavm-classlib</artifactId>
@@ -390,5 +447,7 @@
             <version>${scala.version}</version>
         </dependency>
 
+        <!-- LLVM platform dependency that includes native libraries -->
+   
     </dependencies>
 </project>

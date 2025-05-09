@@ -14,6 +14,9 @@ public class ArgumentParser {
         // get the current dir the program is running in
         public static String currentDir = System.getProperty("user.dir");
         
+        @Parameter(names = {"--test", "-t"}, help = true, description = "runllvm test")
+        public static boolean test = false;
+
         @Parameter(description = "Main file to process", required = false)
         public static java.util.List<String> mainParameter = new java.util.ArrayList<>();
 
