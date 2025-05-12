@@ -34,10 +34,11 @@ public class common {
     public String Error = "";
     public boolean ErrorState = false;
     // TODO: find a better way to do this bullfuck
-    public static String[] registers = {"RAX", "RBX", "RCX", "RDX", "RBP", "RSP", "RIP", "RDI", "RSI", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "RFLAGS"};
+    public static String[] registers = {"RAX", "RBX", "RCX", "RDX", "RBP", "RSP", "RIP", "RDI", "RSI", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "RFLAGS", "FPR0", "FPR1", "FPR2", "FPR3", "FPR4", "FPR5", "FPR6", "FPR7", "FPR8", "FPR9", "FPR10", "FPR11", "FPR12", "FPR13", "FPR14", "FPR15"};
     public static String[] instructions = {"MOV", "ADD", "SUB", "MUL", "DIV", "AND", "OR", "XOR", "NOT", "SHL", "SHR", "CMP", "JMP", "JE", "JNE", "JG", "JGE", "JL", "JLE", "CALL", "RET", "PUSH", "POP", "HLT", "NOP","OUT"};
     public static int[] memory = new int[MAX_MEMORY];
     public static float version = 1;
+    public static long startTime = System.currentTimeMillis();
     
     public static String joined(String[] items, String separator) {
         String output = "";
@@ -89,6 +90,80 @@ public class common {
 
         
     }};
+
+    // Add floating-point registers (16 double-precision)
+    public static double[] floatRegisters = new double[16];
+
+    // Add mapping for floating-point registers
+    public static Map<String, Integer> floatRegistersMap = new HashMap<String, Integer>() {{
+        put("FPR0", 0);  put("FPR1", 1);  put("FPR2", 2);  put("FPR3", 3);
+        put("FPR4", 4);  put("FPR5", 5);  put("FPR6", 6);  put("FPR7", 7);
+        put("FPR8", 8);  put("FPR9", 9);  put("FPR10", 10); put("FPR11", 11);
+        put("FPR12", 12); put("FPR13", 13); put("FPR14", 14); put("FPR15", 15);
+    }};
+
+    // Floating-point register accessors
+    public static double ReadFloatRegister(String reg) {
+        if (!floatRegistersMap.containsKey(reg)) {
+            printerr("Error: Invalid floating-point register name: " + reg + "\n");
+            return Double.NaN;
+        }
+        return floatRegisters[floatRegistersMap.get(reg)];
+    }
+
+    public static void WriteFloatRegister(String reg, double value) {
+        if (!floatRegistersMap.containsKey(reg)) {
+            printerr("Error: Invalid floating-point register name: " + reg + "\n");
+            return;
+        }
+        floatRegisters[floatRegistersMap.get(reg)] = value;
+    }
+
+    // Bit positions for integer flags in RFLAGS
+    public static final int ZF_BIT = 0; // Zero Flag
+    public static final int SF_BIT = 1; // Sign Flag
+    public static final int CF_BIT = 2; // Carry Flag
+    public static final int OF_BIT = 3; // Overflow Flag
+
+    // Bit positions for floating-point flags in RFLAGS (upper bits)
+    public static final int FE_BIT  = 16; // FP Equal
+    public static final int FLT_BIT = 17; // FP Less Than
+    public static final int FGT_BIT = 18; // FP Greater Than
+    public static final int FUO_BIT = 19; // FP Unordered (NaN)
+
+    // Set/Clear/Test integer flags
+    public static void setZF(boolean val) { setFlag(ZF_BIT, val); }
+    public static void setSF(boolean val) { setFlag(SF_BIT, val); }
+    public static void setCF(boolean val) { setFlag(CF_BIT, val); }
+    public static void setOF(boolean val) { setFlag(OF_BIT, val); }
+    public static boolean getZF() { return getFlag(ZF_BIT); }
+    public static boolean getSF() { return getFlag(SF_BIT); }
+    public static boolean getCF() { return getFlag(CF_BIT); }
+    public static boolean getOF() { return getFlag(OF_BIT); }
+
+    // Set/Clear/Test floating-point flags
+    public static void setFE(boolean val) { setFlag(FE_BIT, val); }
+    public static void setFLT(boolean val) { setFlag(FLT_BIT, val); }
+    public static void setFGT(boolean val) { setFlag(FGT_BIT, val); }
+    public static void setFUO(boolean val) { setFlag(FUO_BIT, val); }
+    public static boolean getFE() { return getFlag(FE_BIT); }
+    public static boolean getFLT() { return getFlag(FLT_BIT); }
+    public static boolean getFGT() { return getFlag(FGT_BIT); }
+    public static boolean getFUO() { return getFlag(FUO_BIT); }
+
+    private static void setFlag(int bit, boolean val) {
+        int flags = ReadRegister("RFLAGS");
+        if (val) {
+            flags |= (1 << bit);
+        } else {
+            flags &= ~(1 << bit);
+        }
+        WriteRegister("RFLAGS", flags);
+    }
+    private static boolean getFlag(int bit) {
+        int flags = ReadRegister("RFLAGS");
+        return ((flags >> bit) & 1) != 0;
+    }
 
     /**
      * Dumps the contents of the memory array to the console.

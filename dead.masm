@@ -1,0 +1,12 @@
+lbl main
+inc RAX
+inc RAX
+inc RAX
+inc RAX
+out 1 RAX
+
+jmp #end
+inc RAX
+
+lbl end
+hlt

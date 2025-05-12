@@ -361,8 +361,17 @@ public class Functions {
             }
             int value1 = common.ReadRegister(reg1);
             int value2 = common.ReadRegister(reg2);
+            long result64 = (long)value1 + (long)value2;
             int result = value1 + value2;
             common.WriteRegister(reg1, result);
+
+            // Set flags: ZF, SF, CF, OF
+            common.setZF(result == 0);
+            common.setSF(result < 0);
+            common.setCF((result64 & 0x1_0000_0000L) != 0); // Carry if overflowed 32 bits
+            // OF: if sign of operands same, but sign of result differs
+            boolean of = ((value1 ^ result) & (value2 ^ result) & 0x80000000) != 0;
+            common.setOF(of);
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: add");
         }
@@ -375,8 +384,16 @@ public class Functions {
             }
             int value1 = common.ReadRegister(reg1);
             int value2 = common.ReadRegister(reg2);
+            long result64 = (long)value1 - (long)value2;
             int result = value1 - value2;
             common.WriteRegister(reg1, result);
+
+            // Set flags: ZF, SF, CF, OF
+            common.setZF(result == 0);
+            common.setSF(result < 0);
+            common.setCF((result64 & 0x1_0000_0000L) != 0); // Borrow
+            boolean of = ((value1 ^ value2) & (value1 ^ result) & 0x80000000) != 0;
+            common.setOF(of);
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: sub");
         }
@@ -389,8 +406,17 @@ public class Functions {
             }
             int value1 = common.ReadRegister(reg1);
             int value2 = common.ReadRegister(reg2);
+            long result64 = (long)value1 * (long)value2;
             int result = value1 * value2;
             common.WriteRegister(reg1, result);
+
+            // Set flags: ZF, SF, CF, OF
+            common.setZF(result == 0);
+            common.setSF(result < 0);
+            // CF/OF set if upper 32 bits of result are nonzero
+            boolean overflow = (result64 > Integer.MAX_VALUE || result64 < Integer.MIN_VALUE);
+            common.setCF(overflow);
+            common.setOF(overflow);
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: mul");
         }
@@ -400,16 +426,21 @@ public class Functions {
         try {
             int value1 = common.ReadRegister(reg1);
             int value2 = common.ReadRegister(reg2);
+            if (value2 == 0) throw new ArithmeticException();
             int result = value1 / value2;
             common.WriteRegister(reg1, result);
+
+            // Set flags: ZF, SF, CF, OF (CF/OF cleared)
+            common.setZF(result == 0);
+            common.setSF(result < 0);
+            common.setCF(false);
+            common.setOF(false);
         } catch (ArithmeticException e) {
             throw new MASMException("Division by zero", instrs.currentLine, instrs.currentlineContents, "Error in instruction: div");
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: div");
         }
     }
-
-
 
     public void out(int[] memory, String fd, String source, instructions instrs) {
         try {
@@ -843,7 +874,18 @@ public class Functions {
                 }
             }
 
-            common.WriteRegister("RFLAGS", (value1 == value2) ? 1 : 0);
+            int result = value1 - value2;
+            // Set flags: ZF, SF, CF, OF
+            common.setZF(result == 0);
+            common.setSF(result < 0);
+            // CF: set if unsigned borrow occurred
+            common.setCF((Integer.compareUnsigned(value1, value2) < 0));
+            // OF: set if signed overflow
+            boolean of = ((value1 ^ value2) & (value1 ^ result) & 0x80000000) != 0;
+            common.setOF(of);
+
+            // For legacy compatibility, also set RFLAGS=1 if equal, 0 if not
+            common.WriteRegister("RFLAGS", (result == 0) ? 1 : 0);
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
         }
@@ -917,6 +959,33 @@ public class Functions {
             executor.shutdown();
         }
     }
+
+    // Floating-point compare (FCMP) and flag setting
+    public static void fcmp(double val1, double val2) {
+        boolean isNaN = Double.isNaN(val1) || Double.isNaN(val2);
+        common.setFE(false);
+        common.setFLT(false);
+        common.setFGT(false);
+        common.setFUO(false);
+        if (isNaN) {
+            common.setFUO(true);
+        } else if (val1 == val2) {
+            common.setFE(true);
+        } else if (val1 < val2) {
+            common.setFLT(true);
+        } else if (val1 > val2) {
+            common.setFGT(true);
+        }
+    }
+
+    // Floating-point conditional jump helpers
+    public static boolean fjz() { return common.getFE(); }
+    public static boolean fjne() { return !common.getFE() && !common.getFUO(); }
+    public static boolean fjlt() { return common.getFLT(); }
+    public static boolean fjle() { return common.getFE() || common.getFLT(); }
+    public static boolean fjgt() { return common.getFGT(); }
+    public static boolean fjge() { return common.getFE() || common.getFGT(); }
+    public static boolean fjuo() { return common.getFUO(); }
 
     public void cout(int[] memory, String fd, String reg, instructions instrs) {
         try {
@@ -1000,13 +1069,23 @@ public class Functions {
 
     public static void shl(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
-            // read the register hashmap
             int value1 = common.ReadRegister(reg1);
             int value2 = common.ReadRegister(reg2);
-            // shift the value
-            value1 = value1 << value2;
-            // write the value back to the register
-            common.WriteRegister(reg1, value1);
+            int shift = value2 & 0x1F;
+            int result = value1 << shift;
+            // Set CF to last bit shifted out
+            boolean cf = shift > 0 && ((value1 >> (32 - shift)) & 1) != 0;
+            common.WriteRegister(reg1, result);
+            common.setZF(result == 0);
+            common.setSF(result < 0);
+            common.setCF(cf);
+            // OF: if shift == 1, OF = MSB(result) ^ CF
+            if (shift == 1) {
+                boolean of = ((result >> 31) & 1) != (cf ? 1 : 0);
+                common.setOF(of);
+            } else {
+                common.setOF(false);
+            }
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: shl");
         }
@@ -1014,13 +1093,23 @@ public class Functions {
 
     public static void shr(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
-            // read the register hashmap
             int value1 = common.ReadRegister(reg1);
             int value2 = common.ReadRegister(reg2);
-            // shift the value
-            value1 = value1 >> value2;
-            // write the value back to the register
-            common.WriteRegister(reg1, value1);
+            int shift = value2 & 0x1F;
+            int result = value1 >>> shift;
+            // Set CF to last bit shifted out
+            boolean cf = shift > 0 && ((value1 >> (shift - 1)) & 1) != 0;
+            common.WriteRegister(reg1, result);
+            common.setZF(result == 0);
+            common.setSF(result < 0);
+            common.setCF(cf);
+            // OF: if shift == 1, OF = MSB(value1)
+            if (shift == 1) {
+                boolean of = ((value1 >> 31) & 1) != 0;
+                common.setOF(of);
+            } else {
+                common.setOF(false);
+            }
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: shr");
         }
@@ -1028,13 +1117,15 @@ public class Functions {
 
     public static void and(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
-            // read the register hashmap
             int value1 = common.ReadRegister(reg1);
             int value2 = common.ReadRegister(reg2);
-            // and the values
             int result = value1 & value2;
-            // write the result back to the register
             common.WriteRegister(reg1, result);
+            // Set flags: ZF, SF, CF=0, OF=0
+            common.setZF(result == 0);
+            common.setSF(result < 0);
+            common.setCF(false);
+            common.setOF(false);
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: and");
         }
@@ -1042,13 +1133,15 @@ public class Functions {
 
     public static void or(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
-            // read the register hashmap
             int value1 = common.ReadRegister(reg1);
             int value2 = common.ReadRegister(reg2);
-            // or the values
             int result = value1 | value2;
-            // write the result back to the register
             common.WriteRegister(reg1, result);
+            // Set flags: ZF, SF, CF=0, OF=0
+            common.setZF(result == 0);
+            common.setSF(result < 0);
+            common.setCF(false);
+            common.setOF(false);
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: or");
         }
@@ -1056,13 +1149,15 @@ public class Functions {
 
     public static void xor(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
-            // read the register hashmap
             int value1 = common.ReadRegister(reg1);
             int value2 = common.ReadRegister(reg2);
-            // xor the values
             int result = value1 ^ value2;
-            // write the result back to the register
             common.WriteRegister(reg1, result);
+            // Set flags: ZF, SF, CF=0, OF=0
+            common.setZF(result == 0);
+            common.setSF(result < 0);
+            common.setCF(false);
+            common.setOF(false);
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: xor");
         }
@@ -1070,12 +1165,10 @@ public class Functions {
 
     public static void not(int[] memory, String reg, instructions instrs) {
         try {
-            // read the register hashmap
             int value = common.ReadRegister(reg);
-            // not the value
             value = ~value;
-            // write the value back to the register
             common.WriteRegister(reg, value);
+            // NOT does not affect flags
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: not");
         }
@@ -1275,6 +1368,171 @@ public class Functions {
             bufferedStderr.flush();
         } catch (Exception e) {
             // ignore
+        }
+    }
+
+    // Jump if greater (signed): ZF==0 && SF==OF
+    public void jg(int[] memory, String target, instructions instrs) {
+        try {
+            if (!common.getZF() && (common.getSF() == common.getOF())) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jg");
+        }
+    }
+
+    // Jump if greater or equal (signed): SF==OF
+    public void jge(int[] memory, String target, instructions instrs) {
+        try {
+            if (common.getSF() == common.getOF()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jge");
+        }
+    }
+
+    // Jump if less (signed): SF!=OF
+    public void jl(int[] memory, String target, instructions instrs) {
+        try {
+            if (common.getSF() != common.getOF()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jl");
+        }
+    }
+
+    // Jump if less or equal (signed): ZF==1 || SF!=OF
+    public void jle(int[] memory, String target, instructions instrs) {
+        try {
+            if (common.getZF() || (common.getSF() != common.getOF())) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jle");
+        }
+    }
+
+    // Jump if overflow
+    public void jo(int[] memory, String target, instructions instrs) {
+        try {
+            if (common.getOF()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jo");
+        }
+    }
+
+    // Jump if not overflow
+    public void jno(int[] memory, String target, instructions instrs) {
+        try {
+            if (!common.getOF()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jno");
+        }
+    }
+
+    // Jump if carry
+    public void jc(int[] memory, String target, instructions instrs) {
+        try {
+            if (common.getCF()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jc");
+        }
+    }
+
+    // Jump if not carry
+    public void jnc(int[] memory, String target, instructions instrs) {
+        try {
+            if (!common.getCF()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: jnc");
+        }
+    }
+
+    // Floating-point jump if equal (FE)
+    public void fjz(int[] memory, String target, instructions instrs) {
+        try {
+            if (fjz()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: fjz");
+        }
+    }
+
+    // Floating-point jump if not equal (!FE && !FUO)
+    public void fjne(int[] memory, String target, instructions instrs) {
+        try {
+            if (fjne()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: fjne");
+        }
+    }
+
+    // Floating-point jump if less than (FLT)
+    public void fjlt(int[] memory, String target, instructions instrs) {
+        try {
+            if (fjlt()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: fjlt");
+        }
+    }
+
+    // Floating-point jump if less or equal (FE || FLT)
+    public void fjle(int[] memory, String target, instructions instrs) {
+        try {
+            if (fjle()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: fjle");
+        }
+    }
+
+    // Floating-point jump if greater than (FGT)
+    public void fjgt(int[] memory, String target, instructions instrs) {
+        try {
+            if (fjgt()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: fjgt");
+        }
+    }
+
+    // Floating-point jump if greater or equal (FE || FGT)
+    public void fjge(int[] memory, String target, instructions instrs) {
+        try {
+            if (fjge()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: fjge");
+        }
+    }
+
+    // Floating-point jump if unordered (FUO)
+    public void fjuo(int[] memory, String target, instructions instrs) {
+        try {
+            if (fjuo()) {
+                jmp(memory, target, instrs);
+            }
+        } catch (Exception e) {
+            throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: fjuo");
         }
     }
 

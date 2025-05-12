@@ -11,9 +11,10 @@ import java.util.Scanner;
 
 import org.finite.ModuleManager.MNIMethodObject;
 import org.finite.ModuleManager.MNIHandler;
-import org.finite.Exceptions.MASMException;  // Add this import
+import org.finite.Exceptions.MASMException; // Add this import
 import org.finite.Exceptions.MNIException;
 import org.finite.ArgumentParser;
+
 public class interp {
 
     public static boolean testmode = true;
@@ -68,7 +69,8 @@ public class interp {
             case "<QWORD>", "<PTR>" -> 8;
             case "<FLOAT>" -> 4;
             case "<DOUBLE>" -> 8;
-            default -> throw new MASMException("Unknown type in STATE declaration: " + type, 0, line, "Error in instruction: STATE");
+            default -> throw new MASMException("Unknown type in STATE declaration: " + type, 0, line,
+                    "Error in instruction: STATE");
         };
 
         int initialValue = 0;
@@ -76,7 +78,8 @@ public class interp {
             try {
                 initialValue = Integer.parseInt(parts[3]);
             } catch (NumberFormatException e) {
-                throw new MASMException("Invalid initial value in STATE declaration", 0, line, "Error in instruction: STATE");
+                throw new MASMException("Invalid initial value in STATE declaration", 0, line,
+                        "Error in instruction: STATE");
             }
         }
 
@@ -89,7 +92,7 @@ public class interp {
 
         // Initialize memory with the initial value
         // for (int i = 0; i < size; i++) {
-        //     common.WriteMemory(memoryPointer + i, (initialValue >> (i * 8)) & 0xFF);
+        // common.WriteMemory(memoryPointer + i, (initialValue >> (i * 8)) & 0xFF);
         // }
 
         memoryPointer += size;
@@ -111,7 +114,8 @@ public class interp {
                 String macroHeader = parts[1].trim();
                 String[] headerParts = macroHeader.split(" ", 2);
                 String macroName = headerParts[0];
-                List<String> parameters = headerParts.length > 1 ? Arrays.asList(headerParts[1].split(",")) : new ArrayList<>();
+                List<String> parameters = headerParts.length > 1 ? Arrays.asList(headerParts[1].split(","))
+                        : new ArrayList<>();
                 currentMacro = new Macro(macroName, parameters, new ArrayList<>());
                 continue;
             }
@@ -140,7 +144,8 @@ public class interp {
                 Macro macro = macros.get(instruction);
                 List<String> arguments = parts.length > 1 ? Arrays.asList(parts[1].split(",")) : new ArrayList<>();
                 if (arguments.size() != macro.parameters.size()) {
-                    throw new MASMException("Macro argument mismatch for: " + instruction, 0, line, "Error in macro expansion");
+                    throw new MASMException("Macro argument mismatch for: " + instruction, 0, line,
+                            "Error in macro expansion");
                 }
 
                 HashMap<String, String> paramMap = new HashMap<>();
@@ -164,11 +169,11 @@ public class interp {
         String result = processed.toString();
         int maxPasses = 10; // Prevent infinite recursion
         int currentPass = 0;
-        
+
         while (hasIncludes(result) && currentPass < maxPasses) {
             StringBuilder newProcessed = new StringBuilder();
             String[] currentLines = result.split("\n");
-            
+
             for (String line : currentLines) {
                 line = line.trim();
                 if (line.toLowerCase().startsWith("#include")) {
@@ -190,38 +195,77 @@ public class interp {
                     }
                 }
             }
-            
+
             result = newProcessed.toString();
             currentPass++;
         }
-        
+
         if (currentPass >= maxPasses) {
             throw new MASMException("Too many include passes", 0, "", "Error in instruction: #include");
         }
-        
+        //System.out.println("Preprocessed code:\n" + result);
         return result;
     }
 
-    // Optimization pass: simple constant folding, dead code elimination, peephole, etc.
-    private static String optimize(String code) {
+    // Optimization pass: simple constant folding, dead code elimination, peephole,
+    // etc.
+    public static String optimize(String code) {
+        System.out.println("Optimizing code:\n" + code);
+
         String[] lines = code.split("\n");
+        for (String line : lines) {
+            System.out.println("Line: " + line);
+        }
         List<String> optimized = new ArrayList<>();
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
-            // Constant folding for ADD/SUB/MUL/DIV with immediate values
-            if (line.matches("^(ADD|SUB|MUL|DIV)\\s+R\\w+\\s+[-]?\\d+$")) {
-                // Already optimal, just add
-                optimized.add(line);
+            String lineUpper = line.toUpperCase(); // Normalize for matching
+            if (ArgumentParser.Args.debug) {
+                common.dbgprint("Optimizing line %d: '%s'", i, line);
+            }
+
+            // --- New: Combine consecutive ADD/SUB/MUL/DIV on same register with immediates ---
+            if (lineUpper.matches("^(ADD|SUB|MUL|DIV)\\s+R\\w+\\s+[-]?\\d+$")) {
+                String[] parts = line.split("\\s+");
+                String op = parts[0].toUpperCase();
+                String reg = parts[1];
+                int val = Integer.parseInt(parts[2]);
+                int j = i + 1;
+                // Combine as long as next line is same op/reg/immediate
+                while (j < lines.length) {
+                    String next = lines[j].trim();
+                    String nextUpper = next.toUpperCase();
+                    if (nextUpper.matches("^" + op + "\\s+" + reg.toUpperCase() + "\\s+[-]?\\d+$")) {
+                        int nextVal = Integer.parseInt(next.split("\\s+")[2]);
+                        // Fold for ADD/SUB/MUL/DIV
+                        if (op.equals("ADD")) val += nextVal;
+                        else if (op.equals("SUB")) val += nextVal; // SUB x y; SUB x z == SUB x (y+z)
+                        else if (op.equals("MUL")) val *= nextVal;
+                        else if (op.equals("DIV")) val /= nextVal;
+                        j++;
+                    } else {
+                        break;
+                    }
+                }
+                // For SUB, keep as SUB x (y+z)
+                optimized.add(op + " " + reg + " " + val);
+                i = j - 1;
                 continue;
             }
+
+
             // Remove redundant MOV (e.g., MOV R1 R1)
-            if (line.matches("^MOV\\s+(R\\w+)\\s+\\1$")) {
+            if (lineUpper.matches("^MOV\\s+(R\\w+)\\s+\\1$")) {
+                if (ArgumentParser.Args.debug) {
+                    common.dbgprint("Removing redundant MOV: '%s'", line);
+                }
                 continue;
             }
             // Peephole: INC R1; INC R1 → ADD R1 2
             if (i + 1 < lines.length &&
-                line.matches("^INC\\s+(R\\w+)$") &&
-                lines[i + 1].trim().equals(line)) {
+                    lineUpper.matches("^INC\\s+(R\\w+)$") &&
+                    lines[i + 1].trim().toUpperCase().equals(lineUpper)) {
+                common.dbgprint("Peephole optimization: INC R1; INC R1 → ADD R1 2");
                 String reg = line.split("\\s+")[1];
                 optimized.add("ADD " + reg + " 2");
                 i++; // Skip next line
@@ -229,8 +273,8 @@ public class interp {
             }
             // Peephole: DEC R1; DEC R1 → SUB R1 2
             if (i + 1 < lines.length &&
-                line.matches("^DEC\\s+(R\\w+)$") &&
-                lines[i + 1].trim().equals(line)) {
+                    lineUpper.matches("^DEC\\s+(R\\w+)$") &&
+                    lines[i + 1].trim().toUpperCase().equals(lineUpper)) {
                 String reg = line.split("\\s+")[1];
                 optimized.add("SUB " + reg + " 2");
                 i++; // Skip next line
@@ -240,43 +284,49 @@ public class interp {
             if (i + 1 < lines.length) {
                 String l1 = line;
                 String l2 = lines[i + 1].trim();
-                if (l1.matches("^INC\\s+(R\\w+)$") && l2.equals("DEC " + l1.split("\\s+")[1])) {
+                String l1Upper = l1.toUpperCase();
+                String l2Upper = l2.toUpperCase();
+                if (l1Upper.matches("^INC\\s+(R\\w+)$") && l2Upper.equals("DEC " + l1.split("\\s+")[1].toUpperCase())) {
                     i++; // Skip next line
                     continue;
                 }
-                if (l1.matches("^DEC\\s+(R\\w+)$") && l2.equals("INC " + l1.split("\\s+")[1])) {
+                if (l1Upper.matches("^DEC\\s+(R\\w+)$") && l2Upper.equals("INC " + l1.split("\\s+")[1].toUpperCase())) {
                     i++; // Skip next line
                     continue;
                 }
             }
             // Remove ADD Rn 0 and SUB Rn 0 (no-op)
-            if (line.matches("^(ADD|SUB)\\s+R\\w+\\s+0$")) {
+            if (lineUpper.matches("^(ADD|SUB)\\s+R\\w+\\s+0$")) {
                 continue;
             }
             // Remove MUL Rn 1 and DIV Rn 1 (no-op)
-            if (line.matches("^(MUL|DIV)\\s+R\\w+\\s+1$")) {
+            if (lineUpper.matches("^(MUL|DIV)\\s+R\\w+\\s+1$")) {
                 continue;
             }
             // Replace MUL Rn 0 with MOV Rn 0
-            if (line.matches("^MUL\\s+(R\\w+)\\s+0$")) {
+            if (lineUpper.matches("^MUL\\s+(R\\w+)\\s+0$")) {
                 String reg = line.split("\\s+")[1];
                 optimized.add("MOV " + reg + " 0");
                 continue;
             }
             // Replace DIV Rn Rn with MOV Rn 1 (x/x = 1, if x != 0)
-            if (line.matches("^DIV\\s+(R\\w+)\\s+\\1$")) {
+            if (lineUpper.matches("^DIV\\s+(R\\w+)\\s+\\1$")) {
                 String reg = line.split("\\s+")[1];
                 optimized.add("MOV " + reg + " 1");
                 continue;
             }
             // Dead code after unconditional JMP/HLT
             if (!optimized.isEmpty() &&
-                (optimized.get(optimized.size() - 1).matches("^JMP\\b.*") ||
-                 optimized.get(optimized.size() - 1).matches("^HLT\\b.*"))) {
+                    (optimized.get(optimized.size() - 1).toUpperCase().matches("^JMP\\b.*") ||
+                            optimized.get(optimized.size() - 1).toUpperCase().matches("^HLT\\b.*"))) {
                 // Skip until next label
-                if (!line.startsWith("LBL")) continue;
+                if (!lineUpper.startsWith("LBL"))
+                    continue;
             }
             optimized.add(line);
+        }
+        if (ArgumentParser.Args.debug) {
+            common.dbgprint("Optimization complete. %d lines after optimization.", optimized.size());
         }
         return String.join("\n", optimized);
     }
@@ -285,9 +335,12 @@ public class interp {
         // Preprocess includes first
         String preprocessed = preprocess(ops);
         // Add optimization pass here
+        System.out.println("Preprocessed code:\n" + preprocessed);
         String optimized = optimize(preprocessed);
+
+
         String[] processedOps = optimized.split("\n");
-   
+
         interp.instructions instrs = new interp.instructions();
         instrs.instructions = new interp.instruction[100]; // reasonable default size
         instrs.Memory = new int[1000]; // reasonable default memory size
@@ -318,11 +371,9 @@ public class interp {
         currentLine = 0;
         for (String line : processedOps) {
             line = line.trim();
-            if (
-                !line.isEmpty() &&
-                !line.startsWith(";") &&
-                !line.startsWith("LBL")
-            ) {
+            if (!line.isEmpty() &&
+                    !line.startsWith(";") &&
+                    !line.startsWith("LBL")) {
                 interp.instruction instr = new interp.instruction();
                 instr.lineNumber = currentLine;
                 instr.originalLine = line;
@@ -365,11 +416,10 @@ public class interp {
 
         if (ArgumentParser.Args.debug) {
             print(
-                "Read %d instructions and %d labels\n",
-                instrs.length,
-                instrs.labelMap.size()
-            );
-           
+                    "Read %d instructions and %d labels\n",
+                    instrs.length,
+                    instrs.labelMap.size());
+
         }
 
         return instrs;
@@ -383,8 +433,8 @@ public class interp {
         int iop2;
         String sop1;
         String sop2;
-        int lineNumber;  // Add line number tracking
-        String originalLine;  // Add original line tracking
+        int lineNumber; // Add line number tracking
+        String originalLine; // Add original line tracking
     }
 
     public static Functions functions = new Functions();
@@ -404,10 +454,9 @@ public class interp {
         public int Memory[];
         public int labels[];
         public Functions functions;
-        public HashMap<String, Integer> labelMap; 
-        public int currentLine;  // Add current line tracking
-        public String currentlineContents;  // Add current line contents tracking
-         
+        public HashMap<String, Integer> labelMap;
+        public int currentLine; // Add current line tracking
+        public String currentlineContents; // Add current line contents tracking
 
         public instructions() {
             labelMap = new HashMap<>();
@@ -421,58 +470,65 @@ public class interp {
 
         // Only enforce main label in non-test mode
         if (!testMode && mainAddress == null) {
-           throw new MASMException("No 'main' label found in instructions", instrs.currentLine, instrs.currentlineContents, "Error in instruction: main");
-          
+            throw new MASMException("No 'main' label found in instructions", instrs.currentLine,
+                    instrs.currentlineContents, "Error in instruction: main");
+
         }
 
         // In test mode, start from instruction 0 if no main
         common.WriteRegister("RIP", mainAddress != null ? mainAddress : 0);
         String instrString = "";
         int rip = common.ReadRegister("RIP");
-        common.isRunning = true;  // Reset running state
+        common.isRunning = true; // Reset running state
+        long startTime = System.currentTimeMillis();
         while (rip < instrs.length && common.isRunning) {
-            
+
             // use arguments.cpu speed to control execution speed
             // Higher values = faster execution (less sleep time)
-            if (ArgumentParser.Args.cpuSpeed > 0) {
-                try {
-                    Thread.sleep(1000 / ArgumentParser.Args.cpuSpeed); 
-                } catch (InterruptedException e) {
-                    // Handle exception
-                }
-            }
+            // if (ArgumentParser.Args.cpuSpeed > 0) {
+            //     try {
+            //         Thread.sleep(1000 / ArgumentParser.Args.cpuSpeed);
+            //     } catch (InterruptedException e) {
+            //         // Handle exception
+            //     }
+            // }
 
             instruction instr = instrs.instructions[rip];
             if (ArgumentParser.Args.debug) {
                 common.box(
-                    "Debug",
-                    "Executing instruction: " + instr.name,
-                    "info"
-                );
+                        "Debug",
+                        "Executing instruction: " + instr.name,
+                        "info");
             }
-            instrs.currentLine = instr.lineNumber;  // Track current line
+            instrs.currentLine = instr.lineNumber; // Track current line
 
             // Track current line contents
-            instrString = instr.name + " " + (instr.sop1 != null ? instr.sop1 : "") + " " + (instr.sop2 != null ? instr.sop2 : "");
+            instrString = instr.name + " " + (instr.sop1 != null ? instr.sop1 : "") + " "
+                    + (instr.sop2 != null ? instr.sop2 : "");
             instrs.currentlineContents = instrString;
             terp.ExecuteSingleInstruction(instr, instrs.Memory, instrs);
-            if (!common.isRunning) break;  // Exit if HLT was called
+            if (!common.isRunning)
+                break; // Exit if HLT was called
             rip = common.ReadRegister("RIP") + 1;
             common.WriteRegister("RIP", rip);
         }
         // Flush output buffers at the end
+        long endTime = System.currentTimeMillis();
+        long executionTime = endTime - startTime;
+        System.out.println("Execution time: " + executionTime + " ms");
+        System.out.println("Start time: " + startTime);
+        System.out.println("End time: " + endTime);
         Functions.flushAllBuffers();
     }
 
     public static void printinstructions(instructions instrs) {
         for (int i = 0; i < instrs.length; i++) {
             print(
-                "Instruction %d: %s %s %s\n",
-                i,
-                instrs.instructions[i].name,
-                instrs.instructions[i].sop1,
-                instrs.instructions[i].sop2
-            );
+                    "Instruction %d: %s %s %s\n",
+                    i,
+                    instrs.instructions[i].name,
+                    instrs.instructions[i].sop1,
+                    instrs.instructions[i].sop2);
         }
     }
 
@@ -498,12 +554,12 @@ public class interp {
                 lines.add(scanner.nextLine());
             }
             scanner.close();
-     
-            
+
             // Preprocess and parse
             String preprocessed = preprocess(lines.toArray(new String[0]));
-       
-
+            // Add optimization pass here
+            preprocessed = optimize(preprocessed);
+            System.out.println("Optimized code:\n" + preprocessed);
             String[] processedLines = preprocessed.split("\n");
 
             // First pass: collect labels
@@ -568,10 +624,11 @@ public class interp {
 
             // Only check for main label in non-test mode
             if (!testMode && !instrs.labelMap.containsKey("main")) {
-            throw new MASMException("No 'main' label found in instructions", instrs.currentLine, instrs.currentlineContents, "Error in instruction: main");
-                
+                throw new MASMException("No 'main' label found in instructions", instrs.currentLine,
+                        instrs.currentlineContents, "Error in instruction: main");
+
             }
-            //System.out.println(preprocessed);
+            // System.out.println(preprocessed);
             ExecuteAllInstructions(instrs);
         } catch (java.io.FileNotFoundException e) {
             common.box("Error", "File not found: " + filename, "error");
@@ -581,117 +638,190 @@ public class interp {
     private static void dumpinstr(instructions instrs) {
         for (int i = 0; i < instrs.length; i++) {
             print(
-                "Instruction %d: %s %s %s\n",
-                i,
-                instrs.instructions[i].name,
-                instrs.instructions[i].sop1,
-                instrs.instructions[i].sop2
-            );
+                    "Instruction %d: %s %s %s\n",
+                    i,
+                    instrs.instructions[i].name,
+                    instrs.instructions[i].sop1,
+                    instrs.instructions[i].sop2);
         }
     }
 
     private static final Map<String, InstructionHandler> instructionTable = new HashMap<>();
     static {
-        instructionTable.put("mov", (instr, memory, instrs) -> { functions.mov(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("add", (instr, memory, instrs) -> { functions.add(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("sub", (instr, memory, instrs) -> { functions.sub(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("mul", (instr, memory, instrs) -> { functions.mul(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("div", (instr, memory, instrs) -> { functions.div(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("cmp", (instr, memory, instrs) -> { functions.cmp(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("jmp", (instr, memory, instrs) -> { functions.jmp(memory, instr.sop1, instrs); return 0; });
-        instructionTable.put("jeq", (instr, memory, instrs) -> { functions.jeq(memory, instr.sop1, instrs); return 0; });
-        instructionTable.put("jne", (instr, memory, instrs) -> { functions.jne(memory, instr.sop1, instrs); return 0; });
-        instructionTable.put("call", (instr, memory, instrs) -> { functions.call(memory, instr.sop1, instrs); return 0; });
-        instructionTable.put("ret", (instr, memory, instrs) -> { functions.ret(instrs); return 0; });
-        instructionTable.put("push", (instr, memory, instrs) -> { Functions.push(memory, instr.sop1, instrs); return 0; });
-        instructionTable.put("pop", (instr, memory, instrs) -> { Functions.pop(memory, instr.sop1, instrs); return 0; });
-        instructionTable.put("inc", (instr, memory, instrs) -> { Functions.inc(memory, instr.sop1, instrs); return 0; });
-        instructionTable.put("dec", (instr, memory, instrs) -> { Functions.dec(memory, instr.sop1, instrs); return 0; });
-        instructionTable.put("shl", (instr, memory, instrs) -> { Functions.shl(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("shr", (instr, memory, instrs) -> { Functions.shr(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("and", (instr, memory, instrs) -> { Functions.and(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("or", (instr, memory, instrs) -> { Functions.or(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("xor", (instr, memory, instrs) -> { Functions.xor(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("not", (instr, memory, instrs) -> { Functions.not(memory, instr.sop1, instrs); return 0; });
-        instructionTable.put("neg", (instr, memory, instrs) -> { Functions.neg(memory, instr.sop1, instrs); return 0; });
-        instructionTable.put("out", (instr, memory, instrs) -> { functions.out(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("cout", (instr, memory, instrs) -> { functions.cout(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("in", (instr, memory, instrs) -> { functions.in(memory, instr.sop1, instr.sop2, instrs); return 0; });
-        instructionTable.put("db", (instr, memory, instrs) -> { 
+        instructionTable.put("mov", (instr, memory, instrs) -> {
+            functions.mov(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("add", (instr, memory, instrs) -> {
+            functions.add(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("sub", (instr, memory, instrs) -> {
+            functions.sub(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("mul", (instr, memory, instrs) -> {
+            functions.mul(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("div", (instr, memory, instrs) -> {
+            functions.div(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("cmp", (instr, memory, instrs) -> {
+            functions.cmp(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("jmp", (instr, memory, instrs) -> {
+            functions.jmp(memory, instr.sop1, instrs);
+            return 0;
+        });
+        instructionTable.put("jeq", (instr, memory, instrs) -> {
+            functions.jeq(memory, instr.sop1, instrs);
+            return 0;
+        });
+        instructionTable.put("jne", (instr, memory, instrs) -> {
+            functions.jne(memory, instr.sop1, instrs);
+            return 0;
+        });
+        instructionTable.put("call", (instr, memory, instrs) -> {
+            functions.call(memory, instr.sop1, instrs);
+            return 0;
+        });
+        instructionTable.put("ret", (instr, memory, instrs) -> {
+            functions.ret(instrs);
+            return 0;
+        });
+        instructionTable.put("push", (instr, memory, instrs) -> {
+            Functions.push(memory, instr.sop1, instrs);
+            return 0;
+        });
+        instructionTable.put("pop", (instr, memory, instrs) -> {
+            Functions.pop(memory, instr.sop1, instrs);
+            return 0;
+        });
+        instructionTable.put("inc", (instr, memory, instrs) -> {
+            Functions.inc(memory, instr.sop1, instrs);
+            return 0;
+        });
+        instructionTable.put("dec", (instr, memory, instrs) -> {
+            Functions.dec(memory, instr.sop1, instrs);
+            return 0;
+        });
+        instructionTable.put("shl", (instr, memory, instrs) -> {
+            Functions.shl(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("shr", (instr, memory, instrs) -> {
+            Functions.shr(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("and", (instr, memory, instrs) -> {
+            Functions.and(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("or", (instr, memory, instrs) -> {
+            Functions.or(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("xor", (instr, memory, instrs) -> {
+            Functions.xor(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("not", (instr, memory, instrs) -> {
+            Functions.not(memory, instr.sop1, instrs);
+            return 0;
+        });
+        instructionTable.put("neg", (instr, memory, instrs) -> {
+            Functions.neg(memory, instr.sop1, instrs);
+            return 0;
+        });
+        instructionTable.put("out", (instr, memory, instrs) -> {
+            functions.out(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("cout", (instr, memory, instrs) -> {
+            functions.cout(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("in", (instr, memory, instrs) -> {
+            functions.in(memory, instr.sop1, instr.sop2, instrs);
+            return 0;
+        });
+        instructionTable.put("db", (instr, memory, instrs) -> {
             // DB may have all args in sop1, so split if needed
             String[] args = instr.sop1 != null ? instr.sop1.split("\\s+", 2) : new String[0];
             functions.db(memory, instrs, args);
             return 0;
         });
-        instructionTable.put("hlt", (instr, memory, instrs) -> { Functions.hlt(); return 0; });
+        instructionTable.put("hlt", (instr, memory, instrs) -> {
+            Functions.hlt();
+            return 0;
+        });
         instructionTable.put("mni", (instr, memory, instrs) -> {
- 
+
             try {
-                  if (instr.sop1 == null) {
-                        throw new MASMException(
+                if (instr.sop1 == null) {
+                    throw new MASMException(
                             "Missing MNI function name",
                             instr.lineNumber,
                             instr.originalLine,
-                            "Error in instruction: MNI"
-                        );
-                    }
+                            "Error in instruction: MNI");
+                }
 
-                    String[] mniParts = instr.sop1.split("\\.");
-                    if (mniParts.length != 2) {
-                        throw new MASMException(
+                String[] mniParts = instr.sop1.split("\\.");
+                if (mniParts.length != 2) {
+                    throw new MASMException(
                             "Invalid MNI function name",
                             instr.lineNumber,
                             instr.originalLine,
-                            "Error in instruction: MNI"
-                        );
-                    }
+                            "Error in instruction: MNI");
+                }
 
-                    String moduleName = mniParts[0];
-                    String functionName = mniParts[1];
+                String moduleName = mniParts[0];
+                String functionName = mniParts[1];
 
-                    // Parse the register arguments
-                    if (instr.sop2 == null) {
-                        throw new MASMException(
+                // Parse the register arguments
+                if (instr.sop2 == null) {
+                    throw new MASMException(
                             "Missing MNI register arguments",
                             instr.lineNumber,
                             instr.originalLine,
-                            "Error in instruction: MNI"
-                        );
-                    }
+                            "Error in instruction: MNI");
+                }
 
-                    String[] registerArgs = instr.sop2.trim().split("\\s+");
-                    if (registerArgs.length < 2) {
-                        throw new MASMException(
+                String[] registerArgs = instr.sop2.trim().split("\\s+");
+                if (registerArgs.length < 2) {
+                    throw new MASMException(
                             "MNI requires at least two arguments",
                             instr.lineNumber,
                             instr.originalLine,
-                            "Error in instruction: MNI"
-                        );
+                            "Error in instruction: MNI");
+                }
+
+                // Handle state variables in arguments
+                int[] resolvedArgs = new int[registerArgs.length];
+                for (int i = 0; i < registerArgs.length; i++) {
+                    String arg = registerArgs[i];
+                    if (stateVariables.containsKey(arg)) {
+                        resolvedArgs[i] = getStateVariableValue(arg, memory);
+                    } else if (arg.startsWith("$")) {
+                        resolvedArgs[i] = memory[Integer.parseInt(arg.substring(1))];
+                    } else {
+                        resolvedArgs[i] = common.ReadRegister(arg);
                     }
+                }
 
-                    // Handle state variables in arguments
-                    int[] resolvedArgs = new int[registerArgs.length];
-                    for (int i = 0; i < registerArgs.length; i++) {
-                        String arg = registerArgs[i];
-                        if (stateVariables.containsKey(arg)) {
-                            resolvedArgs[i] = getStateVariableValue(arg, memory);
-                        } else if (arg.startsWith("$")) {
-                            resolvedArgs[i] = memory[Integer.parseInt(arg.substring(1))];
-                        } else {
-                            resolvedArgs[i] = common.ReadRegister(arg);
-                        }
-                    }
+                // Create MNI object with resolved arguments
+                MNIMethodObject methodObj = new MNIMethodObject(memory, registerArgs);
+                methodObj.args = resolvedArgs; // Set resolved arguments
+                methodObj.argregs = registerArgs;
 
-                    // Create MNI object with resolved arguments
-                    MNIMethodObject methodObj = new MNIMethodObject(memory, registerArgs);
-                    methodObj.args = resolvedArgs; // Set resolved arguments
-                    methodObj.argregs = registerArgs;
+                MNIHandler.handleMNICall(moduleName, functionName, methodObj);
 
-                    MNIHandler.handleMNICall(moduleName, functionName, methodObj);
-                    
             } catch (Exception e) {
                 throw new MASMException("Error in MNI instruction: " + e.getMessage(),
-                    instr.lineNumber, instr.originalLine, "Error in instruction: mni");
+                        instr.lineNumber, instr.originalLine, "Error in instruction: mni");
             }
             return 0;
         });
@@ -704,10 +834,9 @@ public class interp {
     }
 
     public int ExecuteSingleInstruction(
-        instruction instr,
-        int[] memory,
-        instructions instrs
-    ) {
+            instruction instr,
+            int[] memory,
+            instructions instrs) {
         try {
             InstructionHandler handler = instructionTable.get(instr.name.toLowerCase());
             if (handler != null) {
@@ -716,25 +845,22 @@ public class interp {
 
         } catch (Exception e) {
             if (e instanceof MASMException) {
-               // throw e;
-            }
-            else if (e instanceof MNIException) {
+                // throw e;
+            } else if (e instanceof MNIException) {
                 throw new MASMException(
+                        e.getMessage(),
+                        instr.lineNumber,
+                        instr.originalLine,
+                        "Error in instruction: " + instr.name);
+            }
+            throw new MASMException(
                     e.getMessage(),
                     instr.lineNumber,
                     instr.originalLine,
-                    "Error in instruction: " + instr.name
-                );
-            }
-            throw new MASMException(
-                e.getMessage(),
-                instr.lineNumber,
-                instr.originalLine,
-                String.format("Error in instruction: %s %s %s",
-                    instr.name,
-                    instr.sop1 != null ? instr.sop1 : "",
-                    instr.sop2 != null ? instr.sop2 : "")
-            );
+                    String.format("Error in instruction: %s %s %s",
+                            instr.name,
+                            instr.sop1 != null ? instr.sop1 : "",
+                            instr.sop2 != null ? instr.sop2 : ""));
         }
         return 0;
     }
@@ -754,11 +880,10 @@ public class interp {
                 return Integer.parseInt(arg);
             } catch (NumberFormatException e) {
                 throw new MASMException(
-                    "Invalid number format: " + arg,
-                    0,
-                    "",
-                    "Error in instruction"
-                );
+                        "Invalid number format: " + arg,
+                        0,
+                        "",
+                        "Error in instruction");
             }
         }
     }
@@ -798,10 +923,9 @@ public class interp {
     public static void batchCompareExample(int[] memory, instructions instrs) {
         // Prepare operand pairs
         List<String[]> operandPairs = new ArrayList<>();
-        operandPairs.add(new String[] {"RAX", "RBX"});
-        operandPairs.add(new String[] {"RCX", "RDX"});
-        operandPairs.add(new String[] {"$100", "R8"});
-
+        operandPairs.add(new String[] { "RAX", "RBX" });
+        operandPairs.add(new String[] { "RCX", "RDX" });
+        operandPairs.add(new String[] { "$100", "R8" });
 
         // Call parallelCmp
         List<Integer> results = instrs.functions.parallelCmp(memory, operandPairs, instrs);
@@ -810,5 +934,20 @@ public class interp {
         for (int i = 0; i < results.size(); i++) {
             print("Comparison %d result: %d\n", i, results.get(i));
         }
+    }
+
+    // Helper: is this a floating-point register?
+    public static boolean isFloatRegister(String reg) {
+        return common.floatRegistersMap.containsKey(reg);
+    }
+
+    // Helper: read floating-point register
+    public static double readFPR(String reg) {
+        return common.ReadFloatRegister(reg);
+    }
+
+    // Helper: write floating-point register
+    public static void writeFPR(String reg, double value) {
+        common.WriteFloatRegister(reg, value);
     }
 }

@@ -6,14 +6,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.finite.ModuleManager.ModuleInit;
 import org.finite.ModuleManager.examples.MathModule;
-import org.finite.Comp.*;
+//import org.finite.Comp.*;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
-    private static ArgumentParser.Args arguments;  // Add this field
+    public static ArgumentParser.Args arguments;  // Add this field
 
     public static void main(String[] args) {
         try {
+            System.out.println("MASM Interpreter");
             arguments = new ArgumentParser.Args();  // Initialize arguments
             JCommander.newBuilder()
                 .addObject(arguments)
@@ -61,8 +62,16 @@ public class Main {
                 }
 
             }
+            long finished = System.currentTimeMillis();
+            long elapsed = finished - common.startTime;
+            common.box("Execution finished", "Execution time: " + elapsed + " ms", "info");
+            
         } catch (MASMException e) {
-            common.box("Error", e.getMessage(), "error");
+           // common.box("Error", e.getMessage(), "error");
+           System.out.println(e.getMessage());
+            if (e.getLineNumber() > 0) {
+                System.out.println("Line: " + e.getLineNumber());
+            }
             if (arguments != null && arguments.debug) {
                 e.printStackTrace();
             }
