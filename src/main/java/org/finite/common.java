@@ -17,6 +17,7 @@ public class common {
     String configPath = configDir + "/config.toml";
     String modulesPath = modulesDir + "/modules.toml";
     String[] modules = ReadResourceFile.readDir(modulesPath);
+    public static OutputStream outputStream = System.out;
     // THIS IS FINAL~~!!?!??!?!??!?!?!??!?!?!?!??!?!?
     public static final int MAX_MEMORY = 32767; // are you angry?
     public static final int STACK_SIZE = 1024; // stack size

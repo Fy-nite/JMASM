@@ -2,6 +2,7 @@ package org.finite.Memory;
 
 import org.finite.Config.MASMConfig;
 import org.finite.Exceptions.MASMException;
+import java.util.Arrays;
 
 public class MemoryManager {
     private static final MemoryManager INSTANCE = new MemoryManager();
@@ -17,17 +18,8 @@ public class MemoryManager {
         return INSTANCE;
     }
 
-    public void write(int address, int value) {
-        validateAddress(address);
-        memory[address] = value;
-    }
-
-    public int read(int address) {
-        validateAddress(address);
-        return memory[address];
-    }
-
-    private void validateAddress(int address) {
+    public final void write(int address, int value) {
+        // Inline validation for speed
         if (address < 0 || address >= memorySize) {
             throw new MASMException(
                 "Memory access violation",
@@ -36,11 +28,22 @@ public class MemoryManager {
                 String.format("Address %d is out of bounds (0-%d)", address, memorySize - 1)
             );
         }
+        memory[address] = value;
     }
 
-    public void reset() {
-        for (int i = 0; i < memorySize; i++) {
-            memory[i] = 0;
+    public final int read(int address) {
+        if (address < 0 || address >= memorySize) {
+            throw new MASMException(
+                "Memory access violation",
+                0,
+                "Memory access",
+                String.format("Address %d is out of bounds (0-%d)", address, memorySize - 1)
+            );
         }
+        return memory[address];
+    }
+
+    public final void reset() {
+        Arrays.fill(memory, 0);
     }
 }

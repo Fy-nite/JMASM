@@ -2,14 +2,21 @@ package org.finite;
 
 import static org.finite.common.print;
 import static org.finite.common.printerr;
-
+import org.finite.Modules.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
+import java.io.OutputStream;
+import java.io.BufferedOutputStream;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.finite.Exceptions.MASMException;
 import org.finite.interp.instructions;
 import org.slf4j.Logger;
@@ -21,6 +28,14 @@ public class Functions {
     private static final Logger logger = LoggerFactory.getLogger(
             Functions.class
     );
+
+    // Add static buffered output streams for stdout and stderr
+    private static final BufferedOutputStream bufferedStdout = new BufferedOutputStream(System.out, 8192);
+    private static final BufferedOutputStream bufferedStderr = new BufferedOutputStream(System.err, 8192);
+
+    private static final int FLUSH_THRESHOLD = 4096;
+    private static int stdoutBufferCount = 0;
+    private static int stderrBufferCount = 0;
 
     public static int calculate_box_value(String expression, instructions instrs) {
 
@@ -287,6 +302,58 @@ public class Functions {
         }
     }
 
+    // Helper to get value from register, memory, or immediate
+    private int getValue(int[] memory, String operand, instructions instrs) {
+        operand = operand.trim();
+        if (operand.startsWith("$")) {
+            String addr = operand.substring(1);
+            int address;
+            try {
+                address = Integer.parseInt(addr);
+            } catch (NumberFormatException e) {
+                if (!common.registersMap.containsKey(addr.toUpperCase()))
+                    throw new MASMException("Invalid memory address or register: " + addr, instrs.currentLine, instrs.currentlineContents, "Error in operand");
+                address = common.registersMap.get(addr.toUpperCase());
+            }
+            if (address < 0 || address >= memory.length)
+                throw new MASMException("Memory address out of bounds: " + address, instrs.currentLine, instrs.currentlineContents, "Error in operand");
+            return memory[address];
+        } else if (operand.startsWith("R")) {
+            if (!common.registersMap.containsKey(operand.toUpperCase()))
+                throw new MASMException("Invalid register: " + operand, instrs.currentLine, instrs.currentlineContents, "Error in operand");
+            return common.ReadRegister(operand);
+        } else {
+            try {
+                return Integer.parseInt(operand);
+            } catch (NumberFormatException e) {
+                throw new MASMException("Invalid immediate value: " + operand, instrs.currentLine, instrs.currentlineContents, "Error in operand");
+            }
+        }
+    }
+
+    // Helper to set value to register or memory
+    private void setValue(int[] memory, String dest, int value, instructions instrs) {
+        dest = dest.trim();
+        if (dest.startsWith("$")) {
+            String addr = dest.substring(1);
+            int address;
+            try {
+                address = Integer.parseInt(addr);
+            } catch (NumberFormatException e) {
+                throw new MASMException("Invalid memory address: " + addr, instrs.currentLine, instrs.currentlineContents, "Error in destination");
+            }
+            if (address < 0 || address >= memory.length)
+                throw new MASMException("Memory address out of bounds: " + address, instrs.currentLine, instrs.currentlineContents, "Error in destination");
+            memory[address] = value;
+        } else if (dest.startsWith("R")) {
+            if (!common.registersMap.containsKey(dest.toUpperCase()))
+                throw new MASMException("Invalid register: " + dest, instrs.currentLine, instrs.currentlineContents, "Error in destination");
+            common.WriteRegister(dest, value);
+        } else {
+            throw new MASMException("Invalid destination: " + dest, instrs.currentLine, instrs.currentlineContents, "Error in destination");
+        }
+    }
+
     public void add(int[] memory, String reg1, String reg2, instructions instrs) {
         try {
             if (!Parsing.INSTANCE.isValidRegister(reg1) || !Parsing.INSTANCE.isValidRegister(reg2)) {
@@ -348,131 +415,118 @@ public class Functions {
         try {
             common.dbgprint("Writing to file descriptor %s: %s\n", fd, source);
 
-            String value = "";
-            int fileDescriptor;
+            // Default to standard output
+            OutputStream outputStream = bufferedStdout;
+
             if (source == null) {
                 return;
             }
+
+            // Determine output stream based on file descriptor
+            int fileDescriptor;
             try {
                 fileDescriptor = Integer.parseInt(fd);
             } catch (Exception e) {
-                // If fd is a register, get its value
                 fileDescriptor = common.ReadRegister(fd);
             }
 
-            // Handle memory address starting with $[
+            if (fileDescriptor == 2) {
+                outputStream = bufferedStderr;
+            } else if (fileDescriptor != 1) {
+                throw new MASMException("Invalid file descriptor: " + fileDescriptor,
+                        instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
+            }
+
+            // Write directly to the output stream based on source type
             if (source.startsWith("$[") && source.endsWith("]")) {
-                // Remove $[ and ] to get the expression
+                // Handle memory address with expression
                 String expression = source.substring(2, source.length() - 1);
-                // Calculate the memory address using the expression
                 int memoryAddress = calculate_box_value(expression, instrs);
 
-                // Read from the calculated memory address
                 if (memoryAddress < 0 || memoryAddress >= memory.length) {
                     throw new MASMException("Memory address out of bounds: " + memoryAddress,
                             instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
                 }
 
-                // Try to read as null-terminated string first
-                StringBuilder sb = new StringBuilder();
+                // Output as string if null-terminated
                 int i = 0;
                 while (memoryAddress + i < memory.length && memory[memoryAddress + i] != 0) {
-                    sb.append((char) memory[memoryAddress + i]);
+                    outputStream.write(memory[memoryAddress + i] & 0xFF);
                     i++;
                 }
-                value = Parsing.INSTANCE.processEscapeSequences(sb.toString());
-
-                // If empty, use numeric value
-                if (value.isEmpty()) {
-                    value = Integer.toString(memory[memoryAddress]);
+                // If no characters were written, output the numeric value as bytes
+                if (i == 0) {
+                    int val = memory[memoryAddress];
+                    outputStream.write(Integer.toString(val).getBytes());
                 }
             }
-            // Handle old $address format
             else if (source.startsWith("$")) {
-                // Rest of existing $ handling code...
+                // Handle direct memory address
                 String addr = source.substring(1);
+                int address;
                 try {
-                    // Check if it's a direct memory address
-                    int address = Integer.parseInt(addr);
-                    // Always try to read as null-terminated string first
-                    StringBuilder sb = new StringBuilder();
-                    int i = 0;
-                    while (
-                            address + i < memory.length && memory[address + i] != 0
-                    ) {
-                        sb.append((char) memory[address + i]);
-                        i++;
-                    }
-                    value = Parsing.INSTANCE.processEscapeSequences(sb.toString());
-
-                    // If empty, try as number
-                    if (value.isEmpty()) {
-                        value = Integer.toString(memory[address]);
-                    }
+                    address = Integer.parseInt(addr);
                 } catch (Exception e) {
-                    // Handle register containing address
-                    int regAddr = common.ReadRegister(addr);
-                    StringBuilder sb = new StringBuilder();
-                    int i = 0;
-                    while (
-                            regAddr + i < memory.length && memory[regAddr + i] != 0
-                    ) {
-                        sb.append((char) memory[regAddr + i]);
-                        i++;
-                    }
-                    value = Parsing.INSTANCE.processEscapeSequences(sb.toString());
-
-                    // If empty, try as number
-                    if (value.isEmpty()) {
-                        value = Integer.toString(memory[regAddr]);
-                    }
+                    address = common.ReadRegister(addr);
+                }
+                int i = 0;
+                while (address + i < memory.length && memory[address + i] != 0) {
+                    outputStream.write(memory[address + i] & 0xFF);
+                    i++;
+                }
+                if (i == 0) {
+                    int val = memory[address];
+                    outputStream.write(Integer.toString(val).getBytes());
                 }
             }
-
             else if (source.startsWith("[") && source.endsWith("]")) {
                 String expression = source.substring(1, source.length() - 1);
-                value = Integer.toString(calculate_box_value(expression, instrs));
-
-
-
+                int val = calculate_box_value(expression, instrs);
+                outputStream.write(Integer.toString(val).getBytes());
             }
             else if (source.startsWith("R")) {
                 if (!Parsing.INSTANCE.isValidRegister(source)) {
                     throw new MASMException("Invalid register: " + source,
                             instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
                 }
-                value = Integer.toString(common.ReadRegister(source));
+                int val = common.ReadRegister(source);
+                outputStream.write(Integer.toString(val).getBytes());
             }
-
-            // Check if the source is a state variable
             else if (interp.stateVariables.containsKey(source)) {
-                value = Integer.toString(interp.getStateVariableValue(source, memory));
+                int val = interp.getStateVariableValue(source, memory);
+                outputStream.write(Integer.toString(val).getBytes());
             }
             else {
                 try {
-                    int numValue = Integer.parseInt(source);
-                    value = Integer.toString(numValue);
+                    int val = Integer.parseInt(source);
+                    outputStream.write(Integer.toString(val).getBytes());
                 } catch (NumberFormatException e) {
                     try {
-                        value = Integer.toString(common.ReadRegister(source));
+                        int val = common.ReadRegister(source);
+                        outputStream.write(Integer.toString(val).getBytes());
                     } catch (Exception ex) {
-                        value = Parsing.INSTANCE.processEscapeSequences(source);
-
+                        byte[] bytes = Parsing.INSTANCE.processEscapeSequences(source).getBytes();
+                        outputStream.write(bytes);
                     }
                 }
             }
 
-            if (fileDescriptor == 1) {
-                print("%s", value);
-            } else if (fileDescriptor == 2) {
-                printerr("%s", value);
-            } else {
-                common.box(
-                        "Error",
-                        "Invalid file descriptor: " + fileDescriptor,
-                        "error"
-                );
+            // Buffer flush logic
+            if (outputStream == bufferedStdout) {
+                stdoutBufferCount++;
+                if (stdoutBufferCount >= FLUSH_THRESHOLD) {
+                    bufferedStdout.flush();
+                    stdoutBufferCount = 0;
+                }
+            } else if (outputStream == bufferedStderr) {
+                stderrBufferCount++;
+                if (stderrBufferCount >= FLUSH_THRESHOLD) {
+                    bufferedStderr.flush();
+                    stderrBufferCount = 0;
+                }
             }
+            // ...do not call outputStream.flush() every time...
+
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: out");
         }
@@ -640,6 +694,9 @@ public class Functions {
 
     public void mov(int[] memory, String dest, String source, instructions instrs) {
         try {
+            if (instrs == null) {
+                throw new MASMException("Instructions context is null", 0, "", "Error in instruction: mov");
+            }
             if (dest == null || source == null) {
                 throw new MASMException("MOV requires two operands", instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
             }
@@ -717,7 +774,9 @@ public class Functions {
                 throw e;
             }
             throw new MASMException(e.getMessage(),
-                    instrs.currentLine, instrs.currentlineContents, "Error in instruction: mov");
+                    instrs != null ? instrs.currentLine : 0,
+                    instrs != null ? instrs.currentlineContents : "",
+                    "Error in instruction: mov");
         }
     }
 
@@ -790,6 +849,75 @@ public class Functions {
         }
     }
 
+    /**
+     * Parallel batch comparison of operand pairs.
+     * Each pair is compared in a separate thread.
+     * Returns a list of comparison results (1 if equal, 0 if not).
+     */
+    public List<Integer> parallelCmp(
+            int[] memory,
+            List<String[]> operandPairs,
+            instructions instrs
+    ) {
+        ExecutorService executor = Executors.newFixedThreadPool(
+                Runtime.getRuntime().availableProcessors()
+        );
+        try {
+            List<Callable<Integer>> tasks = new java.util.ArrayList<>();
+            for (String[] pair : operandPairs) {
+                String reg1 = pair[0];
+                String reg2 = pair[1];
+                tasks.add(() -> {
+                    int value1;
+                    int value2;
+                
+                    if (reg1.startsWith("$")) {
+                        try {
+                            int address = Integer.parseInt(reg1.substring(1));
+                            value1 = memory[address];
+                        } catch (NumberFormatException e) {
+                            throw new MASMException("Invalid memory address: " + reg1, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
+                        }
+                    } else {
+                        if (!Parsing.INSTANCE.isValidRegister(reg1)) {
+                            throw new MASMException("Invalid register name: " + reg1, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
+                        }
+                        value1 = common.ReadRegister(reg1);
+                    }
+    
+                    try {
+                        value2 = Integer.parseInt(reg2);
+                    } catch (NumberFormatException e) {
+                        if (reg2.startsWith("$")) {
+                            try {
+                                int address = Integer.parseInt(reg2.substring(1));
+                                value2 = memory[address];
+                            } catch (NumberFormatException ex) {
+                                throw new MASMException("Invalid memory address: " + reg2, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
+                            }
+                        } else {
+                            if (!Parsing.INSTANCE.isValidRegister(reg2)) {
+                                throw new MASMException("Invalid register name: " + reg2, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cmp");
+                            }
+                            value2 = common.ReadRegister(reg2);
+                        }
+                    }
+                    return (value1 == value2) ? 1 : 0;
+                });
+            }
+            List<Future<Integer>> results = executor.invokeAll(tasks);
+            List<Integer> cmpResults = new java.util.ArrayList<>();
+            for (Future<Integer> f : results) {
+                cmpResults.add(f.get());
+            }
+            return cmpResults;
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Error in parallelCmp: " + e.getMessage(), e);
+        } finally {
+            executor.shutdown();
+        }
+    }
+
     public void cout(int[] memory, String fd, String reg, instructions instrs) {
         try {
             common.dbgprint("Writing to file descriptor %s: %s\n", fd, reg);
@@ -802,28 +930,42 @@ public class Functions {
                 fileDescriptor = common.ReadRegister(fd);
             }
 
-            if (fileDescriptor == 1) {
-                ///either the character is a number in a register, or the raw value
-                if (reg.startsWith("R"))
-                {
-                    if (!Parsing.INSTANCE.isValidRegister(reg)) {
-                        throw new MASMException("Invalid register: " + reg, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cout");
-                    }
-                    int value = common.ReadRegister(reg);
-                    print("%c", value);
-                } else {
-                    // Handle raw value
-                    int value = Integer.parseInt(reg);
-                    print("%c", value);
+            OutputStream outputStream = (fileDescriptor == 2) ? bufferedStderr : bufferedStdout;
+            int value;
+            if (reg.startsWith("R")) {
+                if (!Parsing.INSTANCE.isValidRegister(reg)) {
+                    throw new MASMException("Invalid register: " + reg, instrs.currentLine, instrs.currentlineContents, "Error in instruction: cout");
                 }
-            } else if (fileDescriptor == 2) {
-                printerr("%c", reg);
+                value = common.ReadRegister(reg);
+            } else if (reg.startsWith("$")) {
+                // Memory reference
+                String addr = reg.substring(1);
+                int address;
+                try {
+                    address = Integer.parseInt(addr);
+                } catch (Exception e) {
+                    address = common.ReadRegister(addr);
+                }
+                value = memory[address];
             } else {
-                common.box(
-                        "Error",
-                        "Invalid file descriptor: " + fileDescriptor,
-                        "error"
-                );
+                value = Integer.parseInt(reg);
+            }
+            // Only write the lowest byte (as a character)
+            outputStream.write(value & 0xFF);
+
+            // Buffer flush logic
+            if (outputStream == bufferedStdout) {
+                stdoutBufferCount++;
+                if (stdoutBufferCount >= FLUSH_THRESHOLD) {
+                    bufferedStdout.flush();
+                    stdoutBufferCount = 0;
+                }
+            } else if (outputStream == bufferedStderr) {
+                stderrBufferCount++;
+                if (stderrBufferCount >= FLUSH_THRESHOLD) {
+                    bufferedStderr.flush();
+                    stderrBufferCount = 0;
+                }
             }
         } catch (Exception e) {
             throw new MASMException(e.getMessage(), instrs.currentLine, instrs.currentlineContents, "Error in instruction: cout");
@@ -1126,6 +1268,14 @@ public class Functions {
         }
     }
 
-
+    // At the end of program execution, flush buffers
+    public static void flushAllBuffers() {
+        try {
+            bufferedStdout.flush();
+            bufferedStderr.flush();
+        } catch (Exception e) {
+            // ignore
+        }
+    }
 
 }

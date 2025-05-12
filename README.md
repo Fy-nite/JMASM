@@ -60,6 +60,15 @@ lbl main
     hlt
 ```
 
+## Performance Tuning
+
+For best performance, run with:
+
+```bash
+java -server -XX:+UseG1GC -XX:+AggressiveOpts -Xms512m -Xmx2g -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+```
+
+Profile with VisualVM or Java Flight Recorder to find bottlenecks.
 
 ## Contributing
 

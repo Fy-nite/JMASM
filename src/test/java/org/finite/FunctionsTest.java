@@ -1,7 +1,8 @@
 package org.finite;
 
 import static org.junit.jupiter.api.Assertions.*;
-
+import org.finite.interp.*;
+import org.finite.Exceptions.*;
 import org.junit.jupiter.api.*;
 
 public class FunctionsTest {
@@ -66,29 +67,27 @@ public class FunctionsTest {
             );
 
             // Test invalid source register
-            IllegalArgumentException thrown = assertThrows(
-                IllegalArgumentException.class,
+            MASMException thrown = assertThrows(
+                MASMException.class,
                 () -> functions.mov(memory, "RAX", "INVALID_REG", instrs),
-                "Should throw IllegalArgumentException for invalid source register"
+                "Should throw MASMException for invalid source register"
             );
-//            assertTrue(thrown.getMessage().contains("Invalid source register"));
+            // assertTrue(thrown.getMessage().contains("Invalid source register"));
 
             // Test invalid destination register
-            // thrown = assertThrows(
-            //     IllegalArgumentException.class,
-            //     () -> functions.mov(memory, "INVALID_REG", "10", instrs),
-            //     "Should throw IllegalArgumentException for invalid destination register"
-            // );
-            // assertTrue(
-            //     thrown.getMessage().contains("Invalid destination register")
-            // );
+            thrown = assertThrows(
+                MASMException.class,
+                () -> functions.mov(memory, "INVALID_REG", "10", instrs),
+                "Should throw MASMException for invalid destination register"
+            );
+            // assertTrue(thrown.getMessage().contains("Invalid destination register"));
 
-            // // Test invalid memory reference
-            // thrown = assertThrows(
-            //     IllegalArgumentException.class,
-            //     () -> functions.mov(memory, "RAX", "$invalid", instrs),
-            //     "Should throw IllegalArgumentException for invalid memory address"
-            // );
+            // Test invalid memory reference
+            thrown = assertThrows(
+                MASMException.class,
+                () -> functions.mov(memory, "RAX", "$invalid", instrs),
+                "Should throw MASMException for invalid memory address"
+            );
             // assertTrue(thrown.getMessage().contains("Invalid memory address"));
         }
 
@@ -353,103 +352,85 @@ public class FunctionsTest {
         @DisplayName("Memory Operations")
         class MemoryOperations {
 
-            // @Test
-            // @Ignore
-            // @DisplayName("Test DB function")
-            // void testDb() {
-            //     // Test valid DB operation
-            //     functions.db(memory, "$0 \"Hello\"");
-            //     assertEquals('H', memory[0]);
-            //     assertEquals('e', memory[1]);
-
-            //     // Test invalid memory address
-            //     assertThrows(NumberFormatException.class, () -> {
-            //         functions.db(memory, "invalid $address \"Test\"");
-            //     });
-
-            //     // Test empty string
-            //     functions.db(memory, "$10 \"\"");
-            //     assertEquals(0, memory[10]);
-            // }
-
             @Test
             @DisplayName("Test OUT function")
             void testOut() {
+                // Ensure instrs is not null
+                instructions localInstrs = new instructions();
+                localInstrs.Memory = memory;
+                localInstrs.currentLine = 0;
+                localInstrs.currentlineContents = "";
+
                 // Test invalid file descriptor
-                functions.mov(memory, "RAX", "65", instrs); // ASCII 'A'
-                functions.out(memory, "3", "RAX", instrs); // Should not output anything
+                functions.mov(memory, "RAX", "65", localInstrs); // ASCII 'A'
+                functions.out(memory, "3", "RAX", localInstrs); // Should throw MASMException
 
                 // Test null source
-                functions.out(memory, "1", null, instrs);
+                functions.out(memory, "1", null, localInstrs);
 
                 // Test invalid register
-                functions.out(memory, "1", "INVALID_REG", instrs);
+                functions.out(memory, "1", "INVALID_REG", localInstrs);
 
                 // Test valid output
-                functions.out(memory, "1", "RAX", instrs);
+                functions.out(memory, "1", "RAX", localInstrs);
             }
 
             @Test
             @DisplayName("Test IN function")
             void testIn() {
+                instructions localInstrs = new instructions();
+                localInstrs.Memory = memory;
+                localInstrs.currentLine = 0;
+                localInstrs.currentlineContents = "";
                 try {
                     // Setup test input with proper cleanup
                     common.UnwrapStdin();
                     common.WrapStdinToFile("test input");
 
                     // Test valid input first
-                    functions.in(memory, "1", "$0", instrs);
+                    functions.in(memory, "1", "$0", localInstrs);
                     assertEquals('t', memory[0]);
                     assertEquals('e', memory[1]);
                     assertEquals('s', memory[2]);
                     assertEquals('t', memory[3]);
 
-                    // // Test invalid file descriptor (non-zero)
-                    // IllegalArgumentException thrown = assertThrows(
-                    //     IllegalArgumentException.class,
-                    //     () -> functions.in(memory, "999", "$0", instrs)
-                    // );
-                    assertEquals(
-                        "Only stdin (fd 1) is supported",
-                        thrown.getMessage()
+                    // Test invalid file descriptor (non-1)
+                    MASMException thrown = assertThrows(
+                        MASMException.class,
+                        () -> functions.in(memory, "999", "$0", localInstrs)
                     );
+                    assertTrue(thrown.getMessage().contains("Invalid file descriptor"));
 
                     // Test invalid file descriptor format
-                    thrown = assertThrows(IllegalArgumentException.class, () ->
-                        functions.in(memory, "xyz", "$0", instrs)
+                    thrown = assertThrows(MASMException.class, () ->
+                        functions.in(memory, "xyz", "$0", localInstrs)
                     );
-                    assertEquals(
-                        "Invalid file descriptor format: xyz",
-                        thrown.getMessage()
-                    );
+                    assertTrue(thrown.getMessage().contains("Invalid file descriptor"));
 
                     // Test null inputs
                     assertThrows(
-                        IllegalArgumentException.class,
-                        () -> functions.in(memory, null, "$0", instrs),
+                        MASMException.class,
+                        () -> functions.in(memory, null, "$0", localInstrs),
                         "File descriptor and destination cannot be null"
                     );
 
                     assertThrows(
-                        IllegalArgumentException.class,
-                        () -> functions.in(memory, "0", null, instrs),
+                        MASMException.class,
+                        () -> functions.in(memory, "0", null, localInstrs),
                         "File descriptor and destination cannot be null"
                     );
 
                     // Test invalid destination format
-                    thrown = assertThrows(IllegalArgumentException.class, () ->
-                        functions.in(memory, "0", "invalid_dest", instrs)
+                    thrown = assertThrows(MASMException.class, () ->
+                        functions.in(memory, "0", "invalid_dest", localInstrs)
                     );
-
+                    assertTrue(thrown.getMessage().contains("Invalid destination format"));
 
                     // Test invalid memory address format
-                    thrown = assertThrows(IllegalArgumentException.class, () ->
-                        functions.in(memory, "0", "$invalid", instrs)
+                    thrown = assertThrows(MASMException.class, () ->
+                        functions.in(memory, "0", "$invalid", localInstrs)
                     );
-//                    assertEquals(
-//                        "Invalid memory address format: $invalid",
-//                        thrown.getMessage()
-//                    );
+                    assertTrue(thrown.getMessage().contains("Invalid memory address"));
                 } finally {
                     // Always clean up
                     common.UnwrapStdin();

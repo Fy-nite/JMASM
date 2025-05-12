@@ -10,6 +10,17 @@ public class Instructions {
     public static final int TYPE_STACK = 4;
     public static final int TYPE_IO = 5;
 
+    public enum Opcode {
+        MOV, ADD, SUB, MUL, DIV, CMP, JMP, JE, JNE, CALL, RET, HLT, PUSH, POP, DB, LBL;
+        public static Opcode fromString(String name) {
+            try {
+                return Opcode.valueOf(name.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        }
+    }
+
     public static class InstructionDefinition {
         public final String name;
         public final int type;
@@ -134,7 +145,6 @@ public class Instructions {
         return 0;
     }
 
-    // ... implement other execute methods similarly ...
 
     private static int executeMemory(InstructionDefinition def, String op1, String op2, int[] memory, interp.instructions instrs) {
         // Implementation for memory instructions

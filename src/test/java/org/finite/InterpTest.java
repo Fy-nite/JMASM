@@ -106,6 +106,7 @@ public class InterpTest {
             common.WriteRegister("RBX", 0);
             File testFile = tempDir.resolve("test.masm").toFile();
             try (FileWriter writer = new FileWriter(testFile)) {
+                writer.write("LBL main\n");
                 writer.write("MOV RAX 10\n");
                 writer.write("MOV RBX 5\n");
                 writer.write("ADD RAX RBX\n");

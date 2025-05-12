@@ -8,7 +8,6 @@ import org.finite.ModuleManager.ModuleInit;
 import org.finite.ModuleManager.examples.MathModule;
 import org.finite.Comp.*;
 
-
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static ArgumentParser.Args arguments;  // Add this field
@@ -23,14 +22,12 @@ public class Main {
             
             arguments.configureLogging();  // Configure logging based on debug flag
             
-            if (ArgumentParser.Args.debug) {
+            if (arguments.debug) {
                 logger.info("Starting MASM interpreter with debug mode enabled");
             }
-            if (ArgumentParser.Args.test) {
+            if (arguments.test) {
                 logger.info("Running LLVM test");
                 // Call the test function here
-                LLMASM.start();
-                
             }
             System.out.print("\033[H\033[2J");
             System.out.flush();
@@ -41,11 +38,7 @@ public class Main {
                 common.dbgprint("Showing help message");
                 common.box("Help", "This is the help message", "info");
             }
-//            if (ArgumentParser.Args.debug) {
-//                common.box("java MASM interpreter", "2025 (C) finite\nType 'help' for a list of commands\n", "info");
-//                common.dbgprint("Starting debug REPL");
-//                debug.DebugRepl();
-//            }
+
             if (arguments.file != null && !arguments.file.isEmpty()) {
                 logger.info("Running file: {}", arguments.file);
                 common.box("java MASM interpreter", "2025 (C) finite\nrunning file: " + arguments.file + "\n", "info");
@@ -60,24 +53,17 @@ public class Main {
                 }
             }
             else {
-            // get the argument regardless, could be a file or a command
                 String arg = arguments.getEffectiveFile();
                 if (arg != null) {
                     logger.info("Running file: {}", arg);
                     common.box("java MASM interpreter", "2025 (C) finite\nrunning file: " + arg + "\n", "info");
                     interp.runFile(arg);
                 }
-                // else 
-                // {
-                //     common.box("java MASM interpreter", "2025 (C) finite\nType 'help' for a list of commands\n", "info");
-                //     common.dbgprint("Starting debug REPL");
-                //     debug.main();
-                // }
-             
+
             }
         } catch (MASMException e) {
             common.box("Error", e.getMessage(), "error");
-            if (ArgumentParser.Args.debug) {
+            if (arguments != null && arguments.debug) {
                 e.printStackTrace();
             }
             if (common.exitOnHLT) {
@@ -85,7 +71,7 @@ public class Main {
             }
         } catch (Exception e) {
             common.box("Error", "Unexpected error: " + e.getMessage(), "error");
-            if (ArgumentParser.Args.debug) {
+            if (arguments != null && arguments.debug) {
                 e.printStackTrace();
             }
             if (common.exitOnHLT) {

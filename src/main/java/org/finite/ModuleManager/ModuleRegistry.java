@@ -3,13 +3,15 @@ package org.finite.ModuleManager;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 //TODO: make this actualy a thing that people can use.
 public class ModuleRegistry {
     private static final ModuleRegistry instance = new ModuleRegistry();
     private final Map<String, Map<String, Map<String, Method>>> moduleMap;
 
     private ModuleRegistry() {
-        moduleMap = new HashMap<>();
+        // Use ConcurrentHashMap for better concurrency
+        moduleMap = new ConcurrentHashMap<>();
     }
 
     public static ModuleRegistry getInstance() {
@@ -23,9 +25,11 @@ public class ModuleRegistry {
     }
 
     public Method getMethod(String jarName, String className, String methodName) {
-        return moduleMap.getOrDefault(jarName, new HashMap<>())
-                .getOrDefault(className, new HashMap<>())
-                .get(methodName);
+        Map<String, Map<String, Method>> classMap = moduleMap.get(jarName);
+        if (classMap == null) return null;
+        Map<String, Method> methodMap = classMap.get(className);
+        if (methodMap == null) return null;
+        return methodMap.get(methodName);
     }
 
     public void registerMNIModule(String moduleName, String functionName, Method method) {

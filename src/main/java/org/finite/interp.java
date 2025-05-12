@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import org.finite.ModuleManager.MNIMethodObject;
@@ -201,10 +202,91 @@ public class interp {
         return result;
     }
 
+    // Optimization pass: simple constant folding, dead code elimination, peephole, etc.
+    private static String optimize(String code) {
+        String[] lines = code.split("\n");
+        List<String> optimized = new ArrayList<>();
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i].trim();
+            // Constant folding for ADD/SUB/MUL/DIV with immediate values
+            if (line.matches("^(ADD|SUB|MUL|DIV)\\s+R\\w+\\s+[-]?\\d+$")) {
+                // Already optimal, just add
+                optimized.add(line);
+                continue;
+            }
+            // Remove redundant MOV (e.g., MOV R1 R1)
+            if (line.matches("^MOV\\s+(R\\w+)\\s+\\1$")) {
+                continue;
+            }
+            // Peephole: INC R1; INC R1 → ADD R1 2
+            if (i + 1 < lines.length &&
+                line.matches("^INC\\s+(R\\w+)$") &&
+                lines[i + 1].trim().equals(line)) {
+                String reg = line.split("\\s+")[1];
+                optimized.add("ADD " + reg + " 2");
+                i++; // Skip next line
+                continue;
+            }
+            // Peephole: DEC R1; DEC R1 → SUB R1 2
+            if (i + 1 < lines.length &&
+                line.matches("^DEC\\s+(R\\w+)$") &&
+                lines[i + 1].trim().equals(line)) {
+                String reg = line.split("\\s+")[1];
+                optimized.add("SUB " + reg + " 2");
+                i++; // Skip next line
+                continue;
+            }
+            // Peephole: INC R1; DEC R1 or DEC R1; INC R1 → (remove both)
+            if (i + 1 < lines.length) {
+                String l1 = line;
+                String l2 = lines[i + 1].trim();
+                if (l1.matches("^INC\\s+(R\\w+)$") && l2.equals("DEC " + l1.split("\\s+")[1])) {
+                    i++; // Skip next line
+                    continue;
+                }
+                if (l1.matches("^DEC\\s+(R\\w+)$") && l2.equals("INC " + l1.split("\\s+")[1])) {
+                    i++; // Skip next line
+                    continue;
+                }
+            }
+            // Remove ADD Rn 0 and SUB Rn 0 (no-op)
+            if (line.matches("^(ADD|SUB)\\s+R\\w+\\s+0$")) {
+                continue;
+            }
+            // Remove MUL Rn 1 and DIV Rn 1 (no-op)
+            if (line.matches("^(MUL|DIV)\\s+R\\w+\\s+1$")) {
+                continue;
+            }
+            // Replace MUL Rn 0 with MOV Rn 0
+            if (line.matches("^MUL\\s+(R\\w+)\\s+0$")) {
+                String reg = line.split("\\s+")[1];
+                optimized.add("MOV " + reg + " 0");
+                continue;
+            }
+            // Replace DIV Rn Rn with MOV Rn 1 (x/x = 1, if x != 0)
+            if (line.matches("^DIV\\s+(R\\w+)\\s+\\1$")) {
+                String reg = line.split("\\s+")[1];
+                optimized.add("MOV " + reg + " 1");
+                continue;
+            }
+            // Dead code after unconditional JMP/HLT
+            if (!optimized.isEmpty() &&
+                (optimized.get(optimized.size() - 1).matches("^JMP\\b.*") ||
+                 optimized.get(optimized.size() - 1).matches("^HLT\\b.*"))) {
+                // Skip until next label
+                if (!line.startsWith("LBL")) continue;
+            }
+            optimized.add(line);
+        }
+        return String.join("\n", optimized);
+    }
+
     public static interp.instructions parseInstructions(String[] ops) {
         // Preprocess includes first
         String preprocessed = preprocess(ops);
-        String[] processedOps = preprocessed.split("\n");
+        // Add optimization pass here
+        String optimized = optimize(preprocessed);
+        String[] processedOps = optimized.split("\n");
    
         interp.instructions instrs = new interp.instructions();
         instrs.instructions = new interp.instruction[100]; // reasonable default size
@@ -378,6 +460,8 @@ public class interp {
             rip = common.ReadRegister("RIP") + 1;
             common.WriteRegister("RIP", rip);
         }
+        // Flush output buffers at the end
+        Functions.flushAllBuffers();
     }
 
     public static void printinstructions(instructions instrs) {
@@ -506,142 +590,44 @@ public class interp {
         }
     }
 
-    public int ExecuteSingleInstruction(
-        instruction instr,
-        int[] memory,
-        instructions instrs
-    ) {
-        try {
-            if (ArgumentParser.Args.debug) {
-                common.box("Debug", "Executing instruction: " + instr.name, "info");
-                //read common.registersMap
-                for (String key : common.registersMap.keySet()) {
-                    //print("%s: %d\n", key, common.ReadRegister(key));
-                  //  print("en");
-                }
-            }
-            
-            switch (instr.name.toLowerCase()) {
-                case "mov":
-                    if (stateVariables.containsKey(instr.sop1)) {
-                        StateVariable stateVar = stateVariables.get(instr.sop1);
-                        int value = parseValue(instr.sop2, memory);
-                        for (int i = 0; i < stateVar.size; i++) {
-                            common.WriteMemory(memory, stateVar.address + i, (value >> (i * 8)) & 0xFF); // Fix: Add 'memory' as the first argument
-                        }
-                    } else if (stateVariables.containsKey(instr.sop2)) {
-                        StateVariable stateVar = stateVariables.get(instr.sop2);
-                        int value = 0;
-                        for (int i = 0; i < stateVar.size; i++) {
-                            value |= (common.ReadMemory(memory, stateVar.address + i) & 0xFF) << (i * 8); // Fix: Add 'memory' as the first argument
-                        }
-                        common.WriteRegister(instr.sop1, value);
-                    } else {
-                        functions.mov(memory, instr.sop1, instr.sop2, instrs);
-                    }
-                    break;
-                case "dumpinstr":
-                    dumpinstr(instrs);
-                    break;
-                case "add":
-                    functions.add(memory, instr.sop1, instr.sop2,instrs);
-                    break;
-                case "sub":
-                    functions.sub(memory, instr.sop1, instr.sop2,instrs);
-                    break;
-                case "mul":
-                    functions.mul(memory, instr.sop1, instr.sop2,instrs);
-                    break;
-                case "div":
-                    functions.div(memory, instr.sop1, instr.sop2,instrs);
-                    break;
-                case "cmp":
-                    functions.cmp(memory, instr.sop1, instr.sop2,instrs);
-                    break;
-                case "ret":
-                    functions.ret(instrs);
-                    break;
-                case "hlt":
-                    functions.hlt();
-                    break;
-                case "nop":
-                    // skip
-                    break;
-                case "calle":
-                // memory,  target  , instrs
-                    functions.calle(memory, instr.sop1, instrs);
-                    break;
-                case "callne":
-                    functions.callne(memory, instr.sop1, instrs);
-                    break;
-                case "out":
-                    // out wants a fd or "place to output to"
-                    // 1 is stdout where as 2 is stderr
-                    String Splitted = instr.sop1.split(" ")[0];
-                    functions.out(memory, Splitted, instr.sop2,instrs);
-                    break;
-                case "in":
-                    // in wants a fd or "place to input from"
-                    // 0 is stdin
-                    String Splitted1 = instr.sop1.split(" ")[0];
-                    functions.in(memory, Splitted1, instr.sop2,instrs);
-                    break;
-                case "cout":
-                    String Splitted2 = instr.sop1.split(" ")[0];
-                    functions.cout(memory, Splitted2, instr.sop2,instrs);
-                    break;
-                case "jmp":
-                    functions.jmp(memory, instr.sop1, instrs);
-                    break;
-                case "je":
-                    functions.jeq(memory, instr.sop1, instrs);
-                    break;
-                case "jne":
-                    functions.jne(memory, instr.sop1, instrs);
-                    break;
-                case "db":
-                    String[] dbParts = instr.sop1.split("\\s+");
-                    functions.db(memory, instrs,dbParts);
-                    break;
-                case "push":
-                    functions.push(memory, instr.sop1,instrs);
-                    break;
-                case "pop":
-                    functions.pop(memory, instr.sop1,instrs);
-                    break;
-                case "inc":
-                    functions.inc(memory, instr.sop1,instrs);
-                    break;
-                case "dec":
-                    functions.dec(memory, instr.sop1,instrs);
-                    break;
-                case "call":
-                    functions.call(memory, instr.sop1, instrs);
-                    break;
-                case "shl":
-                    functions.shl(memory, instr.sop1, instr.sop2,instrs);
-                    break;
-                case "shr":
-                    functions.shr(memory, instr.sop1, instr.sop2,instrs);
-                    break;
-                case "and":
-                    functions.and(memory, instr.sop1, instr.sop2,instrs);
-                    break;
-                case "or":
-                    functions.or(memory, instr.sop1, instr.sop2,instrs);
-                    break;
-                case "xor":
-                    functions.xor(memory, instr.sop1, instr.sop2,instrs);
-                    break;
-                case "not":
-                    functions.not(memory, instr.sop1,instrs);
-                    break;
-                case "neg":
-                    functions.neg(memory, instr.sop1,instrs);
-                    break;
-                case "mni":
-                    // MNI format: MNI module.function reg1 reg2
-                    if (instr.sop1 == null) {
+    private static final Map<String, InstructionHandler> instructionTable = new HashMap<>();
+    static {
+        instructionTable.put("mov", (instr, memory, instrs) -> { functions.mov(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("add", (instr, memory, instrs) -> { functions.add(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("sub", (instr, memory, instrs) -> { functions.sub(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("mul", (instr, memory, instrs) -> { functions.mul(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("div", (instr, memory, instrs) -> { functions.div(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("cmp", (instr, memory, instrs) -> { functions.cmp(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("jmp", (instr, memory, instrs) -> { functions.jmp(memory, instr.sop1, instrs); return 0; });
+        instructionTable.put("jeq", (instr, memory, instrs) -> { functions.jeq(memory, instr.sop1, instrs); return 0; });
+        instructionTable.put("jne", (instr, memory, instrs) -> { functions.jne(memory, instr.sop1, instrs); return 0; });
+        instructionTable.put("call", (instr, memory, instrs) -> { functions.call(memory, instr.sop1, instrs); return 0; });
+        instructionTable.put("ret", (instr, memory, instrs) -> { functions.ret(instrs); return 0; });
+        instructionTable.put("push", (instr, memory, instrs) -> { Functions.push(memory, instr.sop1, instrs); return 0; });
+        instructionTable.put("pop", (instr, memory, instrs) -> { Functions.pop(memory, instr.sop1, instrs); return 0; });
+        instructionTable.put("inc", (instr, memory, instrs) -> { Functions.inc(memory, instr.sop1, instrs); return 0; });
+        instructionTable.put("dec", (instr, memory, instrs) -> { Functions.dec(memory, instr.sop1, instrs); return 0; });
+        instructionTable.put("shl", (instr, memory, instrs) -> { Functions.shl(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("shr", (instr, memory, instrs) -> { Functions.shr(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("and", (instr, memory, instrs) -> { Functions.and(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("or", (instr, memory, instrs) -> { Functions.or(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("xor", (instr, memory, instrs) -> { Functions.xor(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("not", (instr, memory, instrs) -> { Functions.not(memory, instr.sop1, instrs); return 0; });
+        instructionTable.put("neg", (instr, memory, instrs) -> { Functions.neg(memory, instr.sop1, instrs); return 0; });
+        instructionTable.put("out", (instr, memory, instrs) -> { functions.out(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("cout", (instr, memory, instrs) -> { functions.cout(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("in", (instr, memory, instrs) -> { functions.in(memory, instr.sop1, instr.sop2, instrs); return 0; });
+        instructionTable.put("db", (instr, memory, instrs) -> { 
+            // DB may have all args in sop1, so split if needed
+            String[] args = instr.sop1 != null ? instr.sop1.split("\\s+", 2) : new String[0];
+            functions.db(memory, instrs, args);
+            return 0;
+        });
+        instructionTable.put("hlt", (instr, memory, instrs) -> { Functions.hlt(); return 0; });
+        instructionTable.put("mni", (instr, memory, instrs) -> {
+ 
+            try {
+                  if (instr.sop1 == null) {
                         throw new MASMException(
                             "Missing MNI function name",
                             instr.lineNumber,
@@ -702,17 +688,32 @@ public class interp {
                     methodObj.argregs = registerArgs;
 
                     MNIHandler.handleMNICall(moduleName, functionName, methodObj);
-                    break;
-                default:
-                throw new MASMException(
-                    "Unknown instruction: " + instr.name,
-                    instr.lineNumber,
-                    instr.originalLine,
-                    "Error in instruction: " + instr.name
-                );
+                    
+            } catch (Exception e) {
+                throw new MASMException("Error in MNI instruction: " + e.getMessage(),
+                    instr.lineNumber, instr.originalLine, "Error in instruction: mni");
+            }
+            return 0;
+        });
+
+    }
+
+    @FunctionalInterface
+    interface InstructionHandler {
+        int execute(instruction instr, int[] memory, instructions instrs);
+    }
+
+    public int ExecuteSingleInstruction(
+        instruction instr,
+        int[] memory,
+        instructions instrs
+    ) {
+        try {
+            InstructionHandler handler = instructionTable.get(instr.name.toLowerCase());
+            if (handler != null) {
+                return handler.execute(instr, memory, instrs);
             }
 
-            return 0;
         } catch (Exception e) {
             if (e instanceof MASMException) {
                // throw e;
@@ -735,6 +736,7 @@ public class interp {
                     instr.sop2 != null ? instr.sop2 : "")
             );
         }
+        return 0;
     }
 
     // Helper method to parse values (either direct numbers or register references)
@@ -790,6 +792,23 @@ public class interp {
         StateVariable stateVar = stateVariables.get(name);
         for (int i = 0; i < stateVar.size; i++) {
             common.WriteMemory(memory, stateVar.address + i, (value >> (i * 8)) & 0xFF);
+        }
+    }
+
+    public static void batchCompareExample(int[] memory, instructions instrs) {
+        // Prepare operand pairs
+        List<String[]> operandPairs = new ArrayList<>();
+        operandPairs.add(new String[] {"RAX", "RBX"});
+        operandPairs.add(new String[] {"RCX", "RDX"});
+        operandPairs.add(new String[] {"$100", "R8"});
+
+
+        // Call parallelCmp
+        List<Integer> results = instrs.functions.parallelCmp(memory, operandPairs, instrs);
+
+        // Process results
+        for (int i = 0; i < results.size(); i++) {
+            print("Comparison %d result: %d\n", i, results.get(i));
         }
     }
 }

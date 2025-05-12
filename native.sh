@@ -1,1 +1,1 @@
-native-image -H:ConfigurationFileDirectories=graal-config -jar target/MASM-0.2-jar-with-dependencies.jar -H:Name=masm-native -march=native
+native-image -H:ConfigurationFileDirectories=graal-config -jar target/MASM-0.2-jar-with-dependencies.jar -H:Name=masm-native -O3 --gc=G1  

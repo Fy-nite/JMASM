@@ -26,7 +26,7 @@ public class ArgumentParserTest {
         @DisplayName("Test Debug Flag")
         void testDebugFlag() {
             commander.parse("-d");
-            assertTrue(args.debug);
+            assertTrue(ArgumentParser.Args.debug);
         }
 
         @Test
@@ -40,14 +40,14 @@ public class ArgumentParserTest {
         @DisplayName("Test Version Flag")
         void testVersionFlag() {
             commander.parse("-v");
-            assertTrue(args.version);
+            assertTrue(ArgumentParser.Args.version);
         }
 
         @Test
         @DisplayName("Test Compile Flag")
         void testCompileFlag() {
             commander.parse("-c");
-            assertTrue(args.compile);
+            assertTrue(ArgumentParser.Args.compile);
         }
     }
 
@@ -60,6 +60,13 @@ public class ArgumentParserTest {
             String testFile = "test.masm";
             commander.parse("-f", testFile);
             assertEquals(testFile, args.file);
+        }
+
+        @Test
+        @DisplayName("Test Missing File Argument")
+        void testMissingFileArgument() {
+            commander.parse();
+            assertNull(args.file);
         }
     }
 
