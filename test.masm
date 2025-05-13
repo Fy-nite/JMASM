@@ -2,5 +2,5 @@ lbl main
 out 1 RAX
 cout 1 10
 inc RAX
-cmp RAX 10000
+cmp RAX 100000
 jne #main

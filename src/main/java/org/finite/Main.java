@@ -11,8 +11,9 @@ import org.finite.ModuleManager.examples.MathModule;
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static ArgumentParser.Args arguments;  // Add this field
-
+    
     public static void main(String[] args) {
+        long finished = System.currentTimeMillis();
         try {
             System.out.println("MASM Interpreter");
             arguments = new ArgumentParser.Args();  // Initialize arguments
@@ -62,10 +63,9 @@ public class Main {
                 }
 
             }
-            long finished = System.currentTimeMillis();
             long elapsed = finished - common.startTime;
             common.box("Execution finished", "Execution time: " + elapsed + " ms", "info");
-            
+
         } catch (MASMException e) {
            // common.box("Error", e.getMessage(), "error");
            System.out.println(e.getMessage());
