@@ -20,4 +20,23 @@ public class MNIHandler {
             throw new MNIException("Error calling MNI method", moduleName, functionName);
         }
     }
+
+    // Call a string-returning function from a custom library
+    public static String callCustomLibFunction(String libName, String functionName, Object... args) throws Exception {
+        Class<?> clazz = registry.getCustomLib(libName);
+        if (clazz == null) throw new RuntimeException("Custom lib not found: " + libName);
+        java.lang.reflect.Method method = clazz.getMethod(functionName, toClassArray(args));
+        Object result = method.invoke(null, args);
+        if (result == null) return null;
+        return result.toString();
+    }
+
+    private static Class<?>[] toClassArray(Object[] args) {
+        if (args == null) return new Class<?>[0];
+        Class<?>[] arr = new Class<?>[args.length];
+        for (int i = 0; i < args.length; i++) {
+            arr[i] = args[i] == null ? Object.class : args[i].getClass();
+        }
+        return arr;
+    }
 }

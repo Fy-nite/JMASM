@@ -28,6 +28,9 @@ public class ArgumentParser {
         @Parameter(names = {"--cpuspeed", "-cs"}, description = "Set the CPU speed in Hz")
         public static int cpuSpeed = 1000000; // Default to 1 MHz
 
+        @Parameter(names = {"--stdlib", "-S"}, description = "Path to a custom standard library directory to be checked first for includes")
+        public static String stdlibDir = null;
+
         public String getEffectiveFile() {
             if (file != null && !file.isEmpty()) {
                 return file;

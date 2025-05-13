@@ -1,14 +1,6 @@
-package org.finite.Modules;
+package org.finite.intergrations;
 
-import com.kenai.jffi.Library;
-import jnr.*;
 import jnr.ffi.LibraryLoader;
-import jnr.ffi.Runtime;
-import jnr.ffi.annotations.In;
-
-import jnr.ffi.annotations.Out;
-import jnr.ffi.annotations.Transient;
-import jnr.ffi.Platform;
 
 public class NativeAccess {
     // clib interface variable

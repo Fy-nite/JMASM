@@ -30,6 +30,7 @@ public class MNIMethodObject {
     private int lastCompareResult;
     private boolean zeroFlag;
     private boolean carryFlag;
+
     
     public MNIMethodObject(int[] memory, String... args) {
         this.memory = memory;
