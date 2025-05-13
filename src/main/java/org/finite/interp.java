@@ -20,7 +20,12 @@ public class interp {
     public static boolean testmode = true;
     public static boolean testMode = Boolean.getBoolean("testMode"); // This line changes
 
-    // Add a Macro class to represent macros
+    /*
+     * A class to represent macros in the assembly language.
+     * It contains the macro name, parameters, and body.
+     * This is used for macro
+     * expansion during preprocessing.
+     */
     public static class Macro {
         String name;
         List<String> parameters;
@@ -32,7 +37,11 @@ public class interp {
             this.body = body;
         }
     }
-
+    /*
+     * A class to represent state variables in the assembly language.
+     * It contains the variable name, type, address, and size.
+     * This is used for state variable management.
+     */
     public static class StateVariable {
         String name;
         String type;
@@ -54,6 +63,10 @@ public class interp {
         return content.toLowerCase().contains("#include");
     }
 
+
+    /*
+     * Handles the STATE declaration in the assembly language.
+     */
     private static void handleStateDeclaration(String line) {
         String[] parts = line.split("\\s+");
         if (parts.length < 3) {
@@ -91,12 +104,21 @@ public class interp {
         stateVariables.put(name, stateVar);
 
         // Initialize memory with the initial value
-        // for (int i = 0; i < size; i++) {
-        // common.WriteMemory(memoryPointer + i, (initialValue >> (i * 8)) & 0xFF);
-        // }
+        for (int i = 0; i < size; i++) {
+            if (memoryPointer + i < common.MAX_MEMORY) {
+                common.WriteMemory(memoryPointer + i, (initialValue >> (i * 8)) & 0xFF);
+            } else {
+                throw new MASMException("Memory allocation exceeds available memory", 0, line, 
+                        "Error in instruction: STATE");
+            }
+        }
 
         memoryPointer += size;
     }
+
+    // Add at the top
+    private static final org.finite.ModuleManager.ModuleRegistry mniRegistry =
+        org.finite.ModuleManager.ModuleRegistry.getInstance();
 
     // Extend preprocess method to handle macros
     private static String preprocess(String[] lines) {
@@ -161,6 +183,23 @@ public class interp {
                     processed.append(expandedLine).append("\n");
                 }
                 continue;
+            }
+            // Try custom macro provider (annotation-based)
+            Method macroMethod = mniRegistry.getMacroProvider(instruction);
+            if (macroMethod != null) {
+                try {
+                    String[] macroArgs = parts.length > 1 ? parts[1].split(",") : new String[0];
+                    Object macroBody = macroMethod.invoke(null, (Object) macroArgs);
+                    if (macroBody != null) {
+                        processed.append(macroBody.toString()).append("\n");
+                        continue;
+                    }
+                } catch (Exception e) {
+                    throw new org.finite.Exceptions.MASMException(
+                        "Error calling macro provider: " + instruction,
+                        0, line, "Error in macro expansion"
+                    );
+                }
             }
 
             processed.append(line).append("\n");

@@ -10,3 +10,17 @@ import java.lang.annotation.Target;
 public @interface MNIClass {
     String value();
 }
+
+// New annotation for custom include providers
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface MNIInclude {
+    String name();
+}
+
+// New annotation for custom macro providers
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface MNIMacro {
+    String name();
+}

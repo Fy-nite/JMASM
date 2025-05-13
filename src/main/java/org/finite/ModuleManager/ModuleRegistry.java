@@ -4,10 +4,17 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-//TODO: make this actualy a thing that people can use.
+
 public class ModuleRegistry {
     private static final ModuleRegistry instance = new ModuleRegistry();
     private final Map<String, Map<String, Map<String, Method>>> moduleMap;
+
+    // Add a map for custom library classes (for string-returning functions)
+    private final Map<String, Class<?>> customLibClasses = new ConcurrentHashMap<>();
+
+    // Add maps for includes and macros
+    private final Map<String, Method> includeProviders = new HashMap<>();
+    private final Map<String, Method> macroProviders = new HashMap<>();
 
     private ModuleRegistry() {
         // Use ConcurrentHashMap for better concurrency
@@ -42,5 +49,109 @@ public class ModuleRegistry {
 
     public Map<String, Map<String, Map<String, Method>>> getModuleMap() {
         return moduleMap;
+    }
+
+    public void registerCustomLib(String libName, Class<?> clazz) {
+        customLibClasses.put(libName, clazz);
+    }
+
+    public Class<?> getCustomLib(String libName) {
+        return customLibClasses.get(libName);
+    }
+
+    // Register a method as a custom include or macro provider
+    public void registerAnnotatedProviders(Class<?> clazz) {
+        for (Method method : clazz.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(org.finite.ModuleManager.annotations.MNIInclude.class)) {
+                String name = method.getAnnotation(org.finite.ModuleManager.annotations.MNIInclude.class).name();
+                includeProviders.put(name, method);
+            }
+            if (method.isAnnotationPresent(org.finite.ModuleManager.annotations.MNIMacro.class)) {
+                String name = method.getAnnotation(org.finite.ModuleManager.annotations.MNIMacro.class).name();
+                macroProviders.put(name, method);
+            }
+        }
+    }
+    /*
+     * * Call an include provider method by name.
+     * * @param name The name of the include provider.
+     * * @param args The arguments to pass to the include provider.
+     * * @return The result of the include provider method.
+     * * @throws Exception if the include provider is not found or if an error occurs during invocation.
+     * * This method looks up the include provider by name and invokes it with the provided arguments.
+     * * It is assumed that the include provider is a static method in a class.
+     */
+    public Object callIncludeProvider(String name, Object... args) throws Exception {
+        Method method = includeProviders.get(name);
+        if (method == null) {
+            throw new RuntimeException("Include provider not found: " + name);
+        }
+        return method.invoke(null, args);
+    }
+    /*
+     * * Call a macro provider method by name.
+     * * * @param name The name of the macro provider.
+     * * * @param args The arguments to pass to the macro provider.
+     * * * @return The result of the macro provider method.
+     * * * @throws Exception if the macro provider is not found or if an error occurs during invocation.
+     * * * This method looks up the macro provider by name and invokes it with the provided arguments.
+     * * * It is assumed that the macro provider is a static method in a class.
+     */
+    public Object callMacroProvider(String name, Object... args) throws Exception {
+        Method method = macroProviders.get(name);
+        if (method == null) {
+            throw new RuntimeException("Macro provider not found: " + name);
+        }
+        return method.invoke(null, args);
+    }
+
+    /*
+     * * Call a string-returning function from a custom library.
+     * * @param libName The name of the custom library.
+     * * @param functionName The name of the function to call.
+     * * @param args The arguments to pass to the function.
+     * * @return The result of the function call.
+     * * @throws Exception if the function is not found or if an error occurs during invocation.
+     */
+    public Object callCustomLibFunction(String libName, String functionName, Object... args) throws Exception {
+        Class<?> clazz = customLibClasses.get(libName);
+        if (clazz == null) {
+            throw new RuntimeException("Custom lib not found: " + libName);
+        }
+        Method method = clazz.getMethod(functionName, toClassArray(args));
+        return method.invoke(null, args);
+    }
+    
+    private Class<?>[] toClassArray(Object[] args) {
+        if (args == null) return new Class<?>[0];
+        Class<?>[] arr = new Class<?>[args.length];
+        for (int i = 0; i < args.length; i++) {
+            arr[i] = args[i] == null ? Object.class : args[i].getClass();
+        }
+        return arr;
+    }
+
+    /*
+     * * Get an include provider method by name.
+     * * @param name The name of the include provider.
+     * * @return The method object representing the include provider.
+     * * @throws RuntimeException if the include provider is not found.
+     */
+    public Method getIncludeProvider(String name) {
+        return includeProviders.get(name);
+    }
+
+    /*
+     * * Get a macro provider method by name.
+     * * @param name The name of the macro provider.
+     * * @return The method object representing the macro provider.
+     * * @throws RuntimeException if the macro provider is not found.
+     */
+    public Method getMacroProvider(String name) {
+        Method method = macroProviders.get(name);
+        if (method == null) {
+            throw new RuntimeException("Macro provider not found: " + name);
+        }
+        return method;
     }
 }

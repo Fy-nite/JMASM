@@ -63,7 +63,7 @@ public class Main {
                 }
 
             }
-            long elapsed = finished - common.startTime;
+            long elapsed = System.currentTimeMillis() - finished;
             common.box("Execution finished", "Execution time: " + elapsed + " ms", "info");
 
         } catch (MASMException e) {

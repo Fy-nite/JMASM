@@ -4,6 +4,8 @@ import org.finite.Config.MASMConfig;
 import org.finite.Exceptions.IncludeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.finite.*;
+import org.finite.Argumentparser;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -13,6 +15,8 @@ public class Includemanager {
     private static final Logger log = LoggerFactory.getLogger(Includemanager.class);
     private static final Set<String> includedFiles = new HashSet<>();
     private static final MASMConfig config = MASMConfig.getInstance();
+    private static final org.finite.ModuleManager.ModuleRegistry mniRegistry =
+        org.finite.ModuleManager.ModuleRegistry.getInstance();
 
     static {
         // Configure logger level based on debug flag
@@ -23,6 +27,36 @@ public class Includemanager {
 
     public static String include(String filename, String currentFileContents) {
         String cleanFilename = filename.replace("\"", "");
+        // Check for custom include provider (annotation-based)
+        Method includeMethod = mniRegistry.getIncludeProvider(cleanFilename);
+        if (includeMethod != null) {
+            try {
+                Object result = includeMethod.invoke(null);
+                if (result != null) {
+                    return result.toString();
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Error calling include provider: " + cleanFilename, e);
+            }
+        }
+        // Check for custom macro provider (MNI-based)
+        int dotIdx = cleanFilename.lastIndexOf('.');
+        if (dotIdx > 0) {
+            String libName = cleanFilename.substring(0, dotIdx);
+            String macroName = cleanFilename.substring(dotIdx + 1);
+            Class<?> macroProvider = mniRegistry.getCustomLib(libName);
+            if (macroProvider != null) {
+                try {
+                    java.lang.reflect.Method macroMethod = macroProvider.getMethod(macroName);
+                    Object macroBody = macroMethod.invoke(null);
+                    if (macroBody != null) {
+                        return macroBody.toString();
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("Error calling macro provider: " + libName + "." + macroName, e);
+                }
+            }
+        }
         if (includedFiles.contains(cleanFilename)) {
             throw new IncludeException(
                 "Circular include detected",
@@ -53,13 +87,19 @@ public class Includemanager {
         
         // First try loading from classpath if it's a stdlib file
         String resourcePath = filename.replace(".", "/") + ".masm";
-        if (filename.startsWith("std")) {
+        String resourcePathAsm = filename.replace(".", "/") + ".mas";
             try (InputStream is = Includemanager.class.getClassLoader().getResourceAsStream(resourcePath)) {
                 if (is != null) {
                     return new String(is.readAllBytes(), StandardCharsets.UTF_8);
                 }
             }
-        }
+            try (InputStream is = Includemanager.class.getClassLoader().getResourceAsStream(resourcePathAsm)) {
+                if (is != null) {
+                    return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                }
+            
+            }
+    
         
         // Fall back to file system search
         for (File file : searchPaths) {
@@ -79,6 +119,11 @@ public class Includemanager {
     private static List<File> getSearchPaths(String filename) {
         String resourcePath = filename.replace(".", "/") + ".masm";
         List<File> paths = new ArrayList<>();
+
+        // Add custom stdlib path first if provided
+        if (Argumentparser.Args.stdlibDir != null && !Argumentparser.Args.stdlibDir.isEmpty()) {
+            paths.add(new File(Argumentparser.Args.stdlibDir, resourcePath));
+        }
         
         // Current directory
         paths.add(new File(resourcePath));
@@ -91,6 +136,8 @@ public class Includemanager {
         
         // Stdlib directory
         paths.add(new File(config.getPath("stdlib.dir"), resourcePath));
+        
+        paths.add(Argumentparser.Args.replacementDir);
         
         return paths;
     }

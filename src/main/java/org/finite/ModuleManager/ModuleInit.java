@@ -140,4 +140,9 @@ public class ModuleInit {
             logger.error("Failed to register built-in module: {}", moduleClass.getName(), e);
         }
     }
+
+    // Add this method to register a custom library class
+    public static void registerCustomLib(String libName, Class<?> clazz) {
+        registry.registerCustomLib(libName, clazz);
+    }
 }
