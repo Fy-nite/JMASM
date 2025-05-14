@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-
+import java.lang.reflect.Method;
 import org.finite.ModuleManager.MNIMethodObject;
 import org.finite.ModuleManager.MNIHandler;
 import org.finite.Exceptions.MASMException; // Add this import
@@ -106,7 +106,7 @@ public class interp {
         // Initialize memory with the initial value
         for (int i = 0; i < size; i++) {
             if (memoryPointer + i < common.MAX_MEMORY) {
-                common.WriteMemory(memoryPointer + i, (initialValue >> (i * 8)) & 0xFF);
+                common.WriteMemory(common.memory, memoryPointer + i, (initialValue >> (i * 8)) & 0xFF);
             } else {
                 throw new MASMException("Memory allocation exceeds available memory", 0, line, 
                         "Error in instruction: STATE");

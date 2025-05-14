@@ -150,7 +150,8 @@ public class ModuleRegistry {
     public Method getMacroProvider(String name) {
         Method method = macroProviders.get(name);
         if (method == null) {
-            throw new RuntimeException("Macro provider not found: " + name);
+            //could be a instruction
+            System.out.println("Macro provider not found: " + name);
         }
         return method;
     }

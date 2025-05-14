@@ -1,0 +1,3 @@
+lbl main
+	mov RAX 100
+	meow

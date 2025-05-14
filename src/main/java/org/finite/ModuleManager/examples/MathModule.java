@@ -3,6 +3,7 @@ package org.finite.ModuleManager.examples;
 import org.finite.ModuleManager.annotations.MNIClass;
 import org.finite.ModuleManager.annotations.MNIFunction;
 import org.finite.ModuleManager.MNIMethodObject;
+import org.finite.ModuleManager.annotations.MNIMacro;
 
 @MNIClass("math")
 public class MathModule {
@@ -22,5 +23,10 @@ public class MathModule {
         int result = value * value;
         // Store result back in first register
         obj.setRegister(obj.reg1, result);
+    }
+
+    @MNIMacro(name = "meow")
+    public static String meow(String[] args) {
+        return "out 1 RAX\n";
     }
 }

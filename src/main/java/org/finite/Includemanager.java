@@ -5,11 +5,17 @@ import org.finite.Exceptions.IncludeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.finite.*;
-import org.finite.Argumentparser;
+import org.finite.ArgumentParser; // Add this import
+
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+// methods
+import java.lang.reflect.Method;
+import java.util.List;
 
 public class Includemanager {
     private static final Logger log = LoggerFactory.getLogger(Includemanager.class);
@@ -121,8 +127,8 @@ public class Includemanager {
         List<File> paths = new ArrayList<>();
 
         // Add custom stdlib path first if provided
-        if (Argumentparser.Args.stdlibDir != null && !Argumentparser.Args.stdlibDir.isEmpty()) {
-            paths.add(new File(Argumentparser.Args.stdlibDir, resourcePath));
+        if (ArgumentParser.Args.stdlibDir != null && !ArgumentParser.Args.stdlibDir.isEmpty()) {
+            paths.add(new File(ArgumentParser.Args.stdlibDir, resourcePath));
         }
         
         // Current directory
@@ -136,9 +142,9 @@ public class Includemanager {
         
         // Stdlib directory
         paths.add(new File(config.getPath("stdlib.dir"), resourcePath));
-        
-        paths.add(Argumentparser.Args.replacementDir);
-        
+
+        // Remove: paths.add(Args.replacementDir);
+
         return paths;
     }
 

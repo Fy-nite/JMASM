@@ -1,71 +1,138 @@
-# Module Native Interface (MNI) Documentation
+# Module Native Interface (MNI) – Implementation Details
 
 ## Overview
-The Module Native Interface (MNI) is a system that allows Micro-Assembly to interface with Java libraries and custom modules at runtime. It provides a bridge between the assembly language and native Java code through annotations and a module registry system.
 
-## Key Components
+The Module Native Interface (MNI) enables Micro-Assembly to call native code in host languages (such as Java, C#, C, C++, Rust, Go, etc.) via a unified module/function registry. The implementation approach differs depending on whether the host language supports annotations/attributes (Java, C#, Kotlin, etc.) or not (C, C++, Rust, Go, etc.).
 
-### Annotations
-- `@MNIClass(value)`: Marks a Java class as an MNI module
-- `@MNIFunction(module, name)`: Marks methods that can be called from Micro-Assembly
+---
 
-### Core Classes
-- `ModuleRegistry`: Singleton that manages module registration and lookup
-- `MNIMethodObject`: Contains execution context and utilities for memory/register access
-- `ModuleInit`: Handles loading and initialization of modules
+## Implementation in Languages with Annotation/Attribute Support
 
-## Usage Example
+### Supported Languages
 
-### Java Module Definition
+- Java (annotations)
+- C# (attributes)
+- Kotlin (annotations)
+- Others with similar reflection/metadata systems
+
+### Module and Function Registration
+
+- **Modules** are classes marked with a special annotation/attribute (e.g., `@MNIClass("name")`).
+- **Functions** are static methods marked with an annotation/attribute (e.g., `@MNIFunction(module, name)`).
+- At runtime, the MNI system uses reflection to scan loaded classes for these annotations/attributes and registers them automatically.
+
+#### Example (Java)
+
 ```java
 @MNIClass("math")
 public class MathModule {
     @MNIFunction(module = "math", name = "add")
     public static void add(MNIMethodObject obj) {
-        int value1 = obj.getRegister(obj.reg1);
-        int value2 = obj.getRegister(obj.reg2);
-        obj.setRegister(obj.reg1, value1 + value2);
+        // ...implementation...
     }
 }
 ```
 
-### Micro-Assembly Usage
-```wasm
-MNI math.add R1 R2  ; Calls the math module's add function
+#### Registration Flow
+
+1. On startup, the MNI loader scans the classpath or module JARs for classes with `@MNIClass`.
+2. For each such class, it scans for static methods with `@MNIFunction`.
+3. Each discovered function is registered in the `ModuleRegistry` under its module and function name.
+4. When Micro-Assembly code calls `MNI math.add ...`, the registry locates and invokes the corresponding method.
+
+#### Advantages
+
+- **Automatic discovery**: No manual registration needed.
+- **Extensible**: New modules/functions are picked up automatically.
+
+---
+
+## Implementation in Languages Without Annotation/Attribute Support
+
+### Supported Languages
+
+- C, C++
+- Rust
+- Go
+- Others without runtime reflection/metadata
+
+### Module and Function Registration
+
+- **Modules** are registered via explicit function calls at startup.
+- **Functions** are registered by passing function pointers or descriptors to the registry.
+- No automatic discovery; all registration is manual.
+
+#### Example (C)
+
+```c
+// Define the function signature expected by MNI
+void math_add(MNIMethodObject* obj) {
+    // ...implementation...
+}
+
+// Register module and function at startup
+void register_math_module() {
+    mni_register_module("math");
+    mni_register_function("math", "add", &math_add);
+}
 ```
 
-## Memory and Register Access
-- Modules can read/write memory using `MNIMethodObject.readMemory()` and `writeMemory()`
-- Register access through `getRegister()` and `setRegister()`
-- Stack operations available via `push()` and `pop()`
+#### Registration Flow
 
-more operations should be coming in the near future.
+1. At program initialization, call registration functions for each module and function.
+2. The MNI system stores function pointers in the `ModuleRegistry`.
+3. When Micro-Assembly code calls `MNI math.add ...`, the registry invokes the registered function pointer.
 
-## Module Loading
-- Modules can be loaded from JAR files in the modules directory
-- Built-in modules can be registered programmatically
-- Module methods are discovered through reflection and annotations
+#### Advantages
 
-## Project Directory Structure
-The project automatically creates and manages several directories under the root folder:
+- **Portable**: Works in any language, even without reflection.
+- **Explicit**: Registration is clear and controlled.
+
+---
+
+## Core Concepts (Common to All Languages)
+
+- **ModuleRegistry**: Central registry mapping module/function names to native implementations.
+- **MNIMethodObject**: Encapsulates execution context, memory/register access, stack, and state variables.
+- **Memory/Register Access**: Provided via methods or function arguments, depending on language.
+- **Stack Operations**: Push/pop available via API.
+- **State Variables**: Accessed via API or struct fields.
+
+---
+
+## Directory Structure and Configuration
 
 ```
 MASM_ROOT/
 ├── logs/         # Log files and execution traces
-├── modules/      # JAR files containing MNI modules 
+├── modules/      # Native modules (JARs, DLLs, SOs, etc.)
 ├── config/       # Configuration files
-└── temp/         # Temporary files during execution
+└── temp/         # Temporary files
 ```
 
-### Directory Initialization
-The system automatically creates these directories on startup if they don't exist. Default paths can be configured through system properties:
+- Directories are created on startup if missing.
+- Paths are configurable via system properties or environment variables.
+- Defaults to `.masm/` in the user's home directory if unspecified.
 
-```properties
-masm.root.dir=/path/to/root      # Root directory for all MASM files
-masm.modules.dir=${root}/modules  # Modules directory
-masm.logs.dir=${root}/logs       # Logs directory
-masm.config.dir=${root}/config   # Config directory
-masm.temp.dir=${root}/temp       # Temporary files
-```
+---
 
-If no root directory is specified, the system defaults to the user's home directory under `.masm/`.
+## Extending MNI
+
+- **With annotations/attributes**: Add new classes/methods with the appropriate metadata.
+- **Without annotations/attributes**: Add new registration calls for each module/function.
+- Advanced features (custom include/macro providers, argument types, etc.) can be implemented by extending the registration and invocation APIs.
+
+---
+
+## Safety and Best Practices
+
+- Always validate memory/register access.
+- Free any allocated memory as required by the host language.
+- Ensure thread safety if modules are used concurrently.
+
+---
+
+## Further Reference
+
+- For a list of available modules/functions, see [mni-instructions.md](../mni-instructions.md).
+- Consult the runtime documentation for language-specific integration details.
