@@ -1,7 +1,7 @@
 package org.finite;
 import org.finite.Exceptions.MASMException;  // Add this import
 import com.beust.jcommander.JCommander;
-import org.finite.Modules.extentions.StringOperations;
+import org.finite.Modules.StringOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.finite.ModuleManager.ModuleInit;

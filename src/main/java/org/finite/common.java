@@ -273,7 +273,7 @@ public class common {
     }
     public static void UnwrapStdout()
     {
-        System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
+        System.setOut(System.out);
     }
     public static void UnwrapStderr()
     {

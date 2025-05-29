@@ -8,7 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ModuleRegistry {
     private static final ModuleRegistry instance = new ModuleRegistry();
     private final Map<String, Map<String, Map<String, Method>>> moduleMap;
-
+     public static String[] registers = {"RAX", "RBX", "RCX", "RDX", "RBP", "RSP", "RIP", "RDI", "RSI", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "RFLAGS", "FPR0", "FPR1", "FPR2", "FPR3", "FPR4", "FPR5", "FPR6", "FPR7", "FPR8", "FPR9", "FPR10", "FPR11", "FPR12", "FPR13", "FPR14", "FPR15"};
+    public static String[] instructions = {"MOV", "ADD", "SUB", "MUL", "DIV", "AND", "OR", "XOR", "NOT", "SHL", "SHR", "CMP", "JMP", "JE", "JNE", "JG", "JGE", "JL", "JLE", "CALL", "RET", "PUSH", "POP", "HLT", "NOP","OUT"};
+    
     // Add a map for custom library classes (for string-returning functions)
     private final Map<String, Class<?>> customLibClasses = new ConcurrentHashMap<>();
 
@@ -148,10 +150,15 @@ public class ModuleRegistry {
      * * @throws RuntimeException if the macro provider is not found.
      */
     public Method getMacroProvider(String name) {
+        if (registers.equals(name) || instructions.equals(name) || name.startsWith("R") || name.startsWith("L")) {
+            // if the name is a register or instruction, we do nothing
+            return null; // nothing to do, just return null  
+        } else {
+            //throw new RuntimeException("Macro provider not found: " + name);
+        }
         Method method = macroProviders.get(name);
         if (method == null) {
             //could be a instruction
-            System.out.println("Macro provider not found: " + name);
         }
         return method;
     }

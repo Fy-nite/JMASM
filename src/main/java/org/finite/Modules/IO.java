@@ -1,4 +1,4 @@
-package org.finite.Modules.extentions;
+package org.finite.Modules;
 
 import org.finite.Functions;
 import org.finite.ModuleManager.MNIMethodObject;

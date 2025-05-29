@@ -1,5 +1,6 @@
 package org.finite.ModuleManager;
 
+import org.finite.Modules.MNISystem;
 import java.io.File;
 import java.lang.reflect.*;
 import java.net.URLClassLoader;
@@ -14,12 +15,11 @@ import org.finite.ModuleManager.annotations.MNIClass;
 import org.finite.ModuleManager.annotations.MNIFunction;
 import org.finite.ModuleManager.examples.MathModule;
 import org.finite.Interpreterops;  // Changed from interpreterops to Interpreterops
-import org.finite.Modules.extentions.IO;
-import org.finite.Modules.extentions.StringOperations;
-import org.finite.Modules.extentions.SwingOperations;
+import org.finite.Modules.IO;
+import org.finite.Modules.StringOperations;
+import org.finite.Modules.SwingOperations;
 import org.python.antlr.ast.Module;
 import org.finite.ModuleManager.*;
-import org.finite.Modules.extentions.*;
 /*
     * Module init is a class that is responsible for initializing the modules that are loaded into the interpreter.
     * init handles things like starting the actual ModuleInstaner and calling it for things such as loading from a directory,

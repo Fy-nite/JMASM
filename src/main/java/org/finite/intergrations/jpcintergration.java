@@ -1,4 +1,4 @@
-package org.finite;
+package org.finite.intergrations;
 import org.finite.Config.MASMConfig;
 import org.finite.Exceptions.IncludeException;
 import org.finite.compiler;
@@ -9,6 +9,8 @@ import java.io.FileNotFoundException;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.HashSet;
+import org.finite.compiler;
+import org.finite.parser;
 
 public class jpcintergration {
     public static void startmain(String[] args) {
@@ -55,6 +57,7 @@ public class jpcintergration {
             System.out.println("Error: Unable to read the input file.");
             return;
         }
+        
         // Split the contents into lines
         contents = fileContents.toString().split("\n");
         parser.parse(contents);

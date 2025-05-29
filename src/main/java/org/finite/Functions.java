@@ -21,20 +21,35 @@ import org.finite.interp.instructions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class Functions {
-
+    public static boolean useoutput = true;
     private static final Logger logger = LoggerFactory.getLogger(
             Functions.class
     );
 
     // Add static buffered output streams for stdout and stderr
-    private static final BufferedOutputStream bufferedStdout = new BufferedOutputStream(System.out, 8192);
-    private static final BufferedOutputStream bufferedStderr = new BufferedOutputStream(System.err, 8192);
+    public static OutputStream stdout;
+    public static BufferedOutputStream bufferedStdout;
+    public static BufferedOutputStream bufferedStderr;
 
     private static final int FLUSH_THRESHOLD = 4096;
     private static int stdoutBufferCount = 0;
     private static int stderrBufferCount = 0;
+    
+    // Initialize the static variables
+    static {
+        stdout = System.out;
+        if (!useoutput) {
+            stdout = new OutputStream() {
+                @Override
+                public void write(int b) throws IOException {
+                    // Do nothing, effectively disabling output
+                }
+            };
+        }
+        bufferedStdout = new BufferedOutputStream(stdout, 8192);
+        bufferedStderr = new BufferedOutputStream(System.err, 8192);
+    }
 
     public static int calculate_box_value(String expression, instructions instrs) {
 

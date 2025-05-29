@@ -1,4 +1,0 @@
-lbl io.write
-    ;; Writes a string to the console using MNI functions
-    MNI IO.write RAX RBX
-    ret

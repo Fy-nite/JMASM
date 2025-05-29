@@ -7,18 +7,66 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.File;
 import java.util.Scanner;
+import java.util.stream.Stream;
 import java.lang.reflect.Method;
 import org.finite.ModuleManager.MNIMethodObject;
 import org.finite.ModuleManager.MNIHandler;
 import org.finite.Exceptions.MASMException; // Add this import
 import org.finite.Exceptions.MNIException;
 import org.finite.ArgumentParser;
+import org.finite.Functions;
 
 public class interp {
 
     public static boolean testmode = true;
     public static boolean testMode = Boolean.getBoolean("testMode"); // This line changes
+    public interp.instructions instrs = new interp.instructions();
+    public static interp.instructions instructions = new interp.instructions();
+
+
+    public static class instruction {
+
+        String name;
+        int opcode;
+        int iop1;
+        int iop2;
+        String sop1;
+        String sop2;
+        int lineNumber; // Add line number tracking
+        String originalLine; // Add original line tracking
+    }
+
+    public static Functions functions = new Functions();
+    public static ArgumentParser.Args arguments = new ArgumentParser.Args();
+
+    // instructions class
+    public static class instructions {
+
+        // holds all the instructions
+        public instruction[] instructions;
+        // holds the length of the instructions array
+        public int length;
+
+        // holds the memory size we requested
+        public int memory_size;
+        public int max_labels;
+        public int max_instructions;
+        public int Memory[];
+        public int labels[];
+        public Functions functions;
+        public HashMap<String, Integer> labelMap;
+        public int currentLine; // Add current line tracking
+        public String currentlineContents; // Add current line contents tracking
+
+        public instructions() {
+            labelMap = new HashMap<>();
+        }
+    }
 
     /*
      * A class to represent macros in the assembly language.
@@ -37,6 +85,7 @@ public class interp {
             this.body = body;
         }
     }
+
     /*
      * A class to represent state variables in the assembly language.
      * It contains the variable name, type, address, and size.
@@ -62,7 +111,6 @@ public class interp {
     private static boolean hasIncludes(String content) {
         return content.toLowerCase().contains("#include");
     }
-
 
     /*
      * Handles the STATE declaration in the assembly language.
@@ -108,7 +156,7 @@ public class interp {
             if (memoryPointer + i < common.MAX_MEMORY) {
                 common.WriteMemory(common.memory, memoryPointer + i, (initialValue >> (i * 8)) & 0xFF);
             } else {
-                throw new MASMException("Memory allocation exceeds available memory", 0, line, 
+                throw new MASMException("Memory allocation exceeds available memory", 0, line,
                         "Error in instruction: STATE");
             }
         }
@@ -116,9 +164,34 @@ public class interp {
         memoryPointer += size;
     }
 
-    // Add at the top
-    private static final org.finite.ModuleManager.ModuleRegistry mniRegistry =
-        org.finite.ModuleManager.ModuleRegistry.getInstance();
+    /*
+     * executes masm code provided to it, for external use when jmasm is
+     * used as a library.
+     */
+    public static String executeMASMCode(String code) {
+        // Split the code into lines
+        String[] lines = code.split("\n");
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        BufferedOutputStream outputStream = new BufferedOutputStream(byteStream);
+        // Preprocess the code to handle includes and macros
+        String preprocessedCode = preprocess(lines);
+        // Parse the instructions from the preprocessed code
+        interp.instructions instrs = parseInstructions(preprocessedCode.split("\n"));
+        testMode = true; // Set test mode to true for this execution because it won't run without it
+        Functions.bufferedStdout = outputStream; // Set the output stream to capture output
+        
+        runContents(preprocessedCode); // run the contents.
+        try {
+            outputStream.flush();
+            return byteStream.toString(); // Convert captured output to string
+        } catch (IOException e) {
+            throw new MASMException("Error reading output stream", 0, "", "Error in instruction: output");
+        }
+    }
+
+    // Module registry for macro providers
+    private static final org.finite.ModuleManager.ModuleRegistry mniRegistry = org.finite.ModuleManager.ModuleRegistry
+            .getInstance();
 
     // Extend preprocess method to handle macros
     private static String preprocess(String[] lines) {
@@ -196,9 +269,8 @@ public class interp {
                     }
                 } catch (Exception e) {
                     throw new org.finite.Exceptions.MASMException(
-                        "Error calling macro provider: " + instruction,
-                        0, line, "Error in macro expansion"
-                    );
+                            "Error calling macro provider: " + instruction,
+                            0, line, "Error in macro expansion");
                 }
             }
 
@@ -242,19 +314,19 @@ public class interp {
         if (currentPass >= maxPasses) {
             throw new MASMException("Too many include passes", 0, "", "Error in instruction: #include");
         }
-        //System.out.println("Preprocessed code:\n" + result);
+        // System.out.println("Preprocessed code:\n" + result);
         return result;
     }
 
     // Optimization pass: simple constant folding, dead code elimination, peephole,
     // etc.
     public static String optimize(String code) {
-        System.out.println("Optimizing code:\n" + code);
+        // System.out.println("Optimizing code:\n" + code);
 
         String[] lines = code.split("\n");
-        for (String line : lines) {
-            System.out.println("Line: " + line);
-        }
+        // for (String line : lines) {
+        // System.out.println("Line: " + line);
+        // }
         List<String> optimized = new ArrayList<>();
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
@@ -263,7 +335,8 @@ public class interp {
                 common.dbgprint("Optimizing line %d: '%s'", i, line);
             }
 
-            // --- New: Combine consecutive ADD/SUB/MUL/DIV on same register with immediates ---
+            // --- New: Combine consecutive ADD/SUB/MUL/DIV on same register with immediates
+            // ---
             if (lineUpper.matches("^(ADD|SUB|MUL|DIV)\\s+R\\w+\\s+[-]?\\d+$")) {
                 String[] parts = line.split("\\s+");
                 String op = parts[0].toUpperCase();
@@ -277,10 +350,14 @@ public class interp {
                     if (nextUpper.matches("^" + op + "\\s+" + reg.toUpperCase() + "\\s+[-]?\\d+$")) {
                         int nextVal = Integer.parseInt(next.split("\\s+")[2]);
                         // Fold for ADD/SUB/MUL/DIV
-                        if (op.equals("ADD")) val += nextVal;
-                        else if (op.equals("SUB")) val += nextVal; // SUB x y; SUB x z == SUB x (y+z)
-                        else if (op.equals("MUL")) val *= nextVal;
-                        else if (op.equals("DIV")) val /= nextVal;
+                        if (op.equals("ADD"))
+                            val += nextVal;
+                        else if (op.equals("SUB"))
+                            val += nextVal; // SUB x y; SUB x z == SUB x (y+z)
+                        else if (op.equals("MUL"))
+                            val *= nextVal;
+                        else if (op.equals("DIV"))
+                            val /= nextVal;
                         j++;
                     } else {
                         break;
@@ -291,7 +368,6 @@ public class interp {
                 i = j - 1;
                 continue;
             }
-
 
             // Remove redundant MOV (e.g., MOV R1 R1)
             if (lineUpper.matches("^MOV\\s+(R\\w+)\\s+\\1$")) {
@@ -372,15 +448,14 @@ public class interp {
 
     public static interp.instructions parseInstructions(String[] ops) {
         // Preprocess includes first
+        interp.instructions instrs = new interp.instructions();
         String preprocessed = preprocess(ops);
         // Add optimization pass here
-        System.out.println("Preprocessed code:\n" + preprocessed);
+        // System.out.println("Preprocessed code:\n" + preprocessed);
         String optimized = optimize(preprocessed);
-
 
         String[] processedOps = optimized.split("\n");
 
-        interp.instructions instrs = new interp.instructions();
         instrs.instructions = new interp.instruction[100]; // reasonable default size
         instrs.Memory = new int[1000]; // reasonable default memory size
         instrs.length = 0;
@@ -391,7 +466,7 @@ public class interp {
         instrs.max_instructions = totalSize / 10;
         instrs.labels = new int[instrs.max_labels];
         instrs.functions = new Functions();
-
+        common.UnwrapStdout();
         // First pass: collect labels
         int currentLine = 0;
         for (String line : processedOps) {
@@ -461,46 +536,25 @@ public class interp {
 
         }
 
+        if (ArgumentParser.Args.debug) {
+            common.UnwrapStdout();
+            common.dbgprint("Parsed %d instructions.", instrs.length);
+        }
+        instructions = instrs; // Set the static instructions variable
+        if (instrs != null)
+        {
+            common.UnwrapStdout();
+            System.out.println("Parsed instructions: " + instrs.length);
+        }
+        else 
+        {
+            common.UnwrapStdout();
+            System.out.println("Parse\n\n\n\n\n\n\n\n\n\n\n\n\n\n instructions: 0");
+        }
         return instrs;
     }
 
-    public static class instruction {
 
-        String name;
-        int opcode;
-        int iop1;
-        int iop2;
-        String sop1;
-        String sop2;
-        int lineNumber; // Add line number tracking
-        String originalLine; // Add original line tracking
-    }
-
-    public static Functions functions = new Functions();
-    public static ArgumentParser.Args arguments = new ArgumentParser.Args();
-
-    // instructions class
-    public static class instructions {
-
-        // holds all the instructions
-        public instruction[] instructions;
-        // holds the length of the instructions array
-        public int length;
-        // holds the memory size we requested
-        public int memory_size;
-        public int max_labels;
-        public int max_instructions;
-        public int Memory[];
-        public int labels[];
-        public Functions functions;
-        public HashMap<String, Integer> labelMap;
-        public int currentLine; // Add current line tracking
-        public String currentlineContents; // Add current line contents tracking
-
-        public instructions() {
-            labelMap = new HashMap<>();
-        }
-    }
 
     public static interp terp = new interp();
 
@@ -525,11 +579,11 @@ public class interp {
             // use arguments.cpu speed to control execution speed
             // Higher values = faster execution (less sleep time)
             // if (ArgumentParser.Args.cpuSpeed > 0) {
-            //     try {
-            //         Thread.sleep(1000 / ArgumentParser.Args.cpuSpeed);
-            //     } catch (InterruptedException e) {
-            //         // Handle exception
-            //     }
+            // try {
+            // Thread.sleep(1000 / ArgumentParser.Args.cpuSpeed);
+            // } catch (InterruptedException e) {
+            // // Handle exception
+            // }
             // }
 
             instruction instr = instrs.instructions[rip];
@@ -554,9 +608,9 @@ public class interp {
         // Flush output buffers at the end
         long endTime = System.currentTimeMillis();
         long executionTime = endTime - startTime;
-        System.out.println("Execution time: " + executionTime + " ms");
-        System.out.println("Start time: " + startTime);
-        System.out.println("End time: " + endTime);
+        // System.out.println("Execution time: " + executionTime + " ms");
+        // System.out.println("Start time: " + startTime);
+        // System.out.println("End time: " + endTime);
         Functions.flushAllBuffers();
     }
 
@@ -571,7 +625,7 @@ public class interp {
         }
     }
 
-    public static void runFile(String filename) {
+    public static void runContents(String contents) {
         instructions instrs = new instructions();
         instrs.instructions = new instruction[21463]; // reasonable default size
         instrs.Memory = new int[common.MAX_MEMORY]; // reasonable default memory size
@@ -582,6 +636,102 @@ public class interp {
         instrs.labels = new int[instrs.max_labels];
         instrs.functions = new Functions();
 
+        // init the stack pointer
+        common.WriteRegister("RSP", common.MAX_MEMORY - 1);
+
+        // Preprocess and parse
+        String preprocessed = preprocess(contents.split("\n"));
+        // Add optimization pass here
+        preprocessed = optimize(preprocessed);
+        // System.out.println("Optimized code:\n" + preprocessed);
+        String[] processedLines = preprocessed.split("\n");
+
+        // First pass: collect labels
+        int currentLine = 0;
+        for (String line : processedLines) {
+            line = line.trim();
+            if (!line.isEmpty() && !line.startsWith(";")) {
+                if (line.toLowerCase().startsWith("lbl ")) {
+                    String labelName = line.substring(4).trim();
+                    instrs.labelMap.put(labelName, currentLine);
+                    continue;
+                }
+                currentLine++;
+            }
+        }
+
+        // Second pass: read instructions
+        for (String line : processedLines) {
+            line = line.trim();
+            if (!line.isEmpty() && !line.startsWith(";")) {
+                // Skip label declarations but don't treat them as errors
+                if (line.toLowerCase().startsWith("lbl ")) {
+                    continue;
+                }
+
+                instruction instr = new instruction();
+                instr.lineNumber = currentLine;
+                instr.originalLine = line;
+
+                // Special handling for DB instruction
+                if (line.toUpperCase().startsWith("DB ")) {
+                    instr.name = "DB";
+                    instr.sop1 = line.substring(2).trim(); // Keep everything after "DB"
+                } else {
+                    // Normal instruction parsing
+                    String[] parts = line.split("\\s+", 3); // Limit split to 3 parts
+                    instr.name = parts[0];
+                    // Remove any inline comments from the operands
+                    if (parts.length > 1) {
+                        String op1 = parts[1];
+                        int commentStart = op1.indexOf(';');
+                        if (commentStart != -1) {
+                            op1 = op1.substring(0, commentStart).trim();
+                        }
+                        instr.sop1 = op1;
+                    }
+                    if (parts.length > 2) {
+                        String op2 = parts[2];
+                        int commentStart = op2.indexOf(';');
+                        if (commentStart != -1) {
+                            op2 = op2.substring(0, commentStart).trim();
+                        }
+                        instr.sop2 = op2;
+                    }
+                }
+
+                instrs.instructions[instrs.length] = instr;
+                instrs.Memory[instrs.length] = instrs.length;
+                instrs.length++;
+            }
+        }
+
+        // Only check for main label in non-test mode
+        if (!testMode && !instrs.labelMap.containsKey("main")) {
+            throw new MASMException("No 'main' label found in instructions", instrs.currentLine,
+                    instrs.currentlineContents, "Error in instruction: main");
+
+        }
+        // System.out.println(preprocessed);
+        ExecuteAllInstructions(instrs);
+
+    }
+    /*
+     * this method runs whenever the interpreter runs standalone.
+     * so help me god, please never remove this javadoc, i spent 2 hours on figuring what out.
+     */
+    public static void runFile(String filename) {
+        instructions instrs = new instructions();
+        instrs.instructions = new instruction[21463]; // reasonable default size
+        instrs.Memory = new int[common.MAX_MEMORY]; // reasonable default memory size
+        instrs.length = 0;
+        instrs.memory_size = common.MAX_MEMORY;
+        instrs.max_labels = 21463;
+        instrs.max_instructions = 21463;
+        instrs.labels = new int[instrs.max_labels];
+        instrs.functions = new Functions();
+        common.UnwrapStdout(); // why the hell does this not work?
+        System.out.println("Running fileasdasd: " + filename);
         // init the stack pointer
         common.WriteRegister("RSP", common.MAX_MEMORY - 1);
 
@@ -598,7 +748,7 @@ public class interp {
             String preprocessed = preprocess(lines.toArray(new String[0]));
             // Add optimization pass here
             preprocessed = optimize(preprocessed);
-            System.out.println("Optimized code:\n" + preprocessed);
+            //System.out.println("Optimized code:\n" + preprocessed);
             String[] processedLines = preprocessed.split("\n");
 
             // First pass: collect labels

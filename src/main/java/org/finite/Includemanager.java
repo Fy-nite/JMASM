@@ -31,35 +31,69 @@ public class Includemanager {
         
     }
 
+    private enum ImportType {
+        STDLIB,     // STDLIB:module
+        PATH,       // path/to/file.mas or path/to/file.masm
+        DOT_NOTATION, // existing dot.notation
+        MODULE_MACRO // modulename:macroname
+    }
+
     public static String include(String filename, String currentFileContents) {
         String cleanFilename = filename.replace("\"", "");
-        // Check for custom include provider (annotation-based)
-        Method includeMethod = mniRegistry.getIncludeProvider(cleanFilename);
-        if (includeMethod != null) {
-            try {
-                Object result = includeMethod.invoke(null);
-                if (result != null) {
-                    return result.toString();
-                }
-            } catch (Exception e) {
-                throw new RuntimeException("Error calling include provider: " + cleanFilename, e);
-            }
-        }
-        // Check for custom macro provider (MNI-based)
-        int dotIdx = cleanFilename.lastIndexOf('.');
-        if (dotIdx > 0) {
-            String libName = cleanFilename.substring(0, dotIdx);
-            String macroName = cleanFilename.substring(dotIdx + 1);
-            Class<?> macroProvider = mniRegistry.getCustomLib(libName);
-            if (macroProvider != null) {
+        
+        // Parse the import type and get the actual filename/path
+        ImportInfo importInfo = parseImportType(cleanFilename);
+        
+        // Check for custom include provider (annotation-based) - only for non-stdlib imports
+        if (importInfo.type != ImportType.STDLIB) {
+            Method includeMethod = mniRegistry.getIncludeProvider(cleanFilename);
+            if (includeMethod != null) {
                 try {
-                    java.lang.reflect.Method macroMethod = macroProvider.getMethod(macroName);
-                    Object macroBody = macroMethod.invoke(null);
-                    if (macroBody != null) {
-                        return macroBody.toString();
+                    Object result = includeMethod.invoke(null);
+                    if (result != null) {
+                        return result.toString();
                     }
                 } catch (Exception e) {
-                    throw new RuntimeException("Error calling macro provider: " + libName + "." + macroName, e);
+                    throw new RuntimeException("Error calling include provider: " + cleanFilename, e);
+                }
+            }
+        }
+        
+        // Check for custom macro provider (MNI-based) - for both dot notation and module:macro format
+        if (importInfo.type == ImportType.DOT_NOTATION || importInfo.type == ImportType.MODULE_MACRO) {
+            String libName;
+            String macroName;
+            
+            if (importInfo.type == ImportType.MODULE_MACRO) {
+                // Parse modulename:macroname format
+                int colonIdx = cleanFilename.indexOf(':');
+                libName = cleanFilename.substring(0, colonIdx);
+                macroName = cleanFilename.substring(colonIdx + 1);
+            } else {
+                // Parse dot notation format
+                int dotIdx = cleanFilename.lastIndexOf('.');
+                if (dotIdx <= 0) {
+                    // No dot found, continue to file reading
+                    libName = null;
+                    macroName = null;
+                } else {
+                    libName = cleanFilename.substring(0, dotIdx);
+                    macroName = cleanFilename.substring(dotIdx + 1);
+                }
+            }
+            
+            if (libName != null && macroName != null) {
+                Class<?> macroProvider = mniRegistry.getCustomLib(libName);
+                if (macroProvider != null) {
+                    try {
+                        java.lang.reflect.Method macroMethod = macroProvider.getMethod(macroName);
+                        Object macroBody = macroMethod.invoke(null);
+                        if (macroBody != null) {
+                            return macroBody.toString();
+                        }
+                    } catch (Exception e) {
+                        throw new RuntimeException("Error calling macro provider: " + libName + "." + macroName, e);
+                    }
                 }
             }
         }
@@ -74,7 +108,7 @@ public class Includemanager {
 
         try {
             includedFiles.add(cleanFilename);
-            String fileContent = readFileContent(cleanFilename);
+            String fileContent = readFileContent(importInfo);
             String processed = processIncludes(currentFileContents, fileContent, cleanFilename);
             includedFiles.remove(cleanFilename);
             return processed;
@@ -88,7 +122,96 @@ public class Includemanager {
         }
     }
 
-    private static String readFileContent(String filename) throws IOException {
+    private static class ImportInfo {
+        ImportType type;
+        String path;
+        String originalFilename;
+
+        ImportInfo(ImportType type, String path, String originalFilename) {
+            this.type = type;
+            this.path = path;
+            this.originalFilename = originalFilename;
+        }
+    }
+
+    private static ImportInfo parseImportType(String filename) {
+        if (filename.startsWith("STDLIB:")) {
+            String moduleName = filename.substring(7); // Remove "STDLIB:" prefix
+            return new ImportInfo(ImportType.STDLIB, moduleName, filename);
+        } else if (filename.contains(":") && !filename.startsWith("STDLIB:")) {
+            // Handle modulename:macroname format
+            return new ImportInfo(ImportType.MODULE_MACRO, filename, filename);
+        } else if (filename.contains("/") || filename.endsWith(".mas") || filename.endsWith(".masm")) {
+            return new ImportInfo(ImportType.PATH, filename, filename);
+        } else {
+            // Default to dot notation for backward compatibility
+            return new ImportInfo(ImportType.DOT_NOTATION, filename, filename);
+        }
+    }
+
+    private static String readFileContent(ImportInfo importInfo) throws IOException {
+        switch (importInfo.type) {
+            case STDLIB:
+                return readStdlibContent(importInfo.path);
+            case PATH:
+                return readPathContent(importInfo.path);
+            case DOT_NOTATION:
+                return readDotNotationContent(importInfo.path);
+            case MODULE_MACRO:
+                // If macro provider didn't handle it, treat as regular file
+                return readPathContent(importInfo.path);
+            default:
+                throw new IOException("Unknown import type");
+        }
+    }
+
+    private static String readStdlibContent(String moduleName) throws IOException {
+        // Try both .masm and .mas extensions for stdlib
+        String[] extensions = {".masm", ".mas"};
+        
+        for (String ext : extensions) {
+            String resourcePath = "stdlib/" + moduleName + ext;
+            try (InputStream is = Includemanager.class.getClassLoader().getResourceAsStream(resourcePath)) {
+                if (is != null) {
+                    return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                }
+            }
+        }
+
+        // If not found in classpath, try custom stdlib directory
+        if (ArgumentParser.Args.stdlibDir != null && !ArgumentParser.Args.stdlibDir.isEmpty()) {
+            for (String ext : extensions) {
+                File stdlibFile = new File(ArgumentParser.Args.stdlibDir, moduleName + ext);
+                if (stdlibFile.exists()) {
+                    return readFile(stdlibFile);
+                }
+            }
+        }
+
+        throw new IOException("Stdlib module not found: " + moduleName);
+    }
+
+    private static String readPathContent(String path) throws IOException {
+        File file = new File(path);
+        
+        // If the path doesn't have an extension, try both .masm and .mas
+        if (!path.endsWith(".mas") && !path.endsWith(".masm")) {
+            File masmFile = new File(path + ".masm");
+            File masFile = new File(path + ".mas");
+            
+            if (masmFile.exists()) {
+                return readFile(masmFile);
+            } else if (masFile.exists()) {
+                return readFile(masFile);
+            }
+        } else if (file.exists()) {
+            return readFile(file);
+        }
+
+        throw new IOException("File not found: " + path);
+    }
+
+    private static String readDotNotationContent(String filename) throws IOException {
         List<File> searchPaths = getSearchPaths(filename);
         
         // First try loading from classpath if it's a stdlib file

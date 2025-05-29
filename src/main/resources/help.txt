@@ -1,8 +1,0 @@
-Usage:
-    -d : debug mode, used for debugging MASM code in the terminal
-    -f <file> : specify a file to read MASM code from and execute
-    -h : display this help message
-    -r : run the Micro-Assembly REPL
-    -modules : display the available modules ether included with the program or in the modules directory
-    -v : display the version of the program
-    -init : initialize the folders required if the program didn't do it automatically

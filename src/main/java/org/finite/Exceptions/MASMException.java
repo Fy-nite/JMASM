@@ -16,11 +16,11 @@ public class MASMException extends RuntimeException {
     public String getMessage() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
-        sb.append("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
-        sb.append("┃ MASM Exception\n");
-        sb.append("┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
-        if (lineNumber > 0) sb.append(String.format("┃ Line      : %d\n", lineNumber));
-        if (instruction != null && !instruction.isEmpty()) sb.append(String.format("┃ Instruction: %s\n", instruction));
+        sb.append("+---------------------------------------------------\n");
+        sb.append("| MASM Exception\n");
+        sb.append("+---------------------------------------------------\n");
+        if (lineNumber > 0) sb.append(String.format("| Line      : %d\n", lineNumber));
+    
         sb.append(String.format("┃ Message   : %s\n", super.getMessage()));
         if (details != null && !details.isEmpty()) sb.append(String.format("┃ Details   : %s\n", details));
         sb.append("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");

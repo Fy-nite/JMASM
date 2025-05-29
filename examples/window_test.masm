@@ -1,56 +1,28 @@
 lbl main
-    ; Create main window
-    mov RAX 1000
-    mov RBX 200
-    DB $1000 "MASM Window Test"
-    MNI window.create RAX RBX
+    db $100 "Masm Window Test"
+    db $200 "Hello, World!"
+    ; frameid
+    mov R1 100
+    ; width
+    mov R2 700
+    ; mem string
+    mov R3 200
+    ;; title
+    mov R4 100
+    mov R5 400
+    ; Create and configure window
+    MNI SwingOperations.createFrame R4 R1
+    ;; Set the title of the window
+    MNI SwingOperations.setFrameSize R1 R2
+    MNI SwingOperations.showFrame R1 R2
+    MNI SwingOperations.createLabel R4 R1
+    ;; Set the text of the label
+    MNI SwingOperations.setText R4 R3
+    ;; Add the label to the frame
+    MNI SwingOperations.addToFrame R1 R4
 
-    ; Create a greeting label
-    mov RAX RBX
-    mov RBX 300
-    DB $1100 "Welcome to MASM GUI System!"
-    mov R0 20        ; x position
-    mov $1102 R0     ; Store in memory
-    mov R0 20        ; y position
-    mov $1103 R0
-    mov R0 250       ; width
-    mov $1104 R0
-    mov R0 30        ; height
-    mov $1105 R0
-    MNI window.label RAX RBX
+    MNI SwingOperations.createTextField R5 R1
+    MNI SwingOperations.addToFrame R1 R5
 
-    ; Create first button
-    mov RAX 200
-    mov RBX 400
-    DB $1200 "Test Button 1"
-    mov R0 20        ; x position
-    mov $1202 R0
-    mov R0 60        ; y position
-    mov $1203 R0
-    mov R0 120       ; width
-    mov $1204 R0
-    mov R0 40        ; height
-    mov $1205 R0
-    MNI window.button RAX RBX
-
-    ; Create second button
-    mov RAX 200
-    mov RBX 500
-    DB $1300 "Test Button 2"
-    mov R0 150       ; x position
-    mov $1302 R0
-    mov R0 60        ; y position
-    mov $1303 R0
-    mov R0 120       ; width
-    mov $1304 R0
-    mov R0 40        ; height
-    mov $1305 R0
-    MNI window.button RAX RBX
-
-    ; Show the window
-    mov RAX 200
-    MNI window.show RAX RAX
-
-keep_running:
-    mov RAX 1000
-    jmp keep_running
+lbl while
+    jmp #while
